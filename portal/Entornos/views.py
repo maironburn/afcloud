@@ -13,7 +13,7 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from portal.Utils.logger import *
 from django.contrib import messages
-
+from portal.Kubernetes.Kuber import KuberConnectionFail
 logger=getLogger()
 
 
@@ -126,8 +126,12 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
         form = EntornoForm(request.POST, request.FILES)
         if len(request.FILES):
             fichero_config=handle_uploaded_file(request.FILES['ent_config_file'])
-            kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
-            client=kuber.getClient()
+            try:
+                kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
+                client=kuber.getClient()
+                form.setConOkStatus()
+            except KuberConnectionFail:
+                pass
 
         if form.is_valid():
             AfEntorno = form.save(commit=False)

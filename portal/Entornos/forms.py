@@ -13,17 +13,28 @@ class EntornoForm(forms.ModelForm):
     #ent_password = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=False)
     ent_activo= forms.BooleanField(label=_("Entorno activo"), initial=True,required=False)
     ent_config_file = forms.FileField()
-
+    connection=False
     
+    error_messages = {
+        'kubernates_conx_error': _("Por favor introduzca un usuario correcto %(username)s y su contraseña. "
+                           "Tenga en cuenta que ambos campos son sensibles a las mayusculas."),
+        'inactive': _("Esta cuenta se encuentra inactiva."),
+    }
     class Meta:
         model = AfEntorno
         fields = '__all__'
         
-    
+    def setConOkStatus(self):
+        self.connection=True
+        
     def is_valid(self):
         valid = super(EntornoForm, self).is_valid()
         
         '''validacion adicional'''
-        return valid
+        if valid:
+            if self.connection:
+                return True
+        
+        return False
         
         
