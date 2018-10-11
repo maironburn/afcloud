@@ -13,7 +13,7 @@ from portal.Integrantes.forms import IntegrantesRawForm
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
-
+ 
 
 @login_required
 def seccionActivaRedirect(request,id):
