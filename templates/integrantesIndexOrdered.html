@@ -1,0 +1,154 @@
+{% extends "index.html"%}
+{% load static %}
+
+{% block content %}
+<div class="container">
+<div class="row"></div>
+<br>
+    <h2 class="text-danger text-warning" style="margin-top:1em">Integrantes del proyecto <strong>{{request.session.proyecto_seleccionado}}</strong></h2>
+    <form class="navbar-right" role="search" method="get">{% csrf_token %}
+        {#            <div class="form-group">#}
+          {% if  request.session.id_proyecto_seleccionado %}
+
+            <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/nuevoIntegrante" class="btn btn-danger btn-sm">
+          {% else %}
+            <a href="#perla" class="btn btn-danger btn-sm">
+          {% endif %}
+        <span class="glyphicon glyphicon-plus"></span>Crear integrante</a>
+        <input type="text" name="p" placeholder="Nombre del usuario">
+        <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+        {#            </div>#}
+    </form>
+
+    {% if mensaje %}
+        {#              <h4 class="text-warning">{{ mensaje }}</h4>#}
+        <div id="message" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <div class="modal-body">
+                        <h4>{{ mensaje }}</h4>
+                        <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+</br></br></br>
+    <table id="centros" class="table table-hover panel">
+        <thead>
+        <tr>
+        <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
+
+            <th>Nombre de usuario
+              <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/1/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+              <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/1/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Administrador
+                <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/2/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/2/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Nombre y apellidos
+                <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/3/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/3/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Perfil
+                <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/4/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/4/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Activo
+              <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/5/1"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+              <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/5/0"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Editar / Borrar</th>
+
+        </tr>
+
+        </thead>
+        <tbody>
+        {% if integrantes %}
+          {%for i in integrantes %}
+            {% for afuser, perfil in i.items %}
+                <tr>
+
+                  <td>{{ afuser.user.username  }} </td>
+                  <td>
+                    {% if afuser.usu_administrador  %}
+                    <img src="{% static 'images/afcloud_admin.png' %}" width="16px" height="16px">
+                    {%endif%}
+                  </td>
+                  <td>{{ afuser.user.first_name  }} {{ afuser.user.last_name  }}</td>
+                  <td>{{ perfil }}</td>
+                  <td>{% if afuser.user.is_active %}<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">
+                    	<label for="usuario Habilitado">Activo</label>
+                    {% else %}
+                    <img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="usuario inhabilitado">Inactivo</label>
+                    {% endif %}
+                    </td>
+                    <td>
+                       <div id="container_icons" style="position: relative;left: 2em;">
+                        <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/editarIntegrante/{{ afuser.user.id }}/">
+                            <span class="text-danger glyphicon glyphicon-edit"></span>
+                        </a>
+                        <a href="#delete{{ afuser.user.id  }}" data-toggle="modal">
+                            <span class="text-danger glyphicon glyphicon-trash"></span>
+                        </a>
+                        <div id="delete{{ afuser.user.id }}" class="modal fade">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <button type="button" class="close" data-dismiss="modal"
+                                            aria-hidden="true">&times;</button>
+                                    <div class="modal-body">
+                                        <h4 class="">¿Esta seguro de querer borrar {{ afuser.user.username  }}?</h4>
+                                        <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/eliminarIntegrante/{{ afuser.user.id }}"
+                                           class="btn btn-danger "> Sí </a>
+                                        <button class="btn btn-danger" data-dismiss="modal" type="button"> No
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                    </td>
+
+                </tr>
+            {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p><span class="glyphicon glyphicon-exclamation-sign"></span> Seleccione un proyecto.</p>
+            <p>proyecto_seleccionado: {{proyecto_seleccionado}}</p>
+            <p>perfil: {{perfil}}</p>
+            <p>numeric_profile: {{numeric_profile}}</p>
+            <p>proyectos: {{proyectos}}</p>
+            <p>afcloud_admin: {{afcloud_admin}}</p>
+        {% endif %}
+        </tbody>
+    </table>
+    {#     page {{ page }} of {{ page.num_pages }}#}
+    {% if p %}
+        <div class="pagination">
+                  <span class="step-links">
+                      {% if p.has_previous %}
+                          <a href="?page={{ p.previous_page_number }}"
+                             class="text-danger paginate_button previous"><span
+                                  class="text-danger glyphicon glyphicon-backward"></span> Anterior</a>
+                      {% endif %}
+                      <span class="current">
+                          Página {{ p.number }} de {{ p.paginator.num_pages }}
+                      </span>
+
+                      {% if p.has_next %}
+                          <a href="?page={{ p.next_page_number }}" class="text-danger paginate_button next">Siguiente
+                              <span class="text-danger glyphicon glyphicon-forward"></span></a>
+                      {% endif %}
+                  </span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}

@@ -1,0 +1,251 @@
+# Create your views here.
+# coding=utf-8
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
+from portal.models import AfProyecto,AfPerfil,AfEntorno,AfRelEntPro, AfUsuario
+from portal.Proyectos.forms import ProyectoForm,editProyectoForm
+from django.http import JsonResponse
+from  django.shortcuts  import get_object_or_404
+from django.db import IntegrityError
+from portal.Utils.decorators import *
+from portal.Utils.aux_meth import *
+from django.contrib import messages
+
+@login_required
+@group_required('af_cloud_admin',)
+def administrarProyectos(request, template_name='proyectosIndex.html', extra_context=None):
+    try:
+        # para las busquedas
+        name = request.GET['p']
+    except:
+        name = ''
+    if name == '':
+        proyectos = AfProyecto.objects.all().order_by('pro_nombre')
+        e = 'no'
+    else:
+        proyectos = AfProyecto.objects.filter(pro_nombre__icontains=name)
+        e = 'si'
+
+    set_bulk_num_entornos(proyectos)
+    set_bulk_num_integrantes(proyectos)
+    paginator = Paginator(proyectos, 10)
+
+    try:
+        number = int(request.GET.get('page', '1'))
+    except PageNotAnInteger:
+        number = paginator.page(1)
+    except EmptyPage:
+        number = paginator.page(paginator.num_pages)
+    c = paginator.page(number)
+    context = {'p': c, 'e': e}
+    return TemplateResponse(request, template_name, context)
+
+
+# funciones auxiliares para los campos calculados num de integrantes y entornos
+def set_bulk_num_entornos(proyectos):
+
+    for p in proyectos:
+        lst_entornos=[]
+        entornos=AfRelEntPro.objects.filter(pro=p)
+        p.set_num_entornos(len(entornos))
+        for e in entornos:
+            if e.ent.ent_nombre not in entornos:
+                lst_entornos.append(e.ent.ent_nombre)
+
+        p.set_entornos(lst_entornos)
+        p.entornos_str=p.get_entornos_str()
+
+
+'''
+listado de los integrantes de cada proyecto
+'''
+def set_bulk_num_integrantes(proyectos):
+
+    for p in proyectos:
+        lst_integrantes=[]
+        perfiles=AfPerfil.objects.filter(pro=p)
+        p.set_num_integrantes(len(perfiles))
+        for perf in perfiles:
+            if perf.usu.user.username not in lst_integrantes:
+                lst_integrantes.append(perf.usu.user.username)
+
+        p.set_integrantes(lst_integrantes)
+        p.integrantes_str=p.get_integrantes_str()
+
+
+@login_required
+def detallesProyecto(request,id, template_name='detalles_proyecto.html'):
+
+    proyecto_instance= AfProyecto.objects.get(id=id)
+    perfil_qs=AfPerfil.objects.filter(pro=proyecto_instance)
+    usuarios=[]
+    entornos=[]
+    proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion}
+
+    if perfil_qs:
+        for p in perfil_qs:
+            u=AfUsuario.objects.get(user=p.usu.user)
+            usuarios.append(u.user.username)
+
+    rel_ent_pro= AfRelEntPro.objects.filter(pro=proyecto_instance)
+    if rel_ent_pro:
+        for e in rel_ent_pro:
+            try:
+                #ent=AfEntorno.objects.get(id=e.id)
+                entornos.append(e.ent.ent_nombre)
+            except Exception as ex:
+                pass
+
+    response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'usuarios': usuarios, 'entornos': entornos }).rendered_content
+    '''
+    return TemplateResponse(request, template_name, {'proyecto': proyecto, 'usuarios': usuarios,
+                                           'entornos': entornos })
+    '''
+    data={'action': 'detalles_proyecto', 'html':response}
+    return JsonResponse({'data':data})
+
+@login_required
+@group_required('af_cloud_admin',)
+def administrarProyectosOrdered(request, orden, ascendente, template_name='proyectosIndex.html', extra_content=None):
+    try:
+        name = request.GET['p']
+    except:
+        name = ''
+    e = 'no' # parametro q actua como flag indicando q se ha realizado una busqueda
+    ordenar = ''
+    reverse = False
+    campo={1:'pro_nombre', 2: 'num_integrantes', 3: 'num_proyectos', 4: 'pro_activo'}
+
+    proyectos=AfProyecto.objects.all()
+
+    if int(ascendente) == 0:
+            ordenar = '-'
+            reverse=True
+
+    if name=='':
+
+        if int(orden):
+
+            if int(orden)!=2 and int(orden)!=3:
+                ordenar+=campo[int(orden)]
+                p = proyectos.order_by(ordenar)
+                set_bulk_num_entornos(p)
+                set_bulk_num_integrantes(p)
+            else:
+                set_bulk_num_integrantes(proyectos)
+                set_bulk_num_entornos(proyectos)
+                if int(orden)==3:
+                    p=sorted(proyectos, key=lambda p: p.num_entornos, reverse=reverse)
+                else:
+                    p=sorted(proyectos, key=lambda p: p.num_integrantes, reverse=reverse)
+    else:
+            p = proyectos.filter(Nombre__icontains=name)
+            e = 'si'
+            set_bulk_num_entornos(p)
+            set_bulk_num_integrantes(p)
+    #set_bulk_num_entornos(proyectos)
+    paginator = Paginator(p, 10)
+    try:
+        number = int(request.GET.get('page', '1'))
+    except PageNotAnInteger:
+        number = paginator.page(1)
+    except EmptyPage:
+        number = paginator.page(paginator.num_pages)
+    c = paginator.page(number)
+    context = {'p': c, 'e': e}
+    return TemplateResponse(request, template_name, context)
+
+
+@login_required
+@group_required('af_cloud_admin',)
+def nuevoProyecto(request,template_name='newProject.html'):
+    value = 'nuevo'
+    #entornos= AfEntorno.objects.all()
+    if request.method == "POST":
+        form = ProyectoForm(request.POST or None)
+
+        if form.is_valid():
+            form.clean()
+            nombre=form.cleaned_data['pro_nombre']
+            descripcion = form.cleaned_data['pro_descripcion']
+            activo = form.cleaned_data['pro_activo']
+
+            form.saveProyect('new')
+            messages.success(request,  'Proyecto creado con éxito', extra_tags='Creación de proyecto')
+            return HttpResponseRedirect('/administrar/proyectos')
+        else:
+            return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
+
+    else:
+        entornos=AfEntorno.objects.all()
+        form = ProyectoForm(initial={'entornos':entornos })
+        return TemplateResponse(request, template_name,  {'form': form, 'value': value })#,'entornos': entornos})
+
+
+
+@login_required
+@group_required('af_cloud_admin',)
+def editarProyecto(request, id,template_name='editarProyecto.html'):
+    value = 'editar'
+    proyecto= get_object_or_404(AfProyecto, id=id)
+    entornos_associated=[]
+
+    rel_ent_pro=AfRelEntPro.objects.filter(pro=proyecto)
+
+    for ea in rel_ent_pro:
+        entornos_associated.append(AfEntorno.objects.get(id=ea.ent.id))
+
+    entornos_associated=rel_ent_pro.values_list('ent', flat=True)
+    instances=AfEntorno.objects.filter(id__in=entornos_associated)
+
+    form = editProyectoForm(request.POST or None, instance=proyecto,initial={'entornos': instances})
+
+    if request.method == 'POST':
+        if form.is_valid():
+            data={'pro_nombre': request.POST.get('pro_nombre'),
+                  'pro_descripcion': request.POST.get('pro_descripcion'),
+                  'pro_activo': True if request.POST.get('pro_activo')=='on' else False,
+                  'entornos' : request.POST.getlist('entornos')
+                  }
+            form.saveProyect(data, instancia=proyecto)
+            messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
+            return HttpResponseRedirect('/administrar/proyectos')
+
+    return render(request, template_name, {'form': form, 'value': value,'id': id, 'nombre_proyecto': proyecto.pro_nombre})
+
+@login_required
+@group_required('af_cloud_admin',)
+def borrarProyecto(request, id):
+
+    proyecto= AfProyecto.objects.get(id=id)
+
+    try:
+        proyecto.delete()
+    except IntegrityError as e:
+
+        mensaje='No se puede eliminar este entorno : '
+        proyectos = AfRelEntPro.objects.filter(pro=proyecto)
+        if len(proyectos):
+            mensaje+='entornos asociados'
+        integrantes= AfPerfil.objects.filter(pro_id=proyecto)
+        if len(integrantes):
+            mensaje+='integrantes asociados'
+        e = 'no'
+        paginator = Paginator(proyectos, 10)
+        try:
+            number = int(request.GET.get('page', '1'))
+        except PageNotAnInteger:
+            number = paginator.page(1)
+        except EmptyPage:
+            number = paginator.page(paginator.num_pages)
+        c = paginator.page(number)
+        context = {'p': c, 'e': e, 'mensaje': mensaje}
+        return TemplateResponse(request, 'proyectosIndex.html', context)
+
+    messages.success(request,  'Proyecto borrado con éxito', extra_tags='Eliminación de proyecto')
+    return HttpResponseRedirect('/administrar/proyectos')

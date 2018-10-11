@@ -1,0 +1,12 @@
+.close-modal, .open-modal {
+ position: absolute;
+}
+.close-modal {
+    position: absolute;
+ z-index: 2000;
+ bottom: 30px;
+}
+.open-modal {
+    position: absolute;
+ top: 30px;
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+      {% load static %}
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+      <title>AFCloud v.Alpha</title>
+
+      <!-- Bootstrap -->
+      <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet">
+      <link rel="stylesheet" href="{% static 'css/bootstrap-theme.css' %}">
+      <link rel="shortcut icon" href="{% static 'favicon.ico' %}" >
+      <link rel="stylesheet" href="{% static 'css/signin.css' %}">
+      <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+
+  </head>
+  <body>
+  <nav class="navbar navbar-fixed-top navbar-inverse">
+      <div class="container-fluid">
+          <div class="navbar-header">
+              <a class="navbar-brand" href="/index/">AFCloud</a>
+          </div>
+          <ul class="nav navbar-nav">
+{#              <li><a href="/index/">Home</a></li>#}
+              <li><a href="/Despliegues/">Servicios</a></li>
+              <li><a href="/Servidores/">Infraestructura</a></li>
+              <li><a href="/Centros/">Centros</a></li>
+              <li class="dropdown"><a class="dropdown-toggle" href="/gra/despliegues/" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Monitorización<span class="caret"></span></a>
+                <ul class="dropdown-menu ">
+                    <li><a href="/gra/despliegues/">Gráficas Servicios</a></li>
+                    <li><a href="/gra/servidores/">Gráficas Infraestructura</a></li>
+                    <li><a href="/gra/moodle/">Gráficas Moodle</a></li>
+                </ul>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true"
+                   aria-expanded="false"><span class="glyphicon glyphicon-user"></span>
+                    <strong> {{ user.username }}</strong><span class="caret"></span></a>
+                {% if user.is_superuser %}
+                <ul class="dropdown-menu">
+                    <li><a href="/usuarios/">Usuarios</a></li>
+                </ul>
+                {% endif %}
+            </li>
+
+            <li><a href="/logout/"><span class="glyphicon glyphicon-log-in"></span> Cerrar Sesión</a></li>
+        </ul>
+      </div>
+  </nav>
+    <br>
+    <div class="container">
+        {% if error %}
+            <h3 class="text-warning">{{ error }}</h3>
+            <a class="btn btn-danger" href="/Despliegues/"><span class="glyphicon glyphicon-backward"></span> Volver a la lista de despliegues </a>
+        {% else %}
+            {% for d in data %}
+                {{ d }} </br>
+            {% endfor %}
+            </br> <h3 class="text-danger"><a href="{{ url }}">{{ url }}</a></h3>
+            {% if data1 %}
+                </br><h4 class="text-primary">Creación un replication controller</h4>
+                {% for d1 in data1 %}
+                    {{ d1 }} </br>
+                {% endfor %}
+                </br><h4 class="text-primary">Lista de replication controller</h4>
+                {% for d2 in data2 %}
+                    {{ d2 }} </br>
+                {% endfor %}
+                </br><h4 class="text-primary">Creación del servidor</h4>
+                {% for d3 in data3 %}
+                    {{ d3 }} </br>
+                {% endfor %}
+                </br><h4 class="text-primary">Lista de servidores</h4>
+                {% for d4 in data4 %}
+                    {{ d4 }} </br>
+                {% endfor %}
+            {% endif %}
+            {% for r1 in r1 %}
+                {{ r1 }} </br>
+            {% endfor %}
+                {% for r2 in r2 %}
+                {{ r2 }} </br>
+            {% endfor %}
+            {% for r3 in r3 %}
+                {{ r3 }} </br>
+            {% endfor %}
+        {% endif %}
+    </div>
+{#      <div class="container">#}
+{#          <a href="/despliegue/ReplicationController/">Lista de Controller</a><br/>#}
+{#          <a href="/despliegue/deleteController/{{ id }}">borrar controller</a><br/>#}
+{#          <a href="/despliegue/Servicios/">Lista de Servicios</a><br/>#}
+{#          <a href="/despliegue/deleteService/{{ id }}">borrar service</a><br/>#}
+{#          <a href="/despliegue/listaPods/">Lista de Pods</a><br/>#}
+{#          <a href="/despliegue/deletePod/{{ id }}">borrar Pod</a><br/>#}
+{#      </div>#}
+  <footer class="footer text-right">
+      <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+  </footer>
+</body>
+</html>

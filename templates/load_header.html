@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    {% load static %}
+    {% load crispy_forms_tags %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>AFCloud</title>
+
+    <!-- Bootstrap -->
+    <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-theme.css' %}">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" >
+    <link rel="stylesheet" href="{% static 'css/signin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+
+
+  </head>
+  <body
+  {% block content %}>
+  {% endblock %}
+ <footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+  </body>
+  </html>
+  

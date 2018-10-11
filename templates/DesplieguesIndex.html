@@ -1,0 +1,235 @@
+{% extends "index.html"%}
+{% load static %}
+
+{% block content %}
+<div class="container">
+<div class="row"></div>
+<br>
+    <h2 class="text-danger text-warning" style="margin-top:1em">Despliegues <strong>{{request.session.proyecto_seleccionado}}</strong></h2>
+    <form class="navbar-right" role="search" method="get">{% csrf_token %}
+
+        {#            <div class="form-group">#}
+           <!--  -->
+        <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}/crearInstancia/" class="btn btn-danger btn-sm">
+        <span class="glyphicon glyphicon-plus"></span>Crear instancia</a>
+
+        <input type="text" name="p" placeholder="Nombre de la instancia">
+        <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+        {#            </div>#}
+
+    </form>
+    {% if e == 'no' %}
+{#        <h5>Los despliegues que se han dado de alta: </h5>#}
+    {% else %}
+        <h5>Resultado de la búqueda</h5>
+    {% endif %}
+
+    {% if mensaje %}
+        {#              <h4 class="text-warning">{{ mensaje }}</h4>#}
+        <div id="message" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <div class="modal-body">
+                        <h4>{{ mensaje }}</h4>
+                        <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+</br></br></br>
+    <table id="catalogo" class="table table-hover panel">
+        <thead>
+        <tr>
+        <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
+            <th>Servicio
+                <a href="/administrar/catalogo/1/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/catalogo/1/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Fecha de creacion
+                <a href="/administrar/entornos/2/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/entornos/2/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Estado
+            <!--
+                <a href="/administrar/entornos/3/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/entornos/3/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+                 -->
+            </th>
+            <th>Entorno
+
+            </th>
+            <th>URL de servicio
+                <a href="/administrar/entornos/4/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/entornos/4/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+              {% if request.session.numeric_profile > 1 or afcloud_admin %}
+        			<th>
+        			Acciones
+        			</th>
+              {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+        {% if p %}
+            {% for instancia in instancias%}
+                <tr>
+
+                    <td>{{ instancia.nombre_servicio }}</td>
+                    <td>{{ instancia.create_date }}</td>
+                    <td>
+                    {% if instancia.estado %}<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">
+                      <label for="entorno activo">Activo</label></td>
+                    {% else %}
+                    <img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="entorno inactivo">Inactivo</label></td>
+                    {% endif %}
+                    </td>
+
+                    <td>{{ instancia.nombre_entorno }}</td>
+                      <td>{{ instancia.uri }}</td><!-- aqui el num de entornos -->
+
+                    {% if request.session.numeric_profile > 1 or afcloud_admin %}
+
+                    <td>
+                      <div id="container_icons" style="position: relative;left: 0.4em;">
+                      <a href="#despliegue{{ despliegues.id }}" data-toggle="modal">
+                      <span class="text-danger glyphicon glyphicon-play-circle"></span>
+                      </a>
+                            <div id="despliegue{{ despliegues.id }}" class="modal fade">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                                aria-hidden="true">&times;</button>
+                                        <div class="modal-body">
+                                            <h4>¿Esta seguro de querer
+                                                desplegar {{ despliegues.Nombre }}?</h4>
+                                            {% if despliegues.Catalogo_id_id == 1 %}
+                                                <a href="#"
+                                                   class="btn btn-danger "> Sí </a>
+                                            {% else %}
+                                                <a href="#"
+                                                   class="btn btn-danger "> Sí </a>
+                                            {% endif %}
+                                            <button class="btn btn-danger" data-dismiss="modal"
+                                                    type="button"> No
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                          <a href=#replegar{{ despliegues.id }} data-toggle="modal">
+                          <span class="text-danger glyphicon glyphicon-pause"></span>
+                          </a>
+
+                          <div id="replegar{{ despliegues.id }}" class="modal fade">
+                              <div class="modal-dialog">
+                                  <div class="modal-content">
+                                      <button type="button" class="close" data-dismiss="modal"
+                                              aria-hidden="true">&times;</button>
+                                      <div class="modal-body">
+                                          <h4>¿Esta seguro de querer
+                                              replegar {{ despliegues.Nombre }}?</h4>
+                                          {% if despliegues.Catalogo_id_id == 1 %}
+                                              <a href="#"
+                                                 class="btn btn-danger "> Sí </a>
+                                          {% else %}
+                                              <a href="#"
+                                                 class="btn btn-danger "> Sí </a>
+                                          {% endif %}
+
+                                          <button class="btn btn-danger" data-dismiss="modal"
+                                                  type="button"> No
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                            <a href="#delete{{ instancia.id  }}" data-toggle="modal">
+                                <span class="text-danger glyphicon glyphicon-trash"></span>
+                            </a>
+                            <div id="delete{{ instancia.id}}" class="modal fade">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                                aria-hidden="true">&times;</button>
+                                        <div class="modal-body">
+                                            <h4 class="">¿Esta seguro de querer borrar la instancia del servicio: {{ instancia.nombre_servicio }}?</h4>
+
+                                            <a href="/despliegue/proyecto/{{ request.session.id_proyecto_seleccionado }}/eliminarInstancia/{{ instancia.id  }}"
+                                               class="btn btn-danger "> Sí </a>
+                                            <button class="btn btn-danger" data-dismiss="modal" type="button"> No
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                    <!--
+                    acciones de despliegue y repliegue
+                     -->
+                   </div>
+                    </td>
+                {% endif %}
+                </tr>
+            {% endfor %}
+        {% else %}
+            <p><span class="glyphicon glyphicon-exclamation-sign"></span> No hay ninguna instancia.</p>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <!--  message framework-->
+    {% if messages %}
+
+        {% for message in messages %}
+        <div id="messageModal" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{message.extra_tags}}</h4>
+              </div>
+              <div class="modal-body">
+                <p class="text-warning">{{ message }}</p>
+              </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+
+    {#     page {{ page }} of {{ page.num_pages }}#}
+    {% if p %}
+        <div class="pagination">
+                  <span class="step-links">
+                      {% if p.has_previous %}
+                          <a href="?page={{ p.previous_page_number }}"
+                             class="text-danger paginate_button previous"><span
+                                  class="text-danger glyphicon glyphicon-backward"></span> Anterior</a>
+                      {% endif %}
+                      <span class="current">
+                          Página {{ p.number }} de {{ p.paginator.num_pages }}
+                      </span>
+
+                      {% if p.has_next %}
+                          <a href="?page={{ p.next_page_number }}" class="text-danger paginate_button next">Siguiente
+                              <span class="text-danger glyphicon glyphicon-forward"></span></a>
+                      {% endif %}
+                  </span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}

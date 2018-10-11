@@ -1,0 +1,213 @@
+{% extends "index.html"%}
+{% load static %}
+
+{% block content %}
+<div class="container">
+<div class="row"></div>
+<br>
+    <h2 class="text-danger text-warning" style="margin-top:1em">Administración de usuarios</h2>
+    <form class="navbar-right" role="search" method="get">{% csrf_token %}
+        {#            <div class="form-group">#}
+        <a href="/administrar/usuarios/nuevoUsuario/" class="btn btn-danger btn-sm">
+        <span class="glyphicon glyphicon-plus"></span>Crear usuario</a>
+        <input type="text" name="p" placeholder="Nombre del usuario">
+        <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+        {#            </div>#}
+    </form>
+    <!--
+    {% if e == 'no' %}
+	{#        <h5>Los usuarios que se han dado de alta: </h5>#}
+    {% else %}
+        <h5>Resultado de la búqueda</h5>
+    {% endif %}
+   -->
+
+    {% if mensaje %}
+        {#              <h4 class="text-warning">{{ mensaje }}</h4>#}
+        <div id="message" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <div class="modal-body">
+                        <h4>{{ mensaje }}</h4>
+                        <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+</br></br></br>
+    <table id="centros" class="table table-hover panel">
+        <thead>
+        <tr>
+        <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
+
+            <th>Username
+                <a href="/administrar/usuarios/1/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/usuarios/1/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Nombre
+                <a href="/administrar/usuarios/2/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/usuarios/2/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Apellidos
+                <a href="/administrar/usuarios/3/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/usuarios/3/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Estado
+                <a href="/administrar/usuarios/4/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/usuarios/4/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Administrador
+                <a href="/administrar/usuarios/6/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/usuarios/6/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Email
+                <a href="/administrar/usuarios/5/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/usuarios/5/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+
+            <th align="center">Cambio de contraseña</th>
+            <th>Editar / Borrar</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% if form %}
+        <h2 class="text-danger">Cambio de contraseña</h2>
+        <div class="panel-body">
+{#        {% if form.errors %}#}
+{#            <p class="errornote">#}
+{#                {% if form.errors.items|length == 1 %}#}
+{#                    <p>Por favor corrija el error: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% else %}#}
+{#                    <p>Por favor corrija los errores: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% endif %}#}
+{#        {% endif %}#}
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="errors">
+                    {{ error }}
+                </p>
+            {% endfor %}
+        {% endif %}
+        <div class="panel-body">
+            <form class="well" method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" value="Guardar" class="btn btn-danger">
+                <button type="button" class="btn btn-danger" onclick="location.href='/administrar/usuarios/'">Cancelar</button>
+            </form>
+        </div>
+    {% endif %}
+        {% if p %}
+            {% for u in p %}
+                <tr>
+
+                <td>{{ u.user.username }}</td>
+                    <td>{{ u.user.first_name }}</td>
+                    <td>{{ u.user.last_name}}</td>
+                    <td>{% if u.user.is_active %}<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">
+                    	<label for="usuario Habilitado">Activo</label></td>
+                    {% else %}
+                    <img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="usuario inhabilitado">Inactivo</label></td>
+                    {% endif %}
+                    <td>
+                      <!--{% if u.usu_administrador %}<img src="{% static 'images/afcloud_admin.png' %}" width="16px" height="16px">
+                        {% endif %}
+                      -->
+                        {% if u.usu_administrador  %}
+                        <img src="{% static 'images/afcloud_admin.png' %}" width="16px" height="16px">
+                        {%endif%}
+                      </td>
+
+
+                    <td>{{ u.user.email }}</td>
+                    <td align="center"><a href="/user/pass/{{ u.id }}/"><strong class="glyphicon glyphicon-lock"></strong></a></td>
+
+
+                     <td align="center">
+                         <a href="/administrar/usuarios/editarUsuario/{{ u.user.id }}/">
+                             <span class="text-danger glyphicon glyphicon-edit"></span>
+                         </a>
+                         <a href="#delete{{  u.user.id  }}" data-toggle="modal">
+                             <span class="text-danger glyphicon glyphicon-trash"></span>
+                         </a>
+                         <div id="delete{{ u.user.id }}" class="modal fade">
+                             <div class="modal-dialog">
+                                 <div class="modal-content">
+                                     <button type="button" class="close" data-dismiss="modal"
+                                             aria-hidden="true">&times;</button>
+                                     <div class="modal-body">
+                                         <h4 class="">¿Esta seguro de querer borrar al usuario {{ u.user.username  }}?</h4>
+                                         <a href="/administrar/usuarios/eliminarUsuario/{{  u.id }}"
+                                            class="btn btn-danger "> Sí </a>
+                                         <button class="btn btn-danger" data-dismiss="modal" type="button"> No
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                     </td>
+
+                </tr>
+            {% endfor %}
+        {% else %}
+            <p><span class="glyphicon glyphicon-exclamation-sign"></span> No se ha definido nigún proyecto.</p>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <!--  message framework-->
+    {% if messages %}
+
+        {% for message in messages %}
+        <div id="messageModal" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{message.extra_tags}}</h4>
+              </div>
+              <div class="modal-body">
+                <p class="text-warning">{{ message }}</p>
+              </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+
+    {#     page {{ page }} of {{ page.num_pages }}#}
+    {% if p %}
+        <div class="pagination">
+                  <span class="step-links">
+                      {% if p.has_previous %}
+                          <a href="?page={{ p.previous_page_number }}"
+                             class="text-danger paginate_button previous"><span
+                                  class="text-danger glyphicon glyphicon-backward"></span> Anterior</a>
+                      {% endif %}
+                      <span class="current">
+                          Página {{ p.number }} de {{ p.paginator.num_pages }}
+                      </span>
+
+                      {% if p.has_next %}
+                          <a href="?page={{ p.next_page_number }}" class="text-danger paginate_button next">Siguiente
+                              <span class="text-danger glyphicon glyphicon-forward"></span></a>
+                      {% endif %}
+                  </span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}

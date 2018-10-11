@@ -1,0 +1,11 @@
+#regs_per_page a{
+    /*text-decoration: none;*/
+    color:#000;
+    text-decoration: underline;
+}
+#regs_per_page a:hover{
+    text-decoration: underline;
+    color: #444;
+}
+
+/*noinspection CssUnusedSymbol,CssUnusedSymbol,CssUnusedSymbol,CssUnusedSymbol*/

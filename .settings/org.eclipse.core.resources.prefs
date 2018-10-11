@@ -1,0 +1,14 @@
+eclipse.preferences.version=1
+encoding//portal/Catalogo/forms.py=utf-8
+encoding//portal/Catalogo/views.py=utf-8
+encoding//portal/Despliegues/forms.py=utf-8
+encoding//portal/Despliegues/views.py=utf-8
+encoding//portal/Entornos/views.py=utf-8
+encoding//portal/Integrantes/forms.py=utf-8
+encoding//portal/Integrantes/views.py=utf-8
+encoding//portal/Proyectos/views.py=utf-8
+encoding//portal/Servicios/views.py=utf-8
+encoding//portal/Usuarios/forms.py=utf-8
+encoding//portal/Usuarios/views.py=utf-8
+encoding//portal/forms.py=utf-8
+encoding//portal/views.py=utf-8

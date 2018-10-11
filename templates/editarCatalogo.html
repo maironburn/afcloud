@@ -1,0 +1,52 @@
+{% extends "index.html"%}
+{% load static %}
+
+{% block content %}
+
+{% if mensaje %}
+    <div id="message" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-body">
+                    <h4>{{ mensaje }}</h4>
+                    <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+    {% if form %}
+        <h2 class="text-danger"> Edición de entrada de Catálogo</h2>
+        <div class="panel-body">
+{#        {% if form.errors %}#}
+{#            <p class="errornote">#}
+{#                {% if form.errors.items|length == 1 %}#}
+{#                    <p>Por favor corrija el error: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% else %}#}
+{#                    <p>Por favor corrija los errores: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% endif %}#}
+{#        {% endif %}#}
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="errors">
+                    {{ error }}
+                </p>
+            {% endfor %}
+        {% endif %}
+        <div class="panel-body">
+            <form class="well" method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" value="Guardar" class="btn btn-danger">
+                <button type="button" class="btn btn-danger" onclick="location.href='/catalogo/proyecto/{{id}}/'">Cancelar</button>
+            </form>
+        </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

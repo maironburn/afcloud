@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    {% load static %}
+    {% load crispy_forms_tags %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>AFCloud</title>
+
+    <!-- Bootstrap -->
+    <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-theme.css' %}">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" >
+    <link rel="stylesheet" href="{% static 'css/signin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+
+
+  </head>
+  <body>
+    <div class="container">
+        <form method="post" class="form-signin well">{% csrf_token %}
+{#            <div class="panel-heading">#}
+{#                <h3 class="form-signin-heading">Acceso a AFCloud</h3>#}
+            <h1><img src="{% static 'images/Home.jpg' %}" alt="AFCloud" style="width:100%; height: 10%"></h1>
+                {% if form.errors %}
+                    <p class="errornote text-danger">
+                        {% if form.errors.items|length == 1 %}
+                            <p>Por favor corrija el error: </p>
+                            {{ form.errors_messages }}
+                        {% else %}
+                            <p>Por favor corrija los errores: </p>
+                            {{ form.errors_messages }}
+                        {% endif %}
+                {% endif %}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <p class="errors">
+                            {{ error }}
+                        </p>
+                    {% endfor %}
+                {% endif %}
+{#            </div>#}
+            </br>
+            <div class="form-signin">
+{#                    <div class="form-group">#}
+{#                        {% crispy form %}#}
+                <table>
+                    {{ form.as_table }}
+                </table>
+{#                        {{ form|crispy }}#}
+{#                        {{ form.username.errors }}#}
+{#                        {{ form.username.label_tag }} {{ form.username }}#}
+{#                    </div>#}
+{#                    <div class="form-group">#}
+{#                        {{ form.password.errors }}#}
+{#                        {{ form.password.label_tag }} {{ form.password }}#}
+{#                    </div>#}
+                    <button class="btn btn-danger btn-group btn-block" type="submit">Acceder</button>
+                </div>
+        </form>
+    </div>
+    <footer class="footer text-right">
+        <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+    </footer>
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'js/jquery.min.js' %}" ></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+  </body>
+</html>

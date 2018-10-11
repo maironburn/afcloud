@@ -1,0 +1,180 @@
+{% extends "index.html"%}
+{% load static %}
+
+{% block content %}
+<div class="container">
+<div class="row"></div>
+<br>
+    <h2 class="text-danger text-warning" style="margin-top:1em">Administración de proyectos</h2>
+    <form class="navbar-right" role="search" method="get">{% csrf_token %}
+        {#            <div class="form-group">#}
+        <a href="/administrar/proyecto/nuevoProyecto" class="btn btn-danger btn-sm nuevo_proyecto">
+        <span class="glyphicon glyphicon-plus"></span>Crear proyecto</a>
+         <input type="text" name="p" id="buscar" placeholder="Nombre del proyecto">
+
+
+        <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+        {#            </div>#}
+    </form>
+    {% if e == 'no' %}
+{#        <h5>Los centros que se han dado de alta: </h5>#}
+    {% else %}
+        <h5>Resultado de la búqueda</h5>
+    {% endif %}
+
+    {% if mensaje %}
+        {#              <h4 class="text-warning">{{ mensaje }}</h4>#}
+        <div id="message" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <div class="modal-body">
+                        <h4>{{ mensaje }}</h4>
+                        <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+</br></br></br>
+    <table id="centros" class="table table-hover panel">
+        <thead>
+        <tr>
+        <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
+
+            <th>Nombre
+                <a href="/administrar/proyectos/1/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/proyectos/1/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Integrantes
+                <a href="/administrar/proyectos/2/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/proyectos/2/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Entornos
+                <a href="/administrar/proyectos/3/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/proyectos/3/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Estado
+                <a href="/administrar/proyectos/4/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/proyectos/4/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+            <th>Editar / Borrar</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% if p %}
+            {% for proyecto in p %}
+                <tr>
+
+                    <td><a href="#" data-toggle="tooltip" title="{{ proyecto.pro_descripcion }} ">{{ proyecto.pro_nombre }}</a>
+                    </td>
+                    <td>
+                      {% if  proyecto.num_integrantes %}
+                      <a href="#" data-toggle="tooltip" title="{{ proyecto.integrantes_str}} ">{{ proyecto.num_integrantes }}</a>
+                     {%else%}
+                     0
+                     {%endif%}
+                    </td><!-- aqui los integrantes -->
+                    <td>
+                        {% if  proyecto.num_entornos  %}
+                      <a href="#" data-toggle="tooltip" title="{{ proyecto.entornos_str }} ">{{ proyecto.num_entornos }}</a>
+                       {%else%}
+                       0
+                       {% endif %}
+                    </td><!-- aqui el num de entornos -->
+                    <td>
+                    {% if proyecto.pro_activo %}<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">
+                    	<label for="proyecto activo">Activo</label></td>
+                    {% else %}
+                    <img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="proyecto inactivo">Inactivo</label></td>
+                    {% endif %}
+                    </td>
+                    <td>
+                       <div id="container_icons" style="position: relative;left: 2em;">
+                        <a href="/administrar/proyecto/editarProyecto/{{ proyecto.id }}/">
+                            <span class="text-danger glyphicon glyphicon-edit"></span>
+                        </a>
+                        <a href="#delete{{ proyecto.id  }}" data-toggle="modal">
+                            <span class="text-danger glyphicon glyphicon-trash"></span>
+                        </a>
+                        <div id="delete{{ proyecto.id }}" class="modal fade">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <button type="button" class="close" data-dismiss="modal"
+                                            aria-hidden="true">&times;</button>
+                                    <div class="modal-body">
+                                        <h4 class="">¿Esta seguro de querer borrar {{ proyecto.pro_nombre  }}?</h4>
+                                        <a href="/administrar/proyecto/eliminarProyecto/{{ proyecto.id }}"
+                                           class="btn btn-danger "> Sí </a>
+                                        <button class="btn btn-danger" data-dismiss="modal" type="button"> No
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                  </div>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <p><span class="glyphicon glyphicon-exclamation-sign"></span> No se ha definido nigún proyecto.</p>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <!--  message framework-->
+    {% if messages %}
+
+        {% for message in messages %}
+        <div id="messageModal" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{message.extra_tags}}</h4>
+              </div>
+              <div class="modal-body">
+                <p class="text-warning">{{ message }}</p>
+              </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+    {#     page {{ page }} of {{ page.num_pages }}#}
+    {% if p %}
+        <div class="pagination">
+                  <span class="step-links">
+                      {% if p.has_previous %}
+                          <a href="?page={{ p.previous_page_number }}"
+                             class="text-danger paginate_button previous"><span
+                                  class="text-danger glyphicon glyphicon-backward"></span> Anterior</a>
+                      {% endif %}
+                      <span class="current">
+                          Página {{ p.number }} de {{ p.paginator.num_pages }}
+                      </span>
+
+                      {% if p.has_next %}
+                          <a href="?page={{ p.next_page_number }}" class="text-danger paginate_button next">Siguiente
+                              <span class="text-danger glyphicon glyphicon-forward"></span></a>
+                      {% endif %}
+                  </span>
+        </div>
+    {% endif %}
+</div>
+
+ <div id="jquery_dialog" title="Basic dialog">
+</div>
+
+{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}

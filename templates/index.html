@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    {% load static %}
+    {#    {% load crispy_forms_tags %}#}
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>AFCloud</title>
+
+    <!-- Bootstrap -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-theme.css' %}">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/signin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/comun.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="{% static 'js/jquery.min.js' %}"></script>
+	<script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <!-- for dialog  -->
+  	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+ 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+ 	<script src="{% static 'js/common.js' %}"></script>
+</head>
+<body>
+
+
+
+<script>
+
+    $(document).on('click', '.nav-list li', function() {
+       $(".nav-list li").removeClass("active");
+       $(this).addClass("active");
+   });
+   $(document).ready(function(){
+       $('[data-toggle="tooltip"]').tooltip();
+       jQuery.noConflict();
+
+      $('.no_proyect').click(function(){
+          $('#noProyectModel').modal('show');  // show modal
+        setTimeout(function() {
+            $('#noProyectModel').modal('hide');
+        }, 3000);
+
+
+      });
+
+      if ($('#messageModal').length){
+         jQuery.noConflict();
+        $('#messageModal').modal('show');
+
+
+      }
+   });
+
+
+</script>
+
+
+{% block extra_js %}
+{% endblock %}
+
+  <nav class="navbar navbar-fixed-top navbar-inverse">
+    <div class="container-fluid">
+    <div class="navbar-header">
+        <a class="navbar-btn active" href="/index/">
+            <img src="{% static 'images/Logotipo-home-transp.png' %}" width="100px" height="60px">
+        </a>
+    </div>
+
+
+<ul class="nav navbar-nav">
+  <!--dropdown de proyectos-->
+ <li class="dropdown" style="margin-top:0.3em">
+   <a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true"
+     aria-expanded="false"><span class="glyphicon "></span>
+    {%  if request.session.proyectos  %}
+    	 {%if request.session.proyecto_seleccionado %}
+    	 	<strong> {{request.session.proyecto_seleccionado}} <span class="caret"></span></strong>
+         {%else %}
+            <strong> Seleccione proyecto </strong>
+    	 {% endif %}
+    {% else %}
+    	<strong>Ningún proyecto asignado</strong>
+    {% endif%}
+  </a>
+
+  	{% if request.session.proyectos %}
+       <ul class="dropdown-menu">
+  		{% for p in request.session.proyectos %}
+  			{% for x,y in p.items %}
+ 				<li>	<a  href="/index/proyecto/{{ y }}">{{ x }}</a></li>
+  			{% endfor %}
+  		{% endfor %}
+     </ul>
+
+  	{% endif %}
+  </li>
+</ul>
+<!--
+<span style="color:olive"><strong>{{ afcloud_admin }}</strong></span>
+ -->
+ <span style="color:olive"><strong>{{ perfil }}</strong></span>
+
+ {% if  request.session.numeric_profile > 0 or request.session.afcloud_admin %}
+    {%if request.session.id_proyecto_seleccionado %}
+    <ul class="nav navbar-nav " style="margin-left: 1em;">
+      <li><a href="/despliegue/proyecto/{{ request.session.id_proyecto_seleccionado }}"> <img src="{% static 'images/cube.png' %}" width="32px" height="32px">Despliegues</a></li>
+    </ul>
+    {% endif %}
+  {%endif%}
+ {% if  request.session.numeric_profile > 2 or request.session.afcloud_admin  %}
+       <ul class="nav navbar-nav ">
+       {%if request.session.id_proyecto_seleccionado %}
+          <!-- Opciones solo visibles si hay un proyecto seleccionado-->
+          <li><a href="/catalogo/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/catalog.svg'  %}" width="32px" height="32px">Cat&aacute;logo</a></li>
+          <li><a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/members.svg'  %}" width="32px" height="32px"> Integrantes</a></li>
+        {% endif %}
+      </ul>
+ {% endif %}
+
+ <ul class="nav navbar-nav navbar-right">
+ <li class="dropdown">
+   <a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true"
+      aria-expanded="false"><span class="glyphicon "></span>
+       <strong> <img src="{% static 'images/user_logged.svg'  %}" width="32px" height="32px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
+       <span class="caret">
+     </span>
+   </a>
+
+   <ul class="dropdown-menu ">
+       <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/editar_usuario.png'  %}" width="32px" height="32px">Modificar perfil</a></li>
+     <li><a href="/logout/"><span class="glyphicon "></span> <img src="{% static 'images/logout.svg'  %}" width="32px" height="32px"> Cerrar Sesión</a></li>
+  </ul>
+</li>
+</ul>
+
+
+{% if request.session.afcloud_admin %}
+    <ul class="nav navbar-nav  navbar-right">
+    <li class="dropdown"><a class="dropdown-toggle" href="/gra/despliegues/" data-toggle="dropdown" role="button"
+                                aria-haspopup="true" aria-expanded="false"><img src="{% static 'images/administrar.svg' %}" width="32px" height="32px">Administrar<span
+                class="caret"></span></a>
+            <ul class="dropdown-menu ">
+                <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="32px" height="32px">Usuarios</a></li>
+                <li><a href="{% url 'admin_projects' %}"><img src="{% static 'images/adm_proyectos.svg' %}" width="32px" height="32px">Proyectos</a></li>
+                <li><a href="{% url 'admin_services' %}"><img src="{% static 'images/adm_servicios.svg' %}" width="32px" height="32px">Servicios</a></li>
+                <li><a href="{% url 'admin_env' %}"><img src="{% static 'images/adm_entornos.svg' %}" width="32px" height="32px">Entornos</a></li>
+            </ul>
+        </li>
+    </ul>
+{% endif %}
+
+
+</nav>
+
+{% block modal_message%}
+<!-- Modal -->
+<!-- Modal Contents -->
+<div id="noProyectModel" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"
+        aria-hidden="true">×</button>
+        <h4 class="modal-title">Seleccione proyecto</h4>
+      </div>
+      <div class="modal-body">
+        <p class="text-warning">Debe seleccionar un proyecto para ingresar en esta sección. {{name}}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock%}
+
+{% if messages %}
+
+    {% for message in messages %}
+    <div id="messageModal" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">{{message.extra_tags}}</h4>
+          </div>
+          <div class="modal-body">
+            <p class="text-warning">{{ message }}</p>
+          </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+{% block content %}{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}
+</body>
+</html>

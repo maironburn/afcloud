@@ -1,0 +1,61 @@
+{% extends "base.html"%}
+{% load static %}
+
+{% block content %}
+<div class="container">
+      <div class="row">
+        
+      </div>
+
+
+    <form class="form-group" method="post"> {% csrf_token %}
+        <div class="panel-body">
+            {% if value == 'edit' %}
+                <strong><h3 class="text-danger">Editar centro</h3></strong>
+            {% else %}
+                <strong><h3 class="text-danger">Nuevo centro</h3></strong>
+            {% endif %}
+            <div class="panel-body">
+                {% if form.errors %}
+                    <p class="errornote">
+                        {% if form.errors.items|length == 1 %}
+                            <p>Por favor corrija el error: </p>
+                            {{ form.errors_messages }}
+                        {% else %}
+                            <p>Por favor corrija los errores: </p>
+                            {{ form.errors_messages }}
+                        {% endif %}
+                {% endif %}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <p class="errors">
+                            {{ error }}
+                        </p>
+                    {% endfor %}
+                {% endif %}
+                <div class="well-sm">
+                    <div class="well">
+                        <table>
+                            {{ form.as_table }}
+                        </table>
+                        </br>
+                        {#                  {% crispy form %}#}
+                        {#                  {{ form.as_p }}#}
+                        <button type="submit" class="btn btn-danger">Guardar</button>
+                        <button type="button" class="btn btn-danger" onclick="location.href='/Centros/'">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>
