@@ -39,25 +39,14 @@
    $(document).ready(function(){
        $('[data-toggle="tooltip"]').tooltip();
        jQuery.noConflict();
-
-      $('.no_proyect').click(function(){
-          $('#noProyectModel').modal('show');  // show modal
-        setTimeout(function() {
-            $('#noProyectModel').modal('hide');
-        }, 3000);
-
-
       });
 
       if ($('#messageModal').length){
          jQuery.noConflict();
         $('#messageModal').modal('show');
 
-
       }
    });
-
-
 </script>
 
 
@@ -68,7 +57,7 @@
     <div class="container-fluid">
     <div class="navbar-header">
         <a class="navbar-btn active" href="/index/">
-            <img src="{% static 'images/Logotipo-home-transp.png' %}" width="100px" height="60px">
+            <img src="{% static 'images/afcloud.png' %}" width="100px" height="60px">
         </a>
     </div>
 
@@ -101,9 +90,7 @@
   	{% endif %}
   </li>
 </ul>
-<!--
-<span style="color:olive"><strong>{{ afcloud_admin }}</strong></span>
- -->
+
  <span style="color:olive"><strong>{{ perfil }}</strong></span>
 
  {% if  request.session.numeric_profile > 0 or request.session.afcloud_admin %}
@@ -143,7 +130,7 @@
 {% if request.session.afcloud_admin %}
     <ul class="nav navbar-nav  navbar-right">
     <li class="dropdown"><a class="dropdown-toggle" href="/gra/despliegues/" data-toggle="dropdown" role="button"
-                                aria-haspopup="true" aria-expanded="false"><img src="{% static 'images/administrar.svg' %}" width="32px" height="32px">Administrar<span
+                                aria-haspopup="true" aria-expanded="false"><img src="{% static 'images/administrar.png' %}" width="32px" height="32px">Administrar<span
                 class="caret"></span></a>
             <ul class="dropdown-menu ">
                 <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="32px" height="32px">Usuarios</a></li>
@@ -159,22 +146,7 @@
 </nav>
 
 {% block modal_message%}
-<!-- Modal -->
-<!-- Modal Contents -->
-<div id="noProyectModel" class="modal fade">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"
-        aria-hidden="true">×</button>
-        <h4 class="modal-title">Seleccione proyecto</h4>
-      </div>
-      <div class="modal-body">
-        <p class="text-warning">Debe seleccionar un proyecto para ingresar en esta sección. {{name}}</p>
-      </div>
-    </div>
-  </div>
-</div>
+
 {% endblock%}
 
 {% if messages %}

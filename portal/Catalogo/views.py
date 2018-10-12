@@ -154,8 +154,13 @@ def editarCatalogo(request,id_proyecto, id_servicio,template_name='editarCatalog
 
             messages.success(request,  'Catálogo editado con éxito', extra_tags='Edición de catálogos')
             return HttpResponseRedirect('/catalogo/proyecto/%s' % (id_proyecto))
+        
+    svc=AfServicio.objects.filter(ser_activo=True)    
+    dict_svc={}
+    for s in svc:
+        dict_svc.update({s.id : s.ser_tarifa})
 
-    return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id})
+    return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id,'dict_svc': dict_svc})
 
 @login_required
 @group_required('Gestor',)

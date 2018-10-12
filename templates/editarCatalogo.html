@@ -1,8 +1,25 @@
 {% extends "index.html"%}
 {% load static %}
-
+{% load crispy_forms_tags %}
 {% block content %}
+<script>
+$(document).ready(function(){
 
+ $('#id_ser').on( "change", function(){
+
+   var id_serv=$('#id_ser').find(":selected").val();
+
+   if (id_serv!=""){
+     tarifa=$('.lca_tarifa[id_serv="'+ id_serv + '"]').attr('q_tarifa');
+     tarifa=tarifa.replace(",", ".")
+     $('[name=lca_tarifa]').val(tarifa);
+   }
+ });
+
+
+});
+
+</script>
 {% if mensaje %}
     <div id="message" class="modal fade">
         <div class="modal-dialog">
@@ -19,7 +36,7 @@
 
 
     {% if form %}
-        <h2 class="text-danger"> Edición de entrada de Catálogo</h2>
+
         <div class="panel-body">
 {#        {% if form.errors %}#}
 {#            <p class="errornote">#}
@@ -40,13 +57,24 @@
         {% endif %}
         <div class="panel-body">
             <form class="well" method="POST">
-                {% csrf_token %}
-                {{ form.as_p }}
+              {% csrf_token %}
+              <div class="row">
+              <div class="col-md-3">
+                <h2 class="text-danger"> Edición de entrada de Catálogo</h2>
+                <hr/>
+                <div class="well">
+                  {% crispy form %}
+                </div>
                 <input type="submit" value="Guardar" class="btn btn-danger">
                 <button type="button" class="btn btn-danger" onclick="location.href='/catalogo/proyecto/{{id}}/'">Cancelar</button>
             </form>
         </div>
     {% endif %}
     </div>
+    {%if dict_svc %}
+      {% for k,v in  dict_svc.items %}
+      <input type="hidden" class="lca_tarifa" id_serv="{{ k }}" q_tarifa="{{v}}"/>
+      {%endfor%}
+    {% endif %}
 </div>
 {% endblock %}
