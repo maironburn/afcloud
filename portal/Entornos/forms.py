@@ -12,7 +12,7 @@ class EntornoForm(forms.ModelForm):
     #ent_username   = forms.CharField(max_length=50,label='Username',widget = forms.TextInput,required = False)
     #ent_password = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=False)
     ent_activo= forms.BooleanField(label=_("Entorno activo"), initial=True,required=False)
-    ent_config_file = forms.FileField()
+    ent_config_file = forms.FileField(label='Entorno de Kubernates')
     connection=False
     
     error_messages = {

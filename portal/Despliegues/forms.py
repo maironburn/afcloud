@@ -36,9 +36,9 @@ class createMyModelChoiceFieldEntorno(forms.ModelChoiceField):
 class InstanciaForm(forms.Form):
     
     exclude=None
-    service   = createMyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)")
+    service   = createMyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)",required=True)
     
-    entorno = createMyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)")
+    entorno = createMyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)",required=True)
     '''
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),

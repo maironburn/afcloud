@@ -11,4 +11,5 @@ encoding//portal/Servicios/views.py=utf-8
 encoding//portal/Usuarios/forms.py=utf-8
 encoding//portal/Usuarios/views.py=utf-8
 encoding//portal/forms.py=utf-8
+encoding//portal/test_kube/views.py=utf-8
 encoding//portal/views.py=utf-8

@@ -8,10 +8,12 @@ from django.contrib.auth.models import User
 from django.contrib.admin import widgets
 from django.contrib.auth import password_validation
 from django.template.defaultfilters import default
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout,Field
 
 
 class UserRawForm(forms.ModelForm):
-    
+
     username   = forms.CharField(max_length=100,label='Usuario',required=True)
     password = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=True)
     password2 = forms.CharField(label=_("Repetir contraseña"), widget=forms.PasswordInput,required=True)
@@ -19,23 +21,23 @@ class UserRawForm(forms.ModelForm):
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),
     }
-    
+
     class Meta:
         model=User
         fields= ('username','first_name', 'last_name','email')
-    
-    
+
+
     def __init__(self, *args, **kwargs):
         super(UserRawForm, self).__init__(*args, **kwargs)
-        
-        
+
+
         instance = getattr(self, 'instance', None)
         if instance and instance.pk:
             afusuario=AfUsuario.objects.get(user=instance)
             if afusuario.usu_administrador==True:
                 self.fields['usu_administrador'].widget.attrs['checked'] = True
             self.fields['username'].widget.attrs['readonly'] = True
-         
+
     def clean_password2(self):
         password =  self.cleaned_data.get('password')
         password2 = self.cleaned_data.get('password2')
@@ -44,7 +46,7 @@ class UserRawForm(forms.ModelForm):
                 raise forms.ValidationError(self.error_messages['password_mismatch'],
                                             code='password_mismatch', )
         #password_validation.validate_password(password2, self.user)
-        return password2    
+        return password2
 
 
 class SetPasswordForm(forms.Form):
@@ -56,12 +58,12 @@ class SetPasswordForm(forms.Form):
         'password_mismatch': _("Las contraseñas no son las mismas."),
     }
     new_password1 = forms.CharField(label=_("Nueva contraseña"),
-                                    widget=forms.PasswordInput,
+                                    widget=forms.PasswordInput,required=True
                                     )
     # help_text='La contraseña debe tener 8 caracteres')
     # help_text=password_validation.password_validators_help_text_html())
     new_password2 = forms.CharField(label=_("Repetir Nueva contraseña "),
-                                    widget=forms.PasswordInput)
+                                    widget=forms.PasswordInput,required=True)
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -83,11 +85,11 @@ class SetPasswordForm(forms.Form):
         self.user.set_password(password)
         if commit:
             self.user.save()
-        return self.user     
-    
-    
+        return self.user
+
+
 class editUserRawForm(forms.ModelForm):
-    
+
     username   = forms.CharField(max_length=100,label='Usuario',required=True)
     password = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=False)
     password2 = forms.CharField(label=_("Repetir contraseña"), widget=forms.PasswordInput,required=False)
@@ -95,12 +97,12 @@ class editUserRawForm(forms.ModelForm):
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),
     }
-    
+
     class Meta:
         model=User
         fields= ('username','first_name', 'last_name','email')
-    
-    
+
+
     def __init__(self, *args, **kwargs):
         super(editUserRawForm, self).__init__(*args, **kwargs)
         self.fields['usu_administrador'].widget = forms.HiddenInput()
@@ -110,7 +112,7 @@ class editUserRawForm(forms.ModelForm):
             if afusuario.usu_administrador==True:
                 self.fields['usu_administrador'].widget.attrs['checked'] = True
             self.fields['username'].widget.attrs['readonly'] = True
-         
+
     def clean_password2(self):
         password =  self.cleaned_data.get('password')
         password2 = self.cleaned_data.get('password2')
@@ -119,33 +121,33 @@ class editUserRawForm(forms.ModelForm):
                 raise forms.ValidationError(self.error_messages['password_mismatch'],
                                             code='password_mismatch', )
         #password_validation.validate_password(password2, self.user)
-        return password2    
-    
- 
-    
+        return password2
+
+
+
 class userEditProfileForm(forms.ModelForm):
-    
+
     username   = forms.CharField(max_length=100,label='Usuario',required=True)
     password = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=False)
     password2 = forms.CharField(label=_("Repetir contraseña"), widget=forms.PasswordInput,required=False)
-    
+
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),
     }
-    
+
     class Meta:
         model=User
         fields= ('username','first_name', 'last_name','email')
-    
-    
+
+
     def __init__(self, *args, **kwargs):
         super(userEditProfileForm, self).__init__(*args, **kwargs)
-    
+
         instance = getattr(self, 'instance', None)
         if instance and instance.pk:
             afusuario=AfUsuario.objects.get(user=instance)
             self.fields['username'].widget.attrs['readonly'] = True
-         
+
     def clean_password2(self):
         password =  self.cleaned_data.get('password')
         password2 = self.cleaned_data.get('password2')
@@ -154,5 +156,4 @@ class userEditProfileForm(forms.ModelForm):
                 raise forms.ValidationError(self.error_messages['password_mismatch'],
                                             code='password_mismatch', )
         #password_validation.validate_password(password2, self.user)
-        return password2                  
-                  
+        return password2

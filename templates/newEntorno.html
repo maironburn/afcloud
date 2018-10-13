@@ -41,7 +41,7 @@
             {% endfor %}
         {% endif %}
         <div class="panel-body">
-            <form class="well" method="POST">
+            <form class="well" enctype="multipart/form-data" method="POST" >
               {% csrf_token %}
               <div class="row">
               <div class="col-md-3">

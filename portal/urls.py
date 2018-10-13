@@ -10,6 +10,7 @@ from portal.Servicios import views as servicios_views
 from portal.Integrantes import views as integrantes_views
 from portal.Catalogo import views as catalogo_views
 from portal.Despliegues import views as despliegues_views
+from portal.test_kube import views as kube_views
 
 urlpatterns = [
      # USUARIOS
@@ -76,10 +77,11 @@ urlpatterns = [
     #url(r'^integrantes/proyecto/(?P<proyecto>\d+)/(?P<orden>\d+)/(?P<ascendente>\d+)/$', integrantes_views.integrantesIndexOrdered, name='Administrar entornos'),
     url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/crearInstancia/$', despliegues_views.nuevoDespliegue, name='nuevaInstancia'),
     #url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/editarInstancia/(?P<id_instancia>\d+)/$', despliegues_views.editarDespliegue, name='editarInstancia'),
-    url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/eliminarInstancia/(?P<id_instancia>\d+)/$', despliegues_views.eliminarDespliegue, name='borrarrInstancia')
+    url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/eliminarInstancia/(?P<id_instancia>\d+)/$', despliegues_views.eliminarDespliegue, name='borrarrInstancia'),
 
-
-
+    ##################################################
+    # test_kube
+    url(r'^administrar/chikito/$', kube_views.administrarChikito, name='admin_env'),
      #url(r'^administrar/proyectos/(?P<orden>\d+)/(?P<ascendente>\d+)/$', project_views.administrarProyectosOrdered, name='administrarProyectos'),
 
 ]

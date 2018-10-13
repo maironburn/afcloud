@@ -48,7 +48,7 @@ class AfAuditoria(models.Model):
     #id               = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
     aud_entidad_id   = models.IntegerField()
     aud_entidad_tipo = models.CharField(max_length=100)
-    usu_username     = models.ForeignKey(User, on_delete=models.CASCADE)
+    usu_username     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='afauditorias')
     aud_detalle_pre  = models.CharField(max_length=250, blank=True, null=True)
     aud_detalle_pos  = models.CharField(max_length=250, blank=True, null=True)
 
@@ -117,13 +117,11 @@ class AfEntorno(models.Model):
 
     class Meta:
         managed = True
-        #db_table = 'AF_ENTORNO'
         db_table = 'af_entorno'
 
 
 class AfProyecto(models.Model):
-    #pro_id = models.AutoField(primary_key=True)
-    #id               = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
+
     pro_nombre       = models.CharField(max_length=100,verbose_name='Nombre',unique=True)
     pro_descripcion  = models.CharField(max_length=250,verbose_name='Descripción', blank=True, null=True)
     pro_activo       = models.BooleanField(default=1, verbose_name='Activo')
@@ -185,8 +183,7 @@ class AfProyecto(models.Model):
 
 
 class AfRelEntPro(models.Model):
-    #rep_id = models.AutoField(primary_key=True)
-    #id           = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
+
     ent          = models.ForeignKey(AfEntorno, on_delete=models.CASCADE)
     pro          = models.ForeignKey(AfProyecto, on_delete=models.CASCADE)
     rep_activo   = models.BooleanField(default=1, verbose_name='Activo')
@@ -208,8 +205,7 @@ class AfRelEntPro(models.Model):
 
 
 class AfLineaCatalogo(models.Model):
-    #lca_id = models.AutoField(primary_key=True)
-    #id                  = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
+
     pro                 = models.ForeignKey(AfProyecto, on_delete=models.CASCADE)
     ser                 = models.OneToOneField(AfServicio, on_delete=models.CASCADE)
     lca_tarifa          = models.FloatField(blank=True, null=True)
@@ -219,16 +215,13 @@ class AfLineaCatalogo(models.Model):
     def __str__(self):
         return '%s %s' % (self.pro.pro_nombre, self.ser.ser_nombre)
 
-
     class Meta:
         managed = True
-
         db_table = 'af_linea_catalogo'
         db_tablespace = 'af_servicio', 'af_proyecto'
 
 class AfInstancia(models.Model):
-    #ins_id = models.AutoField(primary_key=True)
-    #id           = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
+
     lca          = models.ForeignKey(AfLineaCatalogo,  on_delete=models.CASCADE)
     rep          = models.ForeignKey(AfRelEntPro,  on_delete=models.CASCADE)
     ins_kubeid   = models.CharField(max_length=100)
@@ -236,20 +229,18 @@ class AfInstancia(models.Model):
     ins_activo   = models.BooleanField(default=1, verbose_name='Activo')
 
     def __str__(self):
-        return 'lc_id:%s %s %s' % (self.lca.id, self.lca.ser.ser_nombre, self.rep.ent.ent_nombre)
+        return 'lc_id: %s %s %s' % (self.lca.id, self.lca.ser.ser_nombre, self.rep.ent.ent_nombre)
 
     class Meta:
         managed = True
-        #db_table = 'AF_INSTANCIA'
         db_table = 'af_instancia'
         db_tablespace = 'af_linea_catalogo'
 
 
 
 class AfCiclo(models.Model):
-    #cic_id = models.AutoField(primary_key=True)
-    #id               = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
-    ins              = models.ForeignKey(AfInstancia, default='', on_delete=models.CASCADE)
+
+    ins              = models.ForeignKey(AfInstancia, default='', on_delete=models.CASCADE, related_name='afciclos')
     cic_fecha_inicio = models.DateTimeField(default=datetime.now, blank=True)
     cic_fecha_fin    = models.DateTimeField(default=datetime.now, blank=True)
 
@@ -264,8 +255,7 @@ class AfCiclo(models.Model):
 
 
 class AfTipoPerfil(models.Model):
-    #tpe_id = models.AutoField(primary_key=True)
-    #id              = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
+
     tpe_nombre      = models.CharField(max_length=100)
     tpe_descripcion = models.CharField(max_length=250, blank=True, null=True)
 
@@ -274,14 +264,12 @@ class AfTipoPerfil(models.Model):
 
     class Meta:
         managed = True
-        #db_table = 'AF_TIPO_PERFIL'
         db_table = 'af_tipo_perfil'
 
 
 class AfPerfil(models.Model):
+
     variable_interna=0
-    #per_id = models.AutoField(primary_key=True)
-    #id  = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
     usu = models.ForeignKey(AfUsuario,  on_delete=models.CASCADE)
     pro = models.ForeignKey(AfProyecto, on_delete=models.CASCADE)
     tpe = models.ForeignKey(AfTipoPerfil,  on_delete=models.CASCADE)
@@ -294,14 +282,9 @@ class AfPerfil(models.Model):
 
     def get_variable_interna(self):
         return self.variable_interna
-    '''
-    def __str__(self):
-        return self.tpe_nombre.encode('utf-8', 'ignore')
 
-    '''
 
     class Meta:
         managed = True
-        #db_table = 'AF_PERFIL'
         db_table = 'af_perfil'
         db_tablespace = 'af_usuario', 'af_proyecto', 'af_tipo_perfil'
