@@ -23,7 +23,7 @@ class Kuber(object):
         if fichero:
             self.config_file=fichero
             self.checkConfigFile(self.config_file)
-            if not self.v1 or self.checkConnection():
+            if  self.v1 is None and self.checkConnection():
                 raise KuberConnectionFail("Error en la conexion con Kubernates")
             
 
