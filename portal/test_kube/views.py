@@ -51,11 +51,9 @@ def administrarChikito(request, template_name='test_kube.html', extra_context=No
                 form.setConOkStatus()
             except KuberConnectionFail:
                 pass
-
-        if form.is_valid():
-            AfEntorno = form.save(commit=False)
             
-            AfEntorno.save()
+        if form.is_valid():
+
             messages.success(request,  'Entorno creado con éxito', extra_tags='Creación de entornos')
             return HttpResponseRedirect('/administrar/entornos')
         else:
