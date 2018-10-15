@@ -5,8 +5,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import BaseUserManager
 from datetime import datetime
+from afcloud.settings import MEDIA_ROOT
+from django.core.files.storage import FileSystemStorage
 
 
+fs = FileSystemStorage(location=MEDIA_ROOT)
 
 class AfUsuario(models.Model):
 
@@ -89,11 +92,14 @@ class AfEntorno(models.Model):
     ent_username    = models.CharField(max_length=50, verbose_name="Username", blank=True, null=True)
     ent_password    = models.CharField(max_length=250, blank=True, verbose_name="Password", null=True)
     ent_activo      = models.BooleanField(default=1, verbose_name='Activo')
-    ent_config_file = models.FileField( blank=True,verbose_name="Fichero de entorno")
+    ent_config_file = models.FileField( blank=True,verbose_name="Fichero de entorno",storage=fs)
 
     num_proyectos   = 0
     proyectos_list =[]
     proyectos_list_str=''
+
+    def setConfigfile(self,fichero):
+        self.ent_config_file=fichero
 
     def set_num_proyectos(self, n):
         self.num_proyectos=n

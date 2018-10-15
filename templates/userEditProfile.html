@@ -1,6 +1,6 @@
 {% extends "index.html"%}
 {% load static %}
-
+{% load crispy_forms_tags %}
 {% block content %}
 
 {% if mensaje %}
@@ -40,8 +40,14 @@
         {% endif %}
         <div class="panel-body">
             <form class="well" method="POST">
-                {% csrf_token %}
-                {{ form.as_p }}
+              {% csrf_token %}
+              <div class="row">
+              <div class="col-md-3">
+              <h2 class="text-danger">Nuevo entorno</h2>
+                <hr/>
+                <div class="well">
+                  {% crispy form %}
+                </div>
                 <input type="submit" value="Guardar" class="btn btn-danger">
                 <button type="button" class="btn btn-danger" onclick="location.href='/index'">Cancelar</button>
             </form>

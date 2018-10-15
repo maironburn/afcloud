@@ -13,6 +13,8 @@ from portal.Utils.aux_meth import *
 from portal.Utils.logger import *
 from django.contrib import messages
 from portal.Kubernetes.Kuber import KuberConnectionFail
+from django.core.files import File
+
 
 logger=getLogger()
 
@@ -119,6 +121,7 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
 
     value = 'nuevo'
     test_env=False
+    kuber = None
     
     logger.debug("*AFCLOUD*: %s, Meth: %s, urlConf: %s" % (__name__, request.method, request.path))
     
@@ -134,9 +137,16 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
                 pass
 
         if form.is_valid():
-            AfEntorno = form.save(commit=False)
             
-            AfEntorno.save()
+            entorno = form.save(commit=False)
+            entorno.setConfigfile((MEDIA_ROOT+ '%s') %(fichero_config))
+           
+            local_file = open((MEDIA_ROOT+ '%s') %(fichero_config))
+            djangofile= File(local_file)
+            entorno.ent_config_file.save(fichero_config,djangofile )
+            entorno.save()
+            local_file.close()
+            
             messages.success(request,  'Entorno creado con éxito', extra_tags='Creación de entornos')
             return HttpResponseRedirect('/administrar/entornos')
         else:

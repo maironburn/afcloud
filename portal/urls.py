@@ -81,7 +81,7 @@ urlpatterns = [
 
     ##################################################
     # test_kube
-    url(r'^administrar/chikito/$', kube_views.administrarChikito, name='admin_env'),
+    url(r'^administrar/test_kube/$', kube_views.test_kube, name='test_kube'),
      #url(r'^administrar/proyectos/(?P<orden>\d+)/(?P<ascendente>\d+)/$', project_views.administrarProyectosOrdered, name='administrarProyectos'),
 
 ]

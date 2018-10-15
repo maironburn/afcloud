@@ -21,11 +21,11 @@ class EntornoTestForm(forms.Form):
     def is_valid(self):
         valid = super(EntornoTestForm, self).is_valid()
         
-        '''validacion adicional'''
+        '''validacion adicional
         if valid:
             if self.connection:
                 return True
-        
-        return False
+        '''
+        return valid and self.connection
         
         

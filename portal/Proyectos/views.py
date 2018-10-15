@@ -15,6 +15,9 @@ from django.db import IntegrityError
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
+from portal.Kubernetes.Kuber import Kuber
+from afcloud import settings
+
 
 @login_required
 @group_required('af_cloud_admin',)
@@ -176,7 +179,19 @@ def nuevoProyecto(request,template_name='newProject.html'):
             activo = form.cleaned_data['pro_activo']
 
             form.saveProyect('new')
+            entornos=form.get_entornos()
+            if len(entornos):
+                for e in entornos:
+                    config_file= ('%s') % (e.ent_config_file.path)
+                    kclient=Kuber(config_file)
+                    kclient.createNameSpace(nombre)
+                    
+                
+            #skuber.createNameSpace(nombre))
             messages.success(request,  'Proyecto creado con éxito', extra_tags='Creación de proyecto')
+            
+            col=getProyectos(request.user)
+            request.session['proyectos'] = col['proyectos']
             return HttpResponseRedirect('/administrar/proyectos')
         else:
             return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
@@ -226,6 +241,13 @@ def borrarProyecto(request, id):
 
     try:
         proyecto.delete()
+        messages.success(request,  'Proyecto borrado con éxito', extra_tags='Eliminación de proyecto')
+        if not AfProyecto.objects.count():
+            #fuerza la actualizacion del dropdown de la proyectos
+            request.session['proyecto_seleccionado'] = False
+            request.session['id_proyecto_seleccionado']=False
+            return HttpResponseRedirect('/startpage')
+        
     except IntegrityError as e:
 
         mensaje='No se puede eliminar este entorno : '
@@ -247,5 +269,5 @@ def borrarProyecto(request, id):
         context = {'p': c, 'e': e, 'mensaje': mensaje}
         return TemplateResponse(request, 'proyectosIndex.html', context)
 
-    messages.success(request,  'Proyecto borrado con éxito', extra_tags='Eliminación de proyecto')
+    
     return HttpResponseRedirect('/administrar/proyectos')

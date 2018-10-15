@@ -27,6 +27,8 @@ SECRET_KEY = 'n)ux$5$f8#(l5_fuin!wbg82ld8z%31ow61*m&pz7s33etht@m'
 DEBUG = True
 
 MEDIA_ROOT='/var/www/media/'
+MEDIA_URL='/var/www/media/'
+
 
 ALLOWED_HOSTS = ['*']
 #AUTH_USER_MODEL = 'portal.AfUsuario'
@@ -109,15 +111,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = 'es'
-# TIME_ZONE = 'Etc/GMT+1'
 TIME_ZONE = 'Europe/Madrid'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
 
 
 # Static files (CSS, JavaScript, Images)

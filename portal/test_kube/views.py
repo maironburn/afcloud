@@ -34,7 +34,7 @@ def set_bulk_num_proyectos(entornos):
 
 @login_required
 @group_required('af_cloud_admin',)
-def administrarChikito(request, template_name='test_kube.html', extra_context=None):
+def test_kube(request, template_name='test_kube.html', extra_context=None):
     
     value = 'nuevo'
     test_env=False
@@ -55,7 +55,7 @@ def administrarChikito(request, template_name='test_kube.html', extra_context=No
         if form.is_valid():
 
             messages.success(request,  'Entorno creado con éxito', extra_tags='Creación de entornos')
-            return HttpResponseRedirect('/administrar/entornos')
+            return HttpResponseRedirect('/administrar/test_kube')
         else:
             return render(request, template_name, {'form': form, 'value': value})
     else:
