@@ -18,6 +18,7 @@ from django.contrib import messages
 from portal.Kubernetes.Kuber import Kuber
 from afcloud import settings
 
+logger=getLogger()
 
 @login_required
 @group_required('af_cloud_admin',)
@@ -49,6 +50,8 @@ def administrarProyectos(request, template_name='proyectosIndex.html', extra_con
     return TemplateResponse(request, template_name, context)
 
 
+
+
 # funciones auxiliares para los campos calculados num de integrantes y entornos
 def set_bulk_num_entornos(proyectos):
 
@@ -57,10 +60,15 @@ def set_bulk_num_entornos(proyectos):
         entornos=AfRelEntPro.objects.filter(pro=p)
         p.set_num_entornos(len(entornos))
         for e in entornos:
+            '''
+            kuber=Kuber(e.ent.ent_config_file.path)
+            ns=kuber.getNamespaces()
+            '''
             if e.ent.ent_nombre not in entornos:
                 lst_entornos.append(e.ent.ent_nombre)
 
         p.set_entornos(lst_entornos)
+        
         p.entornos_str=p.get_entornos_str()
 
 
@@ -179,15 +187,6 @@ def nuevoProyecto(request,template_name='newProject.html'):
             activo = form.cleaned_data['pro_activo']
 
             form.saveProyect('new')
-            entornos=form.get_entornos()
-            if len(entornos):
-                for e in entornos:
-                    config_file= ('%s') % (e.ent_config_file.path)
-                    kclient=Kuber(config_file)
-                    kclient.createNameSpace(nombre)
-                    
-                
-            #skuber.createNameSpace(nombre))
             messages.success(request,  'Proyecto creado con éxito', extra_tags='Creación de proyecto')
             
             col=getProyectos(request.user)
@@ -238,15 +237,24 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
 def borrarProyecto(request, id):
 
     proyecto= AfProyecto.objects.get(id=id)
-
+    #entorno=AfEntorno.objects.
     try:
+        rel_ent_pro=AfRelEntPro.objects.filter(pro=proyecto)
+        for ep in rel_ent_pro:
+            kuber=Kuber(ep.ent.ent_config_file.path)
+            kuber.deleteNamespace(proyecto.pro_nombre)
+            
         proyecto.delete()
-        messages.success(request,  'Proyecto borrado con éxito', extra_tags='Eliminación de proyecto')
-        if not AfProyecto.objects.count():
+        logger.info("Proyecto borrado con exito")
+        
+        messages.success(request, 'Proyecto borrado con éxito', extra_tags='Eliminación de proyecto')
+        id_proyecto_seleccionado=request.session.get('id_proyecto_seleccionado', False)
+        if not AfProyecto.objects.count() or id_proyecto_seleccionado==id:
             #fuerza la actualizacion del dropdown de la proyectos
             request.session['proyecto_seleccionado'] = False
             request.session['id_proyecto_seleccionado']=False
-            return HttpResponseRedirect('/startpage')
+        
+        return HttpResponseRedirect('/startpage')
         
     except IntegrityError as e:
 
@@ -269,5 +277,7 @@ def borrarProyecto(request, id):
         context = {'p': c, 'e': e, 'mensaje': mensaje}
         return TemplateResponse(request, 'proyectosIndex.html', context)
 
+    except Exception as ex:
+        logger.info("Exception al borrar el proyecto: %s" % (format(e)))
     
     return HttpResponseRedirect('/administrar/proyectos')

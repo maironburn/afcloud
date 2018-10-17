@@ -3,6 +3,7 @@ from django import forms
 from portal.models import AfProyecto, AfEntorno,AfRelEntPro
 from django.forms.models import ModelForm
 from django.utils.translation import ugettext as _
+from portal.Kubernetes.Kuber import Kuber
 
 #class ProyectoForm(forms.Form):
 class ProyectoForm(forms.ModelForm):
@@ -49,12 +50,23 @@ class ProyectoForm(forms.ModelForm):
             proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
 
         vinculados=AfRelEntPro.objects.filter(pro=proyecto)
+        '''
+        -borrar de la BBDD las relaciones entornos proyectos
+        -conexion con KB y borrado del namespace correspondiente
+        '''
         for v in vinculados:
+            kuber=Kuber (v.ent.ent_config_file.path)
+            kuber.deleteNamespace(self.pro_nombre)
             v.delete()
             
+        '''
+        -Creacion de las nuevas relaciones entorno proyecto
+        -conexion con KB y creacion del namespace correspondiente
+        '''            
         for ep in self.entornos_associated:
             afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)        
-        
+            kuber=Kuber (ep.ent_config_file.path)
+            kuber.createNameSpace(self.pro_nombre)
             #afep.save()
         
        
@@ -114,12 +126,17 @@ class editProyectoForm(forms.ModelForm):
         
         vinculados=AfRelEntPro.objects.filter(pro=instancia)
         for v in vinculados:
+            kuber=Kuber (v.ent.ent_config_file.path)
+            #kuber.deleteNamespace(self.pro_nombre)
+            kuber.patch_Namespace(self.pro_nombre)
             v.delete()
 
         for ep in data['entornos']:
             entorno=AfEntorno.objects.get(id=ep)
             afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)        
-
+            kuber=Kuber (entorno.ent_config_file.path)
+            kuber.createNameSpace(self.pro_nombre)
+            
         instancia.save()
         
         

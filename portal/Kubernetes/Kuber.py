@@ -2,11 +2,11 @@ from kubernetes import client, config, watch
 import yaml
 import sys
 from os import path
-import yaml
 from portal.Utils.logger import *
+
 sys.path.insert(0, '../')
 
-import time
+import time, datetime
 import kubernetes.client
 from kubernetes.client.rest import ApiException
 from pprint import pprint
@@ -58,34 +58,75 @@ class Kuber(object):
 
     def getNamespaces(self):
         
-        ns=[]
+        ns={}
         ret = self.v1.list_namespace()
         for i in ret.items:
-            ns.append(i.metadata.name)
-            print ("%s" % i.metadata.name)
+            ns.update({i.metadata.name : i.status.phase})
+            self.logger.info ("ns: %s, status: %s" % (i.metadata.name, ))
         
         return ns
 
     def createNameSpace(self,name,entorno_config_file=None):
-
         
         try: 
             
             if entorno_config_file:
                 self.checkConfigFile(entorno_config_file)
-            #api_instance = kubernetes.client.CoreV1Api(kubernetes.client.ApiClient(self.config_file))
-            #configuration = kubernetes.client.Configuration()
-            #api_instance = kubernetes.client.CoreV1Api(kubernetes.client.ApiClient(configuration))
+            
             body = kubernetes.client.V1Namespace() 
             body.kind='Namespace'
             body.api_version='v1'
             metadata={'name': name, 'labels' : {'name': name}}
+            
             body.metadata=metadata
+            
             self.v1.create_namespace(body)
             self.logger.debug('Creado namespace: %s' % name)
+            
         except Exception as e:
             print("Exception when calling CoreV1Api->create_namespace: %s\n" % e.body)        
             
+
+    def deleteNamespace(self,name,entorno_config_file=None):   
+        
+        try:
+            
+            if entorno_config_file:
+                self.checkConfigFile(entorno_config_file)
+            
+            body = kubernetes.client.V1DeleteOptions() 
+            self.v1.delete_namespace(name,body)
+            self.logger.debug('Borrado  namespace: %s' % name)       
+            
+        except Exception as e:
+            pass
+              
+    
+    def patch_Namespace(self,name,entorno_config_file=None):
+        
+        try:
+            
+            if entorno_config_file:
+                self.checkConfigFile(entorno_config_file)
+
+            body = kubernetes.client.V1NamespaceSpec() 
+            ns_stats=self.v1.read_namespace_status(name)
+           
+           
+            
+            #body.finalizers=[]
+            #body.deletion_grace_period_seconds=1
+            #ssbody.deletion_timestamp=datetime.datetime.now()
+            #body.finalizers=[]
+            #metadata=kubernetes.client.V1ObjectMeta(deletion_timestamp=datetime.datetime.now())
+            #body.metadata=metadata
+            self.v1.patch_namespace_status(name, ns_stats)
+            self.logger.debug('patch_Namespace : %s' % name)  
+            
+            
+        except Exception as e:
+            pass
+                   
     def getClient(self):
         return self.v1
 
@@ -112,6 +153,7 @@ class Kuber(object):
 
         return False
 
+  
 
     def createDeployment(self,fichero_yaml, target_namespace):
 
