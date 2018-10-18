@@ -39,6 +39,11 @@ class InstanciaForm(forms.Form):
     service   = createMyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)",required=True)
     
     entorno = createMyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)",required=True)
+    unique_instance_name= forms.CharField(max_length=100,label='Nombre del Despliegue',required=True) 
+    ser_min_replicas = forms.IntegerField(min_value=0,max_value=5 , label='Mínimo de réplicas: ')
+    ser_max_replicas = forms.IntegerField(min_value=0,max_value=10, label='Máximo de réplicas: ')
+    
+    
     '''
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),

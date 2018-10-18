@@ -3,6 +3,25 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
+<script>
+$(document).ready(function(){
+
+ $('[name="service"]').on( "change", function(){
+
+   var id_serv=$('[name="service"]').find(":selected").val();
+
+   if (id_serv!=""){
+     var min=$('.dict_serv_extra[id_serv="'+ id_serv + '"]').attr('min_repl');
+     var max=$('.dict_serv_extra[id_serv="'+ id_serv + '"]').attr('max_repl');
+
+     $('[name=ser_min_replicas]').val(min);
+     $('[name=ser_max_replicas]').val(max);
+     }
+  });
+});
+
+</script>
+
 {% if mensaje %}
     <div id="message" class="modal fade">
         <div class="modal-dialog">
@@ -19,7 +38,7 @@
 
 
     {% if form %}
-        
+
         <div class="panel-body">
 {#        {% if form.errors %}#}
 {#            <p class="errornote">#}
@@ -54,5 +73,12 @@
         </div>
     {% endif %}
     </div>
+
+    {%if dict_serv_extra %}
+      {% for k,v in  dict_serv_extra.items %}
+      <input type="hidden" class="dict_serv_extra" id_serv="{{ k }}" min_repl={{v.min}} max_repl={{v.max}} yaml_file={{v.ser_yaml_file}}/>
+      {%endfor%}
+    {% endif %}
+
 </div>
 {% endblock %}

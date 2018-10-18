@@ -12,7 +12,6 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from portal.Utils.logger import *
 from django.contrib import messages
-from portal.Kubernetes.Kuber import KuberConnectionFail
 from portal.test_kube.forms import EntornoTestForm
 
 logger=getLogger()

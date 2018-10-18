@@ -18,6 +18,8 @@ from portal.Utils.aux_meth import *
 from django.contrib import messages
 
 
+logger=getLogger()
+
 @login_required
 @group_required('af_cloud_admin',)
 def administrarServicios(request, template_name='serviciosIndex.html', extra_context=None):
@@ -86,8 +88,11 @@ def nuevoServicio(request,template_name='newService.html'):
 
     value = 'nuevo'
     if request.method == "POST":
-        form = ServicioForm(request.POST or None)
+        fichero_yaml=handle_uploaded_file(request.FILES['ser_yaml_file'])
+        form = ServicioForm(request.POST, request.FILES)
+        form.setConfigfile(fichero_yaml)
         if form.is_valid():
+            
             AfServicio = form.save(commit=False)
             AfServicio.save()
             messages.success(request,  'Servicio creado con éxito', extra_tags='Creación de servicios')

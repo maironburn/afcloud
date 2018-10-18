@@ -14,6 +14,8 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
 
+logger=getLogger()
+
 
 @login_required
 def seccionActivaRedirect(request,id_proyecto):
@@ -110,8 +112,9 @@ def nuevoCatalogo(request,id_proyecto, template_name='newCatalogo.html'):
 
         form = CatalogRawForm(request.POST or None)
         form.setProyect(id_proyecto)
+        
         if form.is_valid():
-
+            
             form.save()
 
             messages.success(request,  'Catálogo añadido con éxito', extra_tags='Creación de catálogos')

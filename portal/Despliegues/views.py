@@ -18,7 +18,7 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
 
-
+logger=getLogger()
 
 @login_required
 def seccionActivaRedirect(request,id):
@@ -116,7 +116,17 @@ def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html
     return TemplateResponse(request, template_name, context)
 
 
-
+def getMaxMinReplic(svc):
+    
+    dic_replic={}
+    for s in svc:
+        dic_replic.update({s.id: {'min': s.ser_min_replicas,
+                                  'max': s.ser_max_replicas, 
+                                  'ser_yaml_file': s.ser_yaml_file.path}
+                                  })
+    
+    return dic_replic
+    
 
 @login_required
 @group_required(None)
@@ -132,8 +142,24 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         servicio=form.getServicio()
         entorno= form.getEntorno()
         lca= AfLineaCatalogo.objects.get(pro=proyecto,ser=servicio)
-            
+        
+        yaml_file=servicio.ser_yaml_file.path
+        kube_conf= entorno.ent.ent_config_file.path
+        min= request.POST.get('ser_min_replicas', False)
+        max= request.POST.get('ser_max_replicas', False)
+        namespace= proyecto.pro_nombre
+        
         if form.is_valid():
+            
+            try:
+                kuber=Kuber(kube_conf)
+                kuber.createDeployment(yaml_file,namespace )
+                
+                form.setConOkStatus()
+            except Exception as e:
+                logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))
+            
+            
             #rel_ent_pro= AfRelEntPro.objects.get(pro=proyecto,ent=entorno)
             instancia=AfInstancia.objects.create(lca=lca,rep=entorno)
             ciclo= AfCiclo.objects.create(ins=instancia)
@@ -145,12 +171,15 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         nombre_proyecto= request.session.get('proyecto_seleccionado', False)
         id_servicios=AfLineaCatalogo.objects.filter(pro=proyecto).select_related('ser').values_list('ser_id', flat=True)
         
+        svc=AfServicio.objects.filter(id__in=[id_servicios])
+        dict_serv_extra= getMaxMinReplic(svc)
         data={'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
-              'service_queryset': AfServicio.objects.filter(id__in=[id_servicios])}
+              'service_queryset': svc
+              }
         #.objects.filter(id__in=[c.ser.id for d in lst_despliegues])}
         form = InstanciaForm(data)
         
-        return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto})
+        return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
 '''
 @login_required
 def editarDespliegue(request,id_proyecto, id_instancia,template_name='editarDespliegue.html'):

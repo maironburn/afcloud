@@ -12,7 +12,6 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from portal.Utils.logger import *
 from django.contrib import messages
-from portal.Kubernetes.Kuber import KuberConnectionFail
 from django.core.files import File
 
 
@@ -133,8 +132,8 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
                 kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
                 client=kuber.getClient()
                 form.setConOkStatus()
-            except KuberConnectionFail:
-                pass
+            except Exception as e:
+                logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,fichero_config))
 
         if form.is_valid():
             
@@ -150,6 +149,7 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
             messages.success(request,  'Entorno creado con éxito', extra_tags='Creación de entornos')
             return HttpResponseRedirect('/administrar/entornos')
         else:
+            messages.error(request,  'Fichero config k8s no válido', extra_tags='fichero_config')
             return render(request, template_name, {'form': form, 'value': value})
     else:
         form = EntornoForm()

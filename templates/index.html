@@ -32,21 +32,21 @@
 
 <script>
 
-    $(document).on('click', '.nav-list li', function() {
-       $(".nav-list li").removeClass("active");
-       $(this).addClass("active");
-   });
    $(document).ready(function(){
+     $(document).on('click', '.nav-list li', function() {
+        $(".nav-list li").removeClass("active");
+        $(this).addClass("active");
+     });
+      // activacion de tooltips
        $('[data-toggle="tooltip"]').tooltip();
-       jQuery.noConflict();
+
+       if ($('#messageModal').length){
+          jQuery.noConflict();
+         $('#messageModal').modal('show');
+       }
+
       });
 
-      if ($('#messageModal').length){
-         jQuery.noConflict();
-        $('#messageModal').modal('show');
-
-      }
-   });
 </script>
 
 

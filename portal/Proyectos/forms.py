@@ -40,7 +40,10 @@ class ProyectoForm(forms.ModelForm):
                     instance=AfEntorno.objects.get(id=e)
                     self.entornos_associated.append(instance)
   
-   
+        if len(kwargs):
+            if 'initial' in kwargs:
+                self.fields['entornos'].queryset=AfEntorno.objects.all()
+                self.fields['entornos'].initial=kwargs['initial']['entornos']
             #self.fields['entornos'].queryset=AfEntorno.objects.all()
 
 

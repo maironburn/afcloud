@@ -19,6 +19,8 @@ class CatalogRawForm(forms.ModelForm):
     
     exclude=None
     proyecto=None
+    yaml_service=None
+    
     ser   = MyModelChoiceCatalogo(label="Servicio",queryset=(AfLineaCatalogo.objects.all()) ,empty_label="(Seleccione servicio)")
     
     lca_tarifa = forms.DecimalField(max_digits=10, label="Tarifa", decimal_places=2,required=True)
@@ -45,17 +47,27 @@ class CatalogRawForm(forms.ModelForm):
                 
         if len(args) and args[0]:
             self.ser=AfServicio.objects.get(id=args[0]['ser'])
+            self.yaml_service=self.ser.ser_yaml_file
             self.lca_tarifa=args[0]['lca_tarifa']
             self.lca_activo= True if args[0]['lca_activo']=='on' else False
            
        
-           
+    
     def setProyect(self,id_proyecto):
         self.proyecto=AfProyecto.objects.get(id=id_proyecto)
-         
+     
+        
+    def getNamespace(self):
+        if self.proyecto:
+            return self.proyecto.pro_nombre
+        
+        return None
+    
     def is_valid(self):
         return  isinstance(self.ser, AfServicio) and  self.lca_tarifa
     
+    def getYaml(self):
+        return self.yaml_service
 
     def save(self):
         instance =AfLineaCatalogo.objects.create(pro=self.proyecto, ser=self.ser, lca_tarifa=self.lca_tarifa, lca_activo=self.lca_activo)

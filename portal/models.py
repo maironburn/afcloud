@@ -33,7 +33,6 @@ class AfUsuario(models.Model):
         u = super(AfUsuario, self).save(*args, **kwargs)
 
     def __str__(self):
-        #return str(id)
         return str(self.user.username.encode('utf-8', 'ignore'))
 
     class Meta:
@@ -67,6 +66,9 @@ class AfServicio(models.Model):
     ser_descripcion  = models.CharField     (max_length=250, verbose_name="Descripción",blank=True, null=True)
     ser_tarifa       = models.DecimalField  (max_digits=10, verbose_name="Tarifa", decimal_places=2, blank=True, null=True)
     ser_activo       = models.BooleanField  (default=1, verbose_name='Activo')
+    ser_yaml_file    = models.FileField     (blank=True,verbose_name="Deployment yaml",storage=fs)
+    ser_min_replicas = models.IntegerField  (default=1,verbose_name="Min replicas")
+    ser_max_replicas = models.IntegerField  (default=1,verbose_name="Min replicas")
 
     def __str__(self):
         return str(self.ser_nombre.encode('utf-8', 'ignore'))
