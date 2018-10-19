@@ -70,6 +70,8 @@ class ProyectoForm(forms.ModelForm):
             afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)        
             kuber=Kuber (ep.ent_config_file.path)
             kuber.createNameSpace(self.pro_nombre)
+            
+            #kuber.create_namespaced_ingress(proyecto.pro_nombre)
             #afep.save()
         
        

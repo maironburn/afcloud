@@ -36,10 +36,9 @@ class createMyModelChoiceFieldEntorno(forms.ModelChoiceField):
 class InstanciaForm(forms.Form):
     
     exclude=None
-    service   = createMyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)",required=True)
-    
-    entorno = createMyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)",required=True)
-    unique_instance_name= forms.CharField(max_length=100,label='Nombre del Despliegue',required=True) 
+    service          = createMyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)",required=True)
+    entorno          = createMyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)",required=True)
+    ins_unique_name  = forms.CharField(max_length=100,label='Nombre del Despliegue',required=True) 
     ser_min_replicas = forms.IntegerField(min_value=0,max_value=5 , label='Mínimo de réplicas: ')
     ser_max_replicas = forms.IntegerField(min_value=0,max_value=10, label='Máximo de réplicas: ')
     
@@ -79,9 +78,12 @@ class InstanciaForm(forms.Form):
 class creaInstanciaForm(forms.Form):
     
     exclude=None
-    service   = MyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)")
+    service          = MyModelChoiceFieldService(label="Servicio",queryset=(AfServicio.objects.all()) ,empty_label="(Seleccione servicio)")
+    entorno          = MyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)")
+    ins_unique_name  = forms.CharField(max_length=100,label='Nombre del Despliegue',required=True) 
+    ser_min_replicas = forms.IntegerField(min_value=0,max_value=5 , label='Mínimo de réplicas: ')
+    ser_max_replicas = forms.IntegerField(min_value=0,max_value=10, label='Máximo de réplicas: ')
     
-    entorno = MyModelChoiceFieldEntorno(queryset=(AfEntorno.objects.all()),empty_label="(Seleccione entorno)")
     catalogo=None
     '''
     error_messages = {

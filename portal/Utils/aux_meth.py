@@ -42,10 +42,10 @@ def getProyectos(usuario):
     col=[]
     af_usuario=AfUsuario.objects.get(user=usuario)
     if af_usuario.usu_administrador:
-        proyectos=AfProyecto.objects.all()
+        proyectos=AfProyecto.objects.filter(pro_activo=True)
         col=[ { p.pro_nombre: p.id } for p in proyectos ]
     else:
-        perfiles=AfPerfil.objects.filter(usu=af_usuario)
+        perfiles=AfPerfil.objects.filter(usu=af_usuario,pro__pro_activo=True)
         col=[ { p.pro.pro_nombre: p.pro.id } for p in perfiles ]
 
     return {'proyectos': col, 'afcloud_admin' : af_usuario.usu_administrador}

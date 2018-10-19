@@ -4,9 +4,10 @@ from django.utils.translation import ugettext as _
 
 #class EntornoForm(forms.Form):
 
-class EntornoTestForm(forms.Form):    
+class GlobalConfForm(forms.Form):    
 
-    ent_config_file = forms.FileField(label='Entorno de Kubernates')
+    global_config_crt_file = forms.FileField(label='Fichero del certificado ')
+    global_config_key_file = forms.FileField(label='Fichero del key')
     connection=False
     
     error_messages = {
@@ -15,17 +16,15 @@ class EntornoTestForm(forms.Form):
         'inactive': _("Esta cuenta se encuentra inactiva."),
     }
 
-    def setConOkStatus(self):
-        self.connection=True
-        
+
     def is_valid(self):
-        valid = super(EntornoTestForm, self).is_valid()
+        valid = super(GlobalConfForm, self).is_valid()
         
         '''validacion adicional
         if valid:
             if self.connection:
                 return True
         '''
-        return valid and self.connection
+        return valid 
         
         

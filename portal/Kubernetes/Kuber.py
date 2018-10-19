@@ -59,7 +59,7 @@ class Kuber(object):
         ret = self.v1.list_namespace()
         for i in ret.items:
             ns.update({i.metadata.name : i.status.phase})
-            self.logger.info ("ns: %s, status: %s" % (i.metadata.name, ))
+            self.logger.info ("ns: %s, status: %s" % (i.metadata.name,i.metadata.status ))
 
         return ns
 
@@ -142,7 +142,6 @@ class Kuber(object):
                 self.logger.debug("%s\t%s\t%s" %
                   (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
 
-            self.logger.debug("Tes de conexion ok ")
             return True
 
         except Exception as e:
@@ -151,11 +150,62 @@ class Kuber(object):
         return False
 
 
+    def list_namespaced_deployment(self, ns, include_uninitialized=True):
+        
+        api_instance = kubernetes.client.ExtensionsV1beta1Api()
+        include_uninitialized = True # bool | If true, partially initialized resources are included in the response
+        try:
+            api_response = api_instance.list_namespaced_deployment(ns, include_uninitialized=include_uninitialized)
+            pprint(api_response)
+        except ApiException as e:
+            print("Exception when calling AppsV1Api->list_namespaced_deployment: %s\n" % e)
 
-    def createDeployment(self,fichero_yaml, target_namespace):
+
+    def list_namespaced_ingress(self, ns, include_uninitialized=True):
+        
+        api_instance = kubernetes.client.ExtensionsV1beta1Api()
+        include_uninitialized = True # bool | If true, partially initialized resources are included in the response
+        try:
+            api_response = api_instance.list_namespaced_ingress(ns, include_uninitialized=include_uninitialized)
+            pprint(api_response)
+        except ApiException as e:
+            print("Exception when calling AppsV1Api->list_namespaced_deployment: %s\n" % e)
+
+
+
+    def create_namespaced_ingress(self,ns):
+        
+        api_instance = kubernetes.client.ExtensionsV1beta1Api()
+        body = kubernetes.client.V1beta1Ingress(
+                    api_version="extensions/v1beta1",
+                    kind="Ingress",
+                    metadata=client.V1ObjectMeta(name=( '%s_ingress' % ns))
+                    )
+        try: 
+            api_response = api_instance.create_namespaced_ingress(ns, body)
+            
+        except ApiException as e:
+            print("Exception when calling ExtensionsV1beta1Api->create_namespaced_ingress: %s\n" % e)
+    
+    
+    
+    '''
+    caracteristicas personalizadas de la instancia
+    '''
+    def particularizeYaml(self,fjson, dict_yaml):
+
+        fjson['metadata']['name'] = dict_yaml['deployment_name']
+        fjson['spec']['replicas'] = int(dict_yaml['replicas'])
+
+        return fjson
+
+    def createDeployment(self,**kwargs):
+
+        fichero_yaml     = kwargs.get('fichero_yaml')
+        target_namespace = kwargs.get('namespace')
 
         with open(fichero_yaml) as f:
-            dep = yaml.load(f)
+            dep = self.particularizeYaml(yaml.load(f),kwargs)
             k8s_beta = client.ExtensionsV1beta1Api()
             resp = k8s_beta.create_namespaced_deployment(
                 body=dep, namespace=target_namespace)

@@ -3,6 +3,17 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
+
+<script>
+$(document).ready(function(){
+
+   $('#id_ent_nombre').on( "input", function(){
+     alert("");
+   });
+});
+
+</script>
+
 {% if mensaje %}
     <div id="message" class="modal fade">
         <div class="modal-dialog">

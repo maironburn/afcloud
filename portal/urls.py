@@ -10,7 +10,7 @@ from portal.Servicios import views as servicios_views
 from portal.Integrantes import views as integrantes_views
 from portal.Catalogo import views as catalogo_views
 from portal.Despliegues import views as despliegues_views
-from portal.test_kube import views as kube_views
+from portal.GlobalConf import views as globalconf_views
 
 urlpatterns = [
      # USUARIOS
@@ -80,8 +80,8 @@ urlpatterns = [
     url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/eliminarInstancia/(?P<id_instancia>\d+)/$', despliegues_views.eliminarDespliegue, name='borrarrInstancia'),
 
     ##################################################
-    # test_kube
-    url(r'^administrar/test_kube/$', kube_views.test_kube, name='test_kube'),
+    # Configuracion global
+    url(r'^administrar/globalconf/$', globalconf_views.creaGlogalConf, name='globalconf'),
      #url(r'^administrar/proyectos/(?P<orden>\d+)/(?P<ascendente>\d+)/$', project_views.administrarProyectosOrdered, name='administrarProyectos'),
 
 ]

@@ -84,11 +84,12 @@ class AfEntorno(models.Model):
 
     ent_nombre      = models.CharField    (max_length=100,verbose_name="Nombre del entorno", blank=False)
     ent_descripcion = models.CharField    (max_length=250, verbose_name="Descripción del entorno",blank=True, null=True)
-    ent_uri         = models.URLField     (max_length=100, verbose_name="URI",blank=True,null=True)
-    ent_username    = models.CharField    (max_length=50, verbose_name="Username", blank=True, null=True)
-    ent_password    = models.CharField    (max_length=250, blank=True, verbose_name="Password", null=True)
     ent_activo      = models.BooleanField (default=1, verbose_name='Activo')
     ent_config_file = models.FileField    (blank=True,verbose_name="Fichero de entorno",storage=fs)
+    ent_json_file   = models.FileField    (blank=True,verbose_name="Json",storage=fs)
+    registry_hash   = models.CharField    (blank=True,max_length=250)
+    nfs_server      = models.GenericIPAddressField(blank=True,null=True)
+
 
     num_proyectos   = 0
     proyectos_list =[]
@@ -202,7 +203,7 @@ class AfRelEntPro(models.Model):
 class AfLineaCatalogo(models.Model):
 
     pro                 = models.ForeignKey     (AfProyecto, on_delete=models.CASCADE)
-    ser                 = models.OneToOneField  (AfServicio, on_delete=models.CASCADE)
+    ser                 = models.ForeignKey     (AfServicio, on_delete=models.CASCADE)
     lca_tarifa          = models.FloatField     (blank=True, null=True)
     lca_configuracion   = models.CharField      (max_length=250, blank=True, null=True)
     lca_activo          = models.BooleanField   (default=1, verbose_name='Activo')
@@ -217,14 +218,15 @@ class AfLineaCatalogo(models.Model):
 
 class AfInstancia(models.Model):
 
-    lca          = models.ForeignKey    (AfLineaCatalogo,  on_delete=models.CASCADE)
-    rep          = models.ForeignKey    (AfRelEntPro,  on_delete=models.CASCADE)
-    ins_kubeid   = models.CharField     (max_length=100)
-    ins_uri      = models.CharField     (max_length=100, blank=True, null=True)
-    ins_activo   = models.BooleanField  (default=1, verbose_name='Activo')
+    lca             = models.ForeignKey    (AfLineaCatalogo,  on_delete=models.CASCADE)
+    rep             = models.ForeignKey    (AfRelEntPro,  on_delete=models.CASCADE)
+    ins_kubeid      = models.CharField     (max_length=100)
+    ins_uri         = models.CharField     (max_length=100, blank=True, null=True)
+    ins_activo      = models.BooleanField  (default=1, verbose_name='Activo')
+    ins_unique_name = models.CharField     (max_length=100, verbose_name='Nombre del Despliegue', blank=True)
 
     def __str__(self):
-        return 'lc_id: %s servicio: %s entorno: %s' % (self.lca.id, self.lca.ser.ser_nombre, self.rep.ent.ent_nombre)
+        return 'lc_id: %s servicio: %s entorno: %s unique_name: %s' % (self.lca.id, self.lca.ser.ser_nombre, self.rep.ent.ent_nombre, self.ins_unique_name)
 
     class Meta:
         managed = True
