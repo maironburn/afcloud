@@ -3,7 +3,8 @@ from django.contrib import admin
 
 #from afcloud.models import User, UserManager
 #from afcloud.models import User, UserManager
-from .models import AfServicio, AfEntorno, AfProyecto, AfRelEntPro, AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil, AfUsuario,AfAuditoria
+from .models import AfServicio, AfEntorno, AfProyecto, AfRelEntPro, \
+AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil, AfUsuario,AfAuditoria,AfGlobalconf
 #AfServicio, AfEntorno, AfProyecto, AfRelEntPro, AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil
 
 
@@ -20,3 +21,4 @@ admin.site.register(AfCiclo)
 admin.site.register(AfTipoPerfil)
 admin.site.register(AfPerfil)
 admin.site.register(AfAuditoria)
+admin.site.register(AfGlobalconf)

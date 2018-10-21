@@ -1,0 +1,11 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: [NAMESPACE]-ingress
+spec:
+  tls:
+  - hosts:
+    - [NAMESPACE].[ENVIROMENT].[FQDN]
+    secretName: [NAMESPACE]-secret
+  rules:
+  - host: [NAMESPACE].[ENVIROMENT].[FQDN]

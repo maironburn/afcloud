@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import BaseUserManager
 from datetime import datetime
-from afcloud.settings import MEDIA_ROOT
+from afcloud.settings import MEDIA_ROOT,CRT_FILE,KEY_FILE
 from django.core.files.storage import FileSystemStorage
 
 
@@ -284,3 +284,18 @@ class AfPerfil(models.Model):
         managed = True
         db_table = 'af_perfil'
         db_tablespace = 'af_usuario', 'af_proyecto', 'af_tipo_perfil'
+
+
+class AfGlobalconf(models.Model):
+
+    fqdn      = models.CharField    (unique=True, max_length=100,verbose_name="FQDN", blank=False)
+    crt_file  = models.FileField    (blank=True,verbose_name="Fichero crt", upload_to=CRT_FILE)
+    key_file  = models.FileField    (blank=True,verbose_name="Fichero key", upload_to=KEY_FILE)
+    is_done   = models.BooleanField (default=0, verbose_name='Configuracion realizada')
+
+    def __str__(self):
+        return '%s' % (self.fqdn)
+
+    class Meta:
+        managed = True
+        db_table = 'af_globalconf'

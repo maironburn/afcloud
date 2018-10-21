@@ -26,9 +26,10 @@ SECRET_KEY = 'n)ux$5$f8#(l5_fuin!wbg82ld8z%31ow61*m&pz7s33etht@m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-MEDIA_ROOT='/var/www/media/'
-MEDIA_URL='/var/www/media/'
-
+MEDIA_ROOT='/var/www/afcloud/'
+MEDIA_URL='/var/www/afcloud/'
+CRT_FILE = 'cert/' 
+KEY_FILE = 'key/' 
 
 ALLOWED_HOSTS = ['*']
 #AUTH_USER_MODEL = 'portal.AfUsuario'

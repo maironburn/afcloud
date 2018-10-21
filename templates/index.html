@@ -133,10 +133,15 @@
                                 aria-haspopup="true" aria-expanded="false"><img src="{% static 'images/administrar.png' %}" width="32px" height="32px">Administrar<span
                 class="caret"></span></a>
             <ul class="dropdown-menu ">
-                <li><a href="{% url 'globalconf' %}">    <img src="{% static 'images/global_conf.png' %}" width="32px" height="32px">Configuración</a></li>
                 <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="32px" height="32px">Usuarios</a></li>
+                {% if not request.session.globalconf_isdone %}
+                <li><a href="{% url 'globalconf' %}">    <img src="{% static 'images/global_conf.png' %}" width="32px" height="32px">Configuración</a></li>
+                {%else%}
                 <li><a href="{% url 'admin_projects' %}"><img src="{% static 'images/adm_proyectos.svg' %}" width="32px" height="32px">Proyectos</a></li>
                 <li><a href="{% url 'admin_services' %}"><img src="{% static 'images/adm_servicios.svg' %}" width="32px" height="32px">Servicios</a></li>
+                {%endif%}
+
+
                 <li><a href="{% url 'admin_env' %}">     <img src="{% static 'images/adm_entornos.svg' %}" width="32px" height="32px">Entornos</a></li>
 
             </ul>

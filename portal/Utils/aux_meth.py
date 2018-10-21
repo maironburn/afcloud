@@ -87,13 +87,13 @@ def seccionActivaRedirect(request,id):
 Recibe un fichero de configuracion del entorno, Master de Kubernates
 '''
 
-def handle_uploaded_file(f):
+def handle_uploaded_file(f, dest=MEDIA_ROOT):
 
     filename=f.name
-    if os.path.exists(MEDIA_ROOT + f.name):
+    if os.path.exists(dest + f.name):
         now = datetime.datetime.now()
         filename+=now.isoformat()
-    with open(MEDIA_ROOT + filename, 'wb+') as destination:
+    with open(dest + filename, 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
 

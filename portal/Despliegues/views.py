@@ -190,39 +190,8 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         form = InstanciaForm(data)
 
         return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
-'''
-@login_required
-def editarDespliegue(request,id_proyecto, id_instancia,template_name='editarDespliegue.html'):
-    value = 'editar'
-
-    instancia=AfInstancia.objects.get(id=id_instancia)
-    proyecto=AfProyecto.objects.get(id=id_proyecto)
-    lca= AfLineaCatalogo.objects.get(id=instancia.lca.id)
-    servicio=lca.ser
-    entorno= instancia.rep.ent
-    data={'instance' : instancia,'service' :servicio, 'entorno': entorno}
-
-    form = InstanciaForm(initial=data)
-        #v fields=('username','password','first_name','last_name','email','is_staff','is_active')
-    if request.method == 'POST':
 
 
-        if form.is_valid():
-
-            data={'instance' : instancia,'proyecto' :proyecto}
-            form = InstanciaForm()
-
-
-            servicio=form.getServicio()
-            lca= AfLineaCatalogo.objects.get(pro=proyecto,ser=servicio)
-
-            return HttpResponseRedirect('/administrar/entornos')
-
-
-
-    return render(request, template_name, {'form': form, 'value': value,'id': id})
-
-'''
 
 @login_required
 @group_required(None)

@@ -7,7 +7,7 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
-from portal.models import AfProyecto,AfUsuario, AfPerfil,AfTipoPerfil
+from portal.models import AfProyecto,AfUsuario, AfPerfil,AfTipoPerfil, AfGlobalconf
 from django.contrib.auth.models import User
 from portal.Usuarios.forms import *
 #####
@@ -70,8 +70,15 @@ def index(request, template_name='index.html', extra_context=None):
 
     usuario=request.user
     col=getProyectos(usuario)
-    context = {'proyectos': col['proyectos'], 'afcloud_admin': col['afcloud_admin']}
-
+    conf_global= AfGlobalconf.objects.first()
+    afuser=AfUsuario.objects.get(user=usuario)
+    if afuser.usu_administrador and not conf_global.is_done:
+        messages.success(request, "La configuración global del portal aun no ha sido realizada, " \
+                                  "las opciones de administación de proyectos y servicios no estarán disponibles ")
+        
+    context = {'proyectos': col['proyectos'], 'afcloud_admin': col['afcloud_admin'], 
+               'globalconf_isdone': conf_global.is_done}
+    request.session['globalconf_isdone']= conf_global.is_done
     request.session['proyectos']     = col['proyectos']
     request.session['afcloud_admin'] = col['afcloud_admin']
 
