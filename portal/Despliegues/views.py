@@ -147,7 +147,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         kube_conf= entorno.ent.ent_config_file.path
         min= request.POST.get('ser_min_replicas', False)
         max= request.POST.get('ser_max_replicas', False)
-        deployment_name = request.POST.get('unique_instance_name', False)
+        unique_instance_name = request.POST.get('ins_unique_name', False)
         namespace= proyecto.pro_nombre
 
         '''
@@ -158,12 +158,15 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
             try:
                 kuber=Kuber(kube_conf)
                 #fichero_yaml, target_namespace
-                kwargs={'fichero_yaml': yaml_file,
+                kwargs={'fichero_yaml': 'yaml_all_services_HsXeaZf.yaml' , #'yaml_file',
                         'namespace': namespace,
-                        'replicas': min,
-                        'deployment_name':deployment_name
+                        'replicas_min': min,
+                        'replicas_max': max,
+                        'unique_instance_name':unique_instance_name,
+                        'nfs-server' : '10.244.0.103',
+                        'env-name'   : entorno.ent.ent_nombre
                         }
-                kuber.createDeployment(**kwargs)
+                kuber.createServiceStack(**kwargs)
 
                 #form.setConOkStatus()
             except Exception as e:
@@ -171,8 +174,12 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
 
 
             #rel_ent_pro= AfRelEntPro.objects.get(pro=proyecto,ent=entorno)
+            
+            
+            '''
             instancia=AfInstancia.objects.create(lca=lca,rep=entorno)
             ciclo= AfCiclo.objects.create(ins=instancia)
+            '''
             messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
             return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
         else:

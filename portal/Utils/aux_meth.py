@@ -3,6 +3,7 @@ from afcloud.settings import MEDIA_ROOT
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.logger import *
 import datetime,os
+import yaml 
 
 def get_extra_content(request):
 

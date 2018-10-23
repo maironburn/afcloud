@@ -131,7 +131,7 @@ class Kuber(object):
         include_uninitialized = True # bool | If true, partially initialized resources are included in the response
         try:
             api_response = api_instance.list_namespaced_deployment(ns, include_uninitialized=include_uninitialized)
-            pprint(api_response)
+            pprint('list_namespaced_deployment: %s'  % (api_response))
         except ApiException as e:
             print("Exception when calling AppsV1Api->list_namespaced_deployment: %s\n" % e)
 
@@ -158,30 +158,139 @@ class Kuber(object):
                     )
         try: 
             api_response = api_instance.create_namespaced_ingress(ns, body)
-            
+            pprint('create_namespaced_ingress: %s'  % (api_response))
         except ApiException as e:
             print("Exception when calling ExtensionsV1beta1Api->create_namespaced_ingress: %s\n" % e)
     
     
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#create_persistent_volume
+    '''
+    def create_persistent_volume(self, kwargs, custom):
+        
+        api_instance = kubernetes.client.CoreV1Api()
+       
+        try:
+            #kargs[]
+            kwargs['metadata']['namespace'] = custom['namespace']
+            kwargs['metadata']['name']      = ('%s%s' % (custom['unique_instance_name'],'-pv'))
+            kwargs['spec']['nfs']['server'] = custom['nfs-server']
+            
+            api_response = api_instance.create_persistent_volume(kwargs)
+            pprint('create_persistent_volume: %s'  % (api_response))
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->create_persistent_volume: %s\n" % e)
     
     '''
-    caracteristicas personalizadas de la instancia
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#create_namespaced_persistent_volume_claim
     '''
-    def particularizeYaml(self,fjson, dict_yaml):
+    def create_namespaced_persistent_volume_claim(self, kwargs, custom):
+        
+        api_instance = kubernetes.client.CoreV1Api()
+        
+        kwargs['metadata']['name'] = ('%s%s' % (custom['unique_instance_name'], '-pvc') )
+        kwargs['metadata']['namespace'] = custom['namespace']
+        
+        try: 
+            api_response = api_instance.create_namespaced_persistent_volume_claim (custom['namespace'], kwargs)
+            pprint('create_namespaced_persistent_volume_claim: %s'  % (api_response))
+        
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->create_namespaced_persistent_volume_claim: %s\n" % e)
+    
+        
+    '''
+        https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#create_namespaced_service
+    '''        
 
-        fjson['metadata']['name'] = dict_yaml['deployment_name']
-        fjson['spec']['replicas'] = int(dict_yaml['replicas'])
+    def create_namespaced_service(self, kwargs, custom):
+        
+        api_instance = kubernetes.client.CoreV1Api()
+        kwargs['metadata']['name']      = ('%s%s' % (custom['unique_instance_name'],'-svc'))
+        kwargs['metadata']['namespace']     = custom['namespace']
+        kwargs['spec']['selector']['app']   = custom['unique_instance_name']
+        
+        try: 
+            api_response = api_instance.create_namespaced_service(custom['namespace'], kwargs)
+            pprint('create_namespaced_service: %s'  % (api_response))
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->create_namespaced_service: %s\n" % e)
+    
+        
 
-        return fjson
-
-    def createDeployment(self,**kwargs):
-
+    def create_namespaced_deployment(self, kwargs, custom):
+        
+        api_instance = kubernetes.client.ExtensionsV1beta1Api()
+       
+        kwargs['metadata']['name']                                = custom['unique_instance_name']
+        kwargs['metadata']['namespace']                           = custom['namespace']
+        kwargs['spec']['replicas']                                = int(custom['replicas_min'])
+        kwargs['spec']['template']['metadata']['name']            = custom['unique_instance_name']
+        kwargs['spec']['template']['metadata']['namespace']       = custom['namespace']
+        kwargs['spec']['template']['metadata']['labels']['app']   = custom['unique_instance_name']
+        kwargs['spec']['template']['spec']['containers'][0]['name']  = custom['unique_instance_name']
+        kwargs['spec']['template']['spec']['containers'][0]['image'] = 'registry.FQDN:32337/nginx-cica:latest'
+        kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['subPath'] = custom['unique_instance_name']
+        kwargs['spec']['template']['spec']['volumes'][0]['persistentVolumeClaim']['claimName'] = ('%s%s' % (custom['unique_instance_name'] , '-pvc'))
+        kwargs['spec']['template']['spec']['imagePullSecrets'][0]['name'] = ('%s%s' % ('registry-', custom['env-name']))
+        
+        try: 
+            
+            api_response = api_instance.create_namespaced_deployment (custom['namespace'], kwargs)
+            pprint('create_namespaced_deployment: %s'  % (api_response))
+            pass
+        except ApiException as e:
+            print("Exception when calling ExtensionsV1beta1Api->create_namespaced_deployment: %s\n" % e)
+    
+              
+    def create_namespaced_horizontal_pod_autoscaler(self,kwargs, custom):
+        
+        api_instance = kubernetes.client.AutoscalingV1Api()
+        kwargs['metadata']['name']      = custom['unique_instance_name']
+        kwargs['metadata']['namespace'] = custom['namespace']
+        kwargs['spec']['maxReplicas']   = int(custom['replicas_max'])
+        kwargs['spec']['minReplicas']   = int(custom['replicas_min'])
+        kwargs['spec']['scaleTargetRef']['name']= custom['unique_instance_name']
+        try: 
+            api_response = api_instance.create_namespaced_horizontal_pod_autoscaler (custom['namespace'], kwargs)
+            pprint('create_namespaced_horizontal_pod_autoscaler: %s'  % (api_response))
+            
+        except ApiException as e:
+            print("Exception when calling AutoscalingV1Api->create_namespaced_horizontal_pod_autoscaler: %s\n" % e)
+    
+             
+    def createServiceStack(self, **kwargs):
+        
         fichero_yaml     = kwargs.get('fichero_yaml')
         target_namespace = kwargs.get('namespace')
+        replicas_min     = kwargs.get('replicas_min')
+        replicas_max     = kwargs.get('replicas_max')
+        instance_name    = kwargs.get('unique_instance_name')
 
-        with open(fichero_yaml) as f:
-            dep = self.particularizeYaml(yaml.load(f),kwargs)
-            k8s_beta = client.ExtensionsV1beta1Api()
-            resp = k8s_beta.create_namespaced_deployment(
-                body=dep, namespace=target_namespace)
-            print("Deployment created. status='%s'" % str(resp.status))
+        kind_dict        = {
+                            'PersistentVolume'          : self.create_persistent_volume,
+                            'PersistentVolumeClaim'     : self.create_namespaced_persistent_volume_claim,
+                            'Deployment'                : self.create_namespaced_deployment,
+                            'create_namespaced_service' : self.create_namespaced_service,
+                            'HorizontalPodAutoscaler'   : self.create_namespaced_horizontal_pod_autoscaler,
+                            'Service'                   : self.create_namespaced_service
+                            } 
+        
+        #filename=f.name
+        with open('/var/www/afcloud/yaml_all_services_HsXeaZf.yaml', 'r') as f:
+            data=f.read()
+            parsed = list(yaml.load_all(data))
+            
+            if parsed:
+                for i in parsed:
+                    kind = i.get('kind')
+                    pprint ("llamando al meth asociado al kind: %s" % (kind))
+                    kind_dict[kind](i, kwargs)
+
+        return parsed
+        
+
+            
+            
+            
+        

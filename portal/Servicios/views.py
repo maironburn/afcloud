@@ -88,6 +88,7 @@ def nuevoServicio(request,template_name='newService.html'):
 
     value = 'nuevo'
     if request.method == "POST":
+       
         fichero_yaml=handle_uploaded_file(request.FILES['ser_yaml_file'])
         form = ServicioForm(request.POST, request.FILES)
         form.setConfigfile(fichero_yaml)
