@@ -154,7 +154,7 @@ class Kuber(object):
         body = kubernetes.client.V1beta1Ingress(
                     api_version="extensions/v1beta1",
                     kind="Ingress",
-                    metadata=client.V1ObjectMeta(name=( '%s_ingress' % ns))
+                    metadata=client.V1ObjectMeta(name=( '%s-ingress' % ns))
                     )
         try: 
             api_response = api_instance.create_namespaced_ingress(ns, body)

@@ -1,0 +1,10 @@
+{
+        "auths": {
+                "registry.entorno1.org:32688": {
+                        "auth": "cmVnaXN0cnktdXNlcjpJc290cm9sLjIwMTg="
+                }
+        },
+        "HttpHeaders": {
+                "User-Agent": "Docker-Client/18.06.1-ce (linux)"
+        }
+}

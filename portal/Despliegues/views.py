@@ -163,7 +163,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
                         'replicas_min': min,
                         'replicas_max': max,
                         'unique_instance_name':unique_instance_name,
-                        'nfs-server' : '10.244.0.103',
+                        'nfs-server' : '10.103.193.211',
                         'env-name'   : entorno.ent.ent_nombre
                         }
                 kuber.createServiceStack(**kwargs)
