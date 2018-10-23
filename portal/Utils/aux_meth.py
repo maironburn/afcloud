@@ -20,8 +20,6 @@ def get_extra_content(request):
              'id_proyecto_seleccionado': id_proyecto_seleccionado
              }
 
-
-
     return context
 
 
@@ -37,15 +35,15 @@ def getPerfilProyecto(id_proyecto, usuario):
     return tpe.tpe_nombre
 
 
-def getProyectos(usuario):
+def getProyectos(usuario, solo_activos=True):
 
     col=[]
     af_usuario=AfUsuario.objects.get(user=usuario)
     if af_usuario.usu_administrador:
-        proyectos=AfProyecto.objects.filter(pro_activo=True)
+        proyectos=AfProyecto.objects.filter(pro_activo=solo_activos)
         col=[ { p.pro_nombre: p.id } for p in proyectos ]
     else:
-        perfiles=AfPerfil.objects.filter(usu=af_usuario,pro__pro_activo=True)
+        perfiles=AfPerfil.objects.filter(usu=af_usuario,pro__pro_activo=solo_activos)
         col=[ { p.pro.pro_nombre: p.pro.id } for p in perfiles ]
 
     return {'proyectos': col, 'afcloud_admin' : af_usuario.usu_administrador}

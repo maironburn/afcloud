@@ -3,6 +3,73 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
+
+<script>
+
+//lectura de entornos entornos_asociados_originales
+
+
+$(document).ready(function(){
+
+  $('[name="entornos"]').change(function() {
+
+    var entornos_asociados_originales=[];
+    $('#entornos_asociados_originales').each(function(i){
+      entornos_asociados_originales.push($(this).attr('entorno'));
+    });
+
+     if (entornos_asociados_originales.includes($(this).val()) && !$(this).is(":checked"))
+
+         $( "#modal_modify_original_conf" ).dialog({
+               resizable: false,
+               height: "auto",
+               width: 400,
+               modal: true,
+               buttons: {
+                 "Aceptar": function() {
+                   $( this ).dialog( "close" );
+                 }
+               }
+          });
+  });
+
+  $('#id_pro_nombre').on( "input", function(e){
+
+    if (e.originalEvent.data.match(/[a-z0-9\-]/g)==null) {
+  //[a-z0-9]([-a-z0-9]*[a-z0-9])?
+       $('[name="pro_nombre"]').val($('[name="pro_nombre"]').val().slice(0,-1));
+       $( "#modal_invalid_char" ).dialog({
+             resizable: false,
+             height: "auto",
+             width: 400,
+             modal: true,
+             buttons: {
+               "Aceptar": function() {
+                 $( this ).dialog( "close" );
+               }
+             }
+           });
+    }
+  });
+
+
+
+});
+
+</script>
+
+<div id="modal_modify_original_conf" style="display: none;" title="Eliminación de Entorno">
+  <p>Ha desmarcado un entorno asociado a este proyecto.</p>
+  <p>Si mantiene esta decisión se eliminarán todos los servicios de este proyecto asociados a este entorno.</p>
+</div>
+
+<div id="modal_invalid_char" style="display: none;" title="Entrada inválida">
+  <p>El caracter que ha introducido no es válido.</p>
+  <p>Nombres válidos: alfanumérico (minúsculas) y -</p>
+
+</div>
+
+
 {% if mensaje %}
     <div id="message" class="modal fade">
         <div class="modal-dialog">
@@ -54,4 +121,11 @@
     {% endif %}
     </div>
 </div>
+
+{%if entornos_associated %}
+  {% for i in entornos_associated %}
+    <input type="hidden" id="entornos_asociados_originales" entorno={{i}} />
+  {%endfor%}
+{%endif%}
+
 {% endblock %}

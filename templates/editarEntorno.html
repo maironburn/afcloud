@@ -3,6 +3,32 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
+<script>
+$(document).ready(function(){
+
+   $('#id_ent_nombre').on( "input", function(e){
+
+     if (e.originalEvent.data.match(/[a-z0-9\-]/g)==null) {
+       //[a-z0-9]([-a-z0-9]*[a-z0-9])?
+        $('[name="ent_nombre"]').val($('[name="ent_nombre"]').val().slice(0,-1));
+        $( "#modal_invalid_char" ).dialog({
+              resizable: false,
+              height: "auto",
+              width: 400,
+              modal: true,
+              buttons: {
+                "Aceptar": function() {
+                  $( this ).dialog( "close" );
+                }
+              }
+            });
+     }
+   });
+});
+
+</script>
+
+
 {% if mensaje %}
     <div id="message" class="modal fade">
         <div class="modal-dialog">
@@ -17,6 +43,10 @@
     </div>
 {% endif %}
 
+<div id="modal_invalid_char" style="display: none;" title="Entrada inválida">
+  <p>El caracter que ha introducido no es válido.</p>
+  <p>Nombres válidos: alfanumérico (minúsculas) y -</p>
+</div>
 
     {% if form %}
 

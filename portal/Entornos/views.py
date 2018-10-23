@@ -124,16 +124,15 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
     
     logger.debug("*AFCLOUD*: %s, Meth: %s, urlConf: %s" % (__name__, request.method, request.path))
     
-    if request.method == "POST":
+    if request.method == "POST" and request.FILES:
         form = EntornoForm(request.POST, request.FILES)
-        if len(request.FILES):
-            fichero_config=handle_uploaded_file(request.FILES['ent_config_file'])
-            try:
-                kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
-                client=kuber.getClient()
-                form.setConOkStatus()
-            except Exception as e:
-                logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,fichero_config))
+        fichero_config=handle_uploaded_file(request.FILES['ent_config_file'])
+        try:
+            kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
+            client=kuber.getClient()
+            form.setConOkStatus()
+        except Exception as e:
+            logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,fichero_config))
 
         if form.is_valid():
             

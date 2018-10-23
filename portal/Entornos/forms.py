@@ -29,13 +29,9 @@ class EntornoForm(forms.ModelForm):
         self.connection=True
         
     def is_valid(self):
+        
         valid = super(EntornoForm, self).is_valid()
         
-        '''validacion adicional
-        if valid:
-            if self.connection:
-                return True
-        '''
         return valid and self.connection
         
     def setConfigfile(self,fichero):

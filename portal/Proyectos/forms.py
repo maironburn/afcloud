@@ -46,7 +46,16 @@ class ProyectoForm(forms.ModelForm):
                 self.fields['entornos'].initial=kwargs['initial']['entornos']
             #self.fields['entornos'].queryset=AfEntorno.objects.all()
 
-
+        
+    
+    def is_valid(self):
+        
+        
+        valid = super(ProyectoForm, self).is_valid() 
+        
+        return valid and len(self.entornos_associated)
+    
+                        
     def saveProyect(self, accion, proyecto=None):
         #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
         if accion=='new':
@@ -81,7 +90,6 @@ class ProyectoForm(forms.ModelForm):
 
     def saveRelations(self, instance):
         #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
-
         for ep in self.entornos_associated:
             afep=AfRelEntPro.objects.create(ent=ep, pro=instance)
             afep.save()
@@ -126,7 +134,13 @@ class editProyectoForm(forms.ModelForm):
 
 
 
-
+    def is_valid(self):
+        
+        valid = super(editProyectoForm, self).is_valid() 
+        
+        return valid #and len(self.entornos_associated)
+    
+    
     def saveProyect(self, data,instancia):
         #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
         instancia.pro_nombre=data['pro_nombre']

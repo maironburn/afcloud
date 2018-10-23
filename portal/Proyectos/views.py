@@ -18,6 +18,7 @@ from django.contrib import messages
 from portal.Kubernetes.Kuber import Kuber
 from afcloud import settings
 
+
 logger=getLogger()
 
 @login_required
@@ -38,7 +39,10 @@ def administrarProyectos(request, template_name='proyectosIndex.html', extra_con
     set_bulk_num_entornos(proyectos)
     set_bulk_num_integrantes(proyectos)
     paginator = Paginator(proyectos, 10)
-
+    
+    usuario=request.user
+    col=getProyectos(usuario,True)
+    request.session['proyectos']     = col['proyectos']
     try:
         number = int(request.GET.get('page', '1'))
     except PageNotAnInteger:
@@ -189,10 +193,13 @@ def nuevoProyecto(request,template_name='newProject.html'):
             form.saveProyect('new')
             messages.success(request,  'Proyecto creado con éxito', extra_tags='Creación de proyecto')
             
-            col=getProyectos(request.user)
+            col=getProyectos(request.user, False)
             request.session['proyectos'] = col['proyectos']
             return HttpResponseRedirect('/administrar/proyectos')
         else:
+            if not len(form.get_entornos()):
+                messages.error(request, "No se puede crear un proyecto sin asociar a un entorno")
+                
             return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
 
     else:
@@ -230,7 +237,9 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
             messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
             return HttpResponseRedirect('/administrar/proyectos')
 
-    return render(request, template_name, {'form': form, 'value': value,'id': id, 'nombre_proyecto': proyecto.pro_nombre})
+    return render(request, template_name, {'form': form, 'value': value,'id': id, 
+                                           'nombre_proyecto': proyecto.pro_nombre,
+                                           'entornos_associated': entornos_associated})
 
 @login_required
 @group_required('af_cloud_admin',)

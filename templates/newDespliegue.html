@@ -18,9 +18,36 @@ $(document).ready(function(){
      $('[name=ser_max_replicas]').val(max);
      }
   });
+
+
+  $('#id_ins_unique_name').on( "input", function(e){
+
+    if (e.originalEvent.data.match(/[a-z0-9\-]/g)==null) {
+  //[a-z0-9]([-a-z0-9]*[a-z0-9])?
+       $('[name="ins_unique_name"]').val($('[name="ins_unique_name"]').val().slice(0,-1));
+       $( "#modal_invalid_char" ).dialog({
+             resizable: false,
+             height: "auto",
+             width: 400,
+             modal: true,
+             buttons: {
+               "Aceptar": function() {
+                 $( this ).dialog( "close" );
+               }
+             }
+           });
+       }
+  });
 });
 
 </script>
+
+<div id="modal_invalid_char" style="display: none;" title="Entrada inválida">
+  <p>El caracter que ha introducido no es válido.</p>
+  <p>Nombres válidos: alfanumérico (minúsculas) y -</p>
+
+</div>
+
 
 {% if mensaje %}
     <div id="message" class="modal fade">
