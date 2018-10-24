@@ -7,7 +7,7 @@ from django.contrib.auth.models import BaseUserManager
 from datetime import datetime
 from afcloud.settings import MEDIA_ROOT,CRT_FILE,KEY_FILE
 from django.core.files.storage import FileSystemStorage
-
+import base64
 
 fs = FileSystemStorage(location=MEDIA_ROOT)
 
@@ -82,7 +82,7 @@ class AfServicio(models.Model):
 
 class AfEntorno(models.Model):
 
-    ent_nombre      = models.CharField    (max_length=100,verbose_name="Nombre del entorno", blank=False)
+    ent_nombre      = models.CharField    (unique=True, max_length=100,verbose_name="Nombre del entorno", blank=False)
     ent_descripcion = models.CharField    (max_length=250, verbose_name="Descripción del entorno",blank=True, null=True)
     ent_activo      = models.BooleanField (default=1, verbose_name='Activo')
     ent_config_file = models.FileField    (blank=True,verbose_name="Fichero de entorno",storage=fs)
@@ -96,7 +96,20 @@ class AfEntorno(models.Model):
     proyectos_list_str=''
 
     def setConfigfile(self,fichero):
-        self.ent_config_file=fichero
+        if fichero:
+            self.ent_config_file=fichero
+
+    def setRegistryfile(self,fichero):
+
+        if fichero:
+            self.ent_config_file= fichero
+
+    def getRegistryHash(self, fichero):
+        with open(fichero, 'rb') as f:
+            content=f.read()
+        f.close()
+
+        return base64.encodestring(content).decode('utf-8').strip()
 
     def set_num_proyectos(self, n):
         self.num_proyectos=n
@@ -288,7 +301,7 @@ class AfPerfil(models.Model):
 
 class AfGlobalconf(models.Model):
 
-    fqdn      = models.CharField    (unique=True, max_length=100,verbose_name="FQDN", blank=False)
+    fqdn      = models.CharField    (max_length=100,verbose_name="FQDN", blank=False)
     crt_file  = models.FileField    (blank=True,verbose_name="Fichero crt", upload_to=CRT_FILE)
     key_file  = models.FileField    (blank=True,verbose_name="Fichero key", upload_to=KEY_FILE)
     is_done   = models.BooleanField (default=0, verbose_name='Configuracion realizada')

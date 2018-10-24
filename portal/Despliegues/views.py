@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from portal.models import AfProyecto, AfUsuario,\
     AfTipoPerfil, AfPerfil,AfRelEntPro, AfLineaCatalogo, AfServicio, AfEntorno, AfInstancia,\
-    AfCiclo
+    AfCiclo, AfGlobalconf
 
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
@@ -38,6 +38,7 @@ def getInstancias(request, id_proyecto):
     lcas= AfLineaCatalogo.objects.filter(pro=proyecto)
     dictio_inst_list=[]
     lst_instancias=[]
+
     for lc in lcas:
 
         despliegues=AfInstancia.objects.filter(lca=lc)
@@ -149,7 +150,8 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         max= request.POST.get('ser_max_replicas', False)
         unique_instance_name = request.POST.get('ins_unique_name', False)
         namespace= proyecto.pro_nombre
-
+        fqdn= AfGlobalconf.objects.values('fqdn')
+        
         '''
          comprobar en is valid q no existe otro deployment con el mismo nombre
         '''
@@ -158,13 +160,14 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
             try:
                 kuber=Kuber(kube_conf)
                 #fichero_yaml, target_namespace
-                kwargs={'fichero_yaml': 'yaml_all_services_HsXeaZf.yaml' , #'yaml_file',
+                kwargs={'fichero_yaml': yaml_file , #'yaml_file',
                         'namespace': namespace,
                         'replicas_min': min,
                         'replicas_max': max,
                         'unique_instance_name':unique_instance_name,
-                        'nfs-server' : '10.103.193.211',
-                        'env-name'   : entorno.ent.ent_nombre
+                        'nfs-server' : entorno.ent.nfs_server,
+                        'env-name'   : entorno.ent.ent_nombre,
+                        'fqdn'       : fqdn[0]['fqdn']
                         }
                 kuber.createServiceStack(**kwargs)
 
@@ -174,12 +177,10 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
 
 
             #rel_ent_pro= AfRelEntPro.objects.get(pro=proyecto,ent=entorno)
-            
-            
-            '''
+
             instancia=AfInstancia.objects.create(lca=lca,rep=entorno)
             ciclo= AfCiclo.objects.create(ins=instancia)
-            '''
+            
             messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
             return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
         else:

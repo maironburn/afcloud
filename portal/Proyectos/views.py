@@ -204,7 +204,7 @@ def nuevoProyecto(request,template_name='newProject.html'):
 
     else:
         entornos=AfEntorno.objects.all()
-        form = ProyectoForm()
+        form = ProyectoForm(initial={'entornos' : entornos})
         return TemplateResponse(request, template_name,  {'form': form, 'value': value })#,'entornos': entornos})
 
 

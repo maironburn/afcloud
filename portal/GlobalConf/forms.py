@@ -30,9 +30,13 @@ class GlobalConfForm(forms.ModelForm):
         super(GlobalConfForm, self).__init__(*args, **kwargs)
         self.fields['fqdn'].widget.attrs['readonly'] = True
     
+    def set_fqdn(self,instance):
+        self.fields['fqdn'].initial= instance.fqdn
+        
+        
     def is_valid(self):
         valid = super(GlobalConfForm, self).is_valid()
-
+        
         '''
         FQDN= openssl x509 -noout -subject -in FICHERO.crt | awk -F \/ '{printf$7}' | cut -c 6-
         

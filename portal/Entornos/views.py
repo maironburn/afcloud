@@ -15,6 +15,7 @@ from django.contrib import messages
 from django.core.files import File
 
 
+
 logger=getLogger()
 
 
@@ -127,21 +128,30 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
     if request.method == "POST" and request.FILES:
         form = EntornoForm(request.POST, request.FILES)
         fichero_config=handle_uploaded_file(request.FILES['ent_config_file'])
+        fichero_json_registry= handle_uploaded_file(request.FILES['ent_json_file'])
+        rook_ip= None
+        
         try:
             kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
             client=kuber.getClient()
+            rook_ip= kuber.get_rook_nfs_ip()
             form.setConOkStatus()
+            
         except Exception as e:
             logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,fichero_config))
 
         if form.is_valid():
             
             entorno = form.save(commit=False)
-            entorno.setConfigfile((MEDIA_ROOT+ '%s') %(fichero_config))
-           
+            entorno.setConfigfile  ((MEDIA_ROOT+ '%s') %(fichero_config))
+            entorno.setRegistryfile((MEDIA_ROOT+ '%s') %(fichero_json_registry))
+            
             local_file = open((MEDIA_ROOT+ '%s') %(fichero_config))
             djangofile= File(local_file)
+            
             entorno.ent_config_file.save(fichero_config,djangofile )
+            entorno.registry_hash = entorno.getRegistryHash ((MEDIA_ROOT+ '%s') %(fichero_json_registry))
+            entorno.nfs_server = rook_ip
             entorno.save()
             local_file.close()
             
