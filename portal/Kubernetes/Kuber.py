@@ -24,6 +24,10 @@ class Kuber(object):
     namespace            = None
     unique_instance_name = None
     persistent_volume    = None
+    fqdn                 = None
+    nfs_server           = None
+    env_name             = None
+    operation_result     = False
 
     def __init__(self,fichero=None):
         self.logger=getLogger()
@@ -47,6 +51,7 @@ class Kuber(object):
 
             self.delete_kind_dict        = {
                             'PersistentVolume'          : self.delete_persistent_volume,
+                            'PersistentVolumeClaim'     : self.delete_namespaced_persistent_volume_claim,
                             'Deployment'                : self.delete_namespaced_deployment,
                             'delete_namespaced_service' : self.delete_namespaced_service,
                             'HorizontalPodAutoscaler'   : self.delete_namespaced_horizontal_pod_autoscaler,
@@ -128,9 +133,7 @@ class Kuber(object):
             body.kind='Namespace'
             body.api_version='v1'
             metadata={'name': name, 'labels' : {'name': name}}
-
             body.metadata=metadata
-
             self.v1.create_namespace(body)
             self.logger.debug('Creado namespace: %s' % name)
 
@@ -141,7 +144,7 @@ class Kuber(object):
     def deleteNamespace(self,name,entorno_config_file=None):
 
         try:
-
+            self.operation_result=True
             if entorno_config_file:
                 self.checkConfigFile(entorno_config_file)
 
@@ -150,8 +153,8 @@ class Kuber(object):
             self.logger.debug('Borrado  namespace: %s' % name)
 
         except Exception as e:
+            self.operation_result=False
             pass
-
 
 
     def getClient(self):
@@ -183,18 +186,48 @@ class Kuber(object):
     '''
     https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#list_namespaced_deployment
     '''
-    def list_namespaced_deployment(self, ns, include_uninitialized=True):
+    def list_namespaced_deployment(self, ins_unique_name, ns, include_uninitialized=True):
 
         include_uninitialized = True # bool | If true, partially initialized resources are included in the response
-
+        response= {}
         try:
             api_instance = kubernetes.client.ExtensionsV1beta1Api()
             api_response = api_instance.list_namespaced_deployment(ns, include_uninitialized=include_uninitialized)
+
+            for i in api_response.items:
+                if ins_unique_name== i.metadata.name:
+                    response={'replicas': i.status.replicas, 'creation_timestamp': i.metadata.creation_timestamp}
+                    pprint('list_namespaced_deployment: %s'  % (i))
+
             pprint('list_namespaced_deployment: %s'  % (api_response))
 
         except ApiException as e:
             print("Exception when calling AppsV1Api->list_namespaced_deployment: %s\n" % e)
 
+        return response
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/AutoscalingV1Api.md#list_namespaced_horizontal_pod_autoscaler
+    '''
+    def list_namespaced_horizontal_pod_autoscaler(self, ins_unique_name, ns, include_uninitialized=True):
+
+        include_uninitialized = True
+        response= {}
+        try:
+            target_name= '%s%s' % (ins_unique_name,'-hpa')
+            api_instance = kubernetes.client.AutoscalingV1Api()
+            api_response = api_instance.list_namespaced_horizontal_pod_autoscaler(ns, include_uninitialized=include_uninitialized)
+
+            for i in api_response.items:
+                if target_name== i.metadata.name:
+                    response={'replicas': i.status.current_replicas, 'creation_timestamp': i.metadata.creation_timestamp}
+                    pprint('list_namespaced_deployment: %s'  % (i))
+
+            pprint('list_namespaced_deployment: %s'  % (api_response))
+
+        except ApiException as e:
+            print("Exception when calling AppsV1Api->list_namespaced_deployment: %s\n" % e)
+
+        return response
 
     def list_namespaced_ingress(self, ns, include_uninitialized=True):
 
@@ -234,21 +267,22 @@ class Kuber(object):
     def create_persistent_volume(self, kwargs, custom):
 
         self.persistent_volume=('%s%s' % (custom['unique_instance_name'],'-pv'))
-
-        kwargs['metadata']['namespace'] = custom['namespace']
+        self.operation_result=True
+        kwargs['metadata']['namespace'] = self.namespace
         kwargs['metadata']['name']      = self.persistent_volume
-        kwargs['spec']['nfs']['server'] = custom['nfs-server']
+        kwargs['spec']['nfs']['server'] = self.nfs_server
 
         try:
 
             api_instance = kubernetes.client.CoreV1Api()
             api_response = api_instance.create_persistent_volume(kwargs)
             pprint('create_persistent_volume: %s'  % (api_response))
-
-            self.rollback_stack_methods.append('delete_persistent_volume')
+            self.rollback_stack_methods.append('PersistentVolume')
 
         except ApiException as e:
             print("Exception when calling CoreV1Api->create_persistent_volume: %s\n" % e)
+            self.operation_result=False
+
 
 
     '''
@@ -256,15 +290,17 @@ class Kuber(object):
     '''
     def create_namespaced_persistent_volume_claim(self, kwargs, custom):
 
-        kwargs['metadata']['name'] = ('%s%s' % (custom['unique_instance_name'], '-pvc') )
+        kwargs['metadata']['name'] = ('%s%s' % (self.unique_instance_name, '-pvc') )
         kwargs['metadata']['namespace'] = self.namespace
-
+        self.operation_result=True
         try:
             api_instance = kubernetes.client.CoreV1Api()
-            api_response = api_instance.create_namespaced_persistent_volume_claim (custom['namespace'], kwargs)
+            api_response = api_instance.create_namespaced_persistent_volume_claim (self.namespace, kwargs)
             pprint('create_namespaced_persistent_volume_claim: %s'  % (api_response))
+            self.rollback_stack_methods.insert(0,'PersistentVolumeClaim')
 
         except ApiException as e:
+            self.operation_result=False
             print("Exception when calling CoreV1Api->create_namespaced_persistent_volume_claim: %s\n" % e)
 
 
@@ -273,16 +309,21 @@ class Kuber(object):
     '''
     def create_namespaced_service(self, kwargs, custom):
 
-        kwargs['metadata']['name']      = ('%s%s' % (custom['unique_instance_name'],'-svc'))
-        kwargs['metadata']['namespace']     = custom['namespace']
-        kwargs['spec']['selector']['app']   = custom['unique_instance_name']
+        self.operation_result=True
+        kwargs['metadata']['name']           = ('%s%s' % (self.unique_instance_name,'-svc'))
+        kwargs['metadata']['namespace']      = self.namespace
+        kwargs['spec']['selector']['app']    = self.unique_instance_name
 
         try:
             api_instance = kubernetes.client.CoreV1Api()
-            api_response = api_instance.create_namespaced_service(custom['namespace'], kwargs)
+            api_response = api_instance.create_namespaced_service(self.namespace, kwargs)
+            self.rollback_stack_methods.append('Service')
             pprint('create_namespaced_service: %s'  % (api_response))
+
         except ApiException as e:
+            self.operation_result= False
             print("Exception when calling CoreV1Api->create_namespaced_service: %s\n" % e)
+
 
 
     '''
@@ -290,27 +331,30 @@ class Kuber(object):
     '''
     def create_namespaced_deployment(self, kwargs, custom):
 
-        kwargs['metadata']['name']                                = custom['unique_instance_name']
-        kwargs['metadata']['namespace']                           = custom['namespace']
+        self.operation_result = True
+        kwargs['metadata']['name']                                = self.unique_instance_name
+        kwargs['metadata']['namespace']                           = self.namespace
         kwargs['spec']['replicas']                                = int(custom['replicas_min'])
-        kwargs['spec']['template']['metadata']['name']            = custom['unique_instance_name']
-        kwargs['spec']['template']['metadata']['namespace']       = custom['namespace']
-        kwargs['spec']['template']['metadata']['labels']['app']   = custom['unique_instance_name']
-        kwargs['spec']['template']['spec']['containers'][0]['name']  = custom['unique_instance_name']
-        kwargs['spec']['template']['spec']['containers'][0]['image'] = 'registry.FQDN:32337/nginx-cica:latest'
-        kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['subPath'] = custom['unique_instance_name']
-        kwargs['spec']['template']['spec']['volumes'][0]['persistentVolumeClaim']['claimName'] = ('%s%s' % (custom['unique_instance_name'] , '-pvc'))
-        kwargs['spec']['template']['spec']['imagePullSecrets'][0]['name'] = ('%s%s' % ('registry-', custom['env-name']))
+        kwargs['spec']['template']['metadata']['name']            = self.unique_instance_name
+        kwargs['spec']['template']['metadata']['namespace']       = self.namespace
+        kwargs['spec']['template']['metadata']['labels']['app']   = self.unique_instance_name
+        kwargs['spec']['template']['spec']['containers'][0]['name']  = self.unique_instance_name
+        kwargs['spec']['template']['spec']['containers'][0]['image'] = 'registry.%s:32337/nginx-cica:latest' % (self.fqdn,) #'registry.FQDN:32337/nginx-cica:latest'
+        kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['subPath'] =  self.unique_instance_name
+        kwargs['spec']['template']['spec']['volumes'][0]['persistentVolumeClaim']['claimName'] = ('%s%s' % (self.unique_instance_name , '-pvc'))
+        kwargs['spec']['template']['spec']['imagePullSecrets'][0]['name'] = ('%s%s' % ('registry-', self.env_name))
 
         try:
 
             api_instance = kubernetes.client.ExtensionsV1beta1Api()
-            api_response = api_instance.create_namespaced_deployment (custom['namespace'], kwargs)
+            api_response = api_instance.create_namespaced_deployment (self.namespace, kwargs)
             pprint('create_namespaced_deployment: %s'  % (api_response))
             self.rollback_stack_methods.append('Deployment')
 
         except ApiException as e:
+            self.operation_result = False
             print("Exception when calling ExtensionsV1beta1Api->create_namespaced_deployment: %s\n" % e)
+
 
 
     '''
@@ -318,19 +362,23 @@ class Kuber(object):
     '''
     def create_namespaced_horizontal_pod_autoscaler(self,kwargs, custom):
 
-        kwargs['metadata']['name']      = custom['unique_instance_name']
-        kwargs['metadata']['namespace'] = custom['namespace']
+        self.operation_result = True
+        kwargs['metadata']['name']      = '%s%s' % (self.unique_instance_name, '-hpa')
+        kwargs['metadata']['namespace'] = self.namespace
         kwargs['spec']['maxReplicas']   = int(custom['replicas_max'])
         kwargs['spec']['minReplicas']   = int(custom['replicas_min'])
-        kwargs['spec']['scaleTargetRef']['name']= custom['unique_instance_name']
+        kwargs['spec']['scaleTargetRef']['name']= self.unique_instance_name
         try:
 
             api_instance = kubernetes.client.AutoscalingV1Api()
-            api_response = api_instance.create_namespaced_horizontal_pod_autoscaler (custom['namespace'], kwargs)
+            api_response = api_instance.create_namespaced_horizontal_pod_autoscaler (self.namespace, kwargs)
             pprint('create_namespaced_horizontal_pod_autoscaler: %s'  % (api_response))
+            self.rollback_stack_methods.append('HorizontalPodAutoscaler')
 
         except ApiException as e:
+            self.operation_result = False
             print("Exception when calling AutoscalingV1Api->create_namespaced_horizontal_pod_autoscaler: %s\n" % e)
+
 
 
     '''
@@ -338,7 +386,7 @@ class Kuber(object):
     '''
     def delete_persistent_volume(self, kwargs):
 
-        name= kwargs['unique_instance_name']
+        name=('%s%s' % (kwargs['unique_instance_name'],'-pv'))
 
         try:
 
@@ -351,6 +399,24 @@ class Kuber(object):
             print("Exception when calling CoreV1Api->delete_persistent_volume: %s\n" % e)
 
 
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#delete_namespaced_persistent_volume_claim
+    '''
+    def delete_namespaced_persistent_volume_claim(self, kwargs):
+
+        name        = ('%s%s' % (kwargs['unique_instance_name'],'-pvc'))
+        namespace   = kwargs['namespace']
+
+        try:
+
+            api_instance = kubernetes.client.CoreV1Api()
+            body = kubernetes.client.V1DeleteOptions()
+            api_response = api_instance.delete_namespaced_persistent_volume_claim(name, namespace, body)
+            pprint(api_response)
+
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->delete_namespaced_persistent_volume_claim: %s\n" % e)
+
     def delete_namespaced_deployment(self, kwargs):
 
 
@@ -361,7 +427,7 @@ class Kuber(object):
 
             api_instance = kubernetes.client.AppsV1Api()
             body = kubernetes.client.V1DeleteOptions()
-            api_response = api_instance.delete_namespaced_deployment( name, body)
+            api_response = api_instance.delete_namespaced_deployment( name, namespace, body)
             pprint(api_response)
 
         except ApiException as e:
@@ -373,8 +439,7 @@ class Kuber(object):
     '''
     def delete_namespaced_horizontal_pod_autoscaler(self, kwargs):
 
-
-        name         = kwargs['unique_instance_name']
+        name         = '%s%s' % (kwargs['unique_instance_name'], '-hpa')
         namespace    = kwargs['namespace']
 
         try:
@@ -393,16 +458,46 @@ class Kuber(object):
     '''
     def delete_namespaced_service(self, kwargs):
 
-        name         = kwargs['unique_instance_name']
+        name         = '%s%s' % (kwargs['unique_instance_name'], '-svc')
         namespace    = kwargs['namespace']
 
         try:
+
             api_instance = kubernetes.client.CoreV1Api()
             body = kubernetes.client.V1DeleteOptions()
             api_response = api_instance.delete_namespaced_service(name, namespace, body)
             pprint(api_response)
+
         except ApiException as e:
             print("Exception when calling CoreV1Api->delete_namespaced_service: %s\n" % e)
+
+
+    def rollBackOperations(self, kwargs):
+
+        for op in self.rollback_stack_methods:
+            self.delete_kind_dict[op](kwargs)
+
+
+    def modifyDeploymentReplicas(self, deployment_name, ns, replicas):
+
+
+        try:
+
+            api_instance = kubernetes.client.AppsV1Api()
+            body= api_instance.read_namespaced_deployment(deployment_name, ns)
+            body.spec.replicas=replicas
+            api_response = api_instance.patch_namespaced_deployment(deployment_name, ns, body)
+
+            pprint(api_response)
+
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->delete_namespaced_service: %s\n" % e)
+
+
+
+
+
+
 
 
     def createServiceStack(self, **kwargs):
@@ -410,9 +505,11 @@ class Kuber(object):
         fichero_yaml                    = kwargs.get('fichero_yaml')
         self.namespace                  = kwargs.get('namespace')
         self.unique_instance_name       = kwargs.get('unique_instance_name')
-
-        replicas_min            = kwargs.get('replicas_min')
-        replicas_max            = kwargs.get('replicas_max')
+        self.fqdn                       = kwargs.get('fqdn')
+        self.nfs_server                 = '192.168.129.22' #kwargs.get('nfs_server')
+        self.env_name                   = kwargs.get('env_name')
+        replicas_min                    = kwargs.get('replicas_min')
+        replicas_max                    = kwargs.get('replicas_max')
 
 
 
@@ -426,7 +523,11 @@ class Kuber(object):
                     kind = i.get('kind')
                     pprint ("llamando al meth asociado al kind: %s" % (kind))
                     self.create_kind_dict[kind](i, kwargs)
+                    if not self.operation_result and len(self.rollback_stack_methods):
+                        self.rollBackOperations(kwargs)
+                        return False
+
 
         #@todo@ Rollback meths
 
-        return parsed
+        return True

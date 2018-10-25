@@ -218,7 +218,7 @@ class AfLineaCatalogo(models.Model):
     pro                 = models.ForeignKey     (AfProyecto, on_delete=models.CASCADE)
     ser                 = models.ForeignKey     (AfServicio, on_delete=models.CASCADE)
     lca_tarifa          = models.FloatField     (blank=True, null=True)
-    lca_configuracion   = models.CharField      (max_length=250, blank=True, null=True)
+    #lca_configuracion   = models.CharField      (max_length=250, blank=True, null=True)
     lca_activo          = models.BooleanField   (default=1, verbose_name='Activo')
 
     def __str__(self):

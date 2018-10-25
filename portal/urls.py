@@ -78,6 +78,8 @@ urlpatterns = [
     url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/crearInstancia/$', despliegues_views.nuevoDespliegue, name='nuevaInstancia'),
     #url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/editarInstancia/(?P<id_instancia>\d+)/$', despliegues_views.editarDespliegue, name='editarInstancia'),
     url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/eliminarInstancia/(?P<id_instancia>\d+)/$', despliegues_views.eliminarDespliegue, name='borrarrInstancia'),
+    url(r'^despliegue/modifyDeploymentReplicas/(?P<id_instancia>\d+)/(?P<replicas>\d+)/$', despliegues_views.modifyDeploymentReplicas, name='modifyDeploymentReplicas'),
+
 
     ##################################################
     # Configuracion global

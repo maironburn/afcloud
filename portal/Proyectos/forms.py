@@ -43,7 +43,7 @@ class ProyectoForm(forms.ModelForm):
         if len(kwargs):
             if 'initial' in kwargs:
                 self.fields['entornos'].queryset=AfEntorno.objects.all()
-                #self.fields['entornos'].initial=kwargs['initial']['entornos']
+                self.fields['entornos'].initial=kwargs['initial']['entornos']
             #self.fields['entornos'].queryset=AfEntorno.objects.all()
 
         
@@ -146,12 +146,13 @@ class editProyectoForm(forms.ModelForm):
         instancia.pro_activo=data['pro_activo']
 
         vinculados=AfRelEntPro.objects.filter(pro=instancia)
+        '''
         for v in vinculados:
             kuber=Kuber (v.ent.ent_config_file.path)
             #kuber.deleteNamespace(self.pro_nombre)
             kuber.patch_Namespace(self.pro_nombre)
             v.delete()
-
+        '''
         for ep in data['entornos']:
             entorno=AfEntorno.objects.get(id=ep)
             afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)

@@ -17,6 +17,7 @@ from django.contrib import messages
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
+from setuptools.unicode_utils import try_encode
 
 logger=getLogger()
 
@@ -44,12 +45,23 @@ def getInstancias(request, id_proyecto):
         despliegues=AfInstancia.objects.filter(lca=lc)
         for i in despliegues:
             lst_instancias.append(i)
+            ns=proyecto.pro_nombre
+            fichero_entorno= i.rep.ent.ent_config_file.path
+            
+            kuber=Kuber(fichero_entorno)
+            resp= kuber.list_namespaced_deployment(i.ins_unique_name, ns)
+            #resp= kuber.list_namespaced_horizontal_pod_autoscaler(i.ins_unique_name, ns)
+            
             dictio_inst_list.append({'nombre_entorno': i.rep.ent.ent_nombre ,
-                        'nombre_servicio': lc.ser.ser_nombre,
-                        'estado': i.ins_activo,
-                        'uri': i.ins_uri,
-                        'create_date': '',
-                        'id': i.id
+                        'nombre_servicio'   : lc.ser.ser_nombre,
+                        'nombre_despliegue' : i.ins_unique_name,
+                        'running'           : resp['replicas'], 
+                        'replicas_min'      : lc.ser.ser_min_replicas,
+                        'replicas_max'      : lc.ser.ser_max_replicas,
+                        'estado'            : i.ins_activo,
+                        'uri'               : i.ins_uri,
+                        'creation_date'     : resp['creation_timestamp'],
+                        'id'                : i.id
                         })
 
     return dictio_inst_list, lst_instancias
@@ -151,40 +163,42 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         unique_instance_name = request.POST.get('ins_unique_name', False)
         namespace= proyecto.pro_nombre
         fqdn= AfGlobalconf.objects.values('fqdn')
-        
+
         '''
          comprobar en is valid q no existe otro deployment con el mismo nombre
         '''
         if form.is_valid():
-
+            operation_result=False
             try:
                 kuber=Kuber(kube_conf)
                 #fichero_yaml, target_namespace
-                kwargs={'fichero_yaml': yaml_file , #'yaml_file',
-                        'namespace': namespace,
-                        'replicas_min': min,
-                        'replicas_max': max,
-                        'unique_instance_name':unique_instance_name,
-                        'nfs-server' : entorno.ent.nfs_server,
-                        'env-name'   : entorno.ent.ent_nombre,
-                        'fqdn'       : fqdn[0]['fqdn']
+                kwargs={
+                        'fichero_yaml'         : yaml_file , #'yaml_file',
+                        'namespace'            : namespace,
+                        'replicas_min'         : min,
+                        'replicas_max'         : max,
+                        'unique_instance_name' : unique_instance_name,
+                        'nfs_server'           : entorno.ent.nfs_server,
+                        'env_name'             : entorno.ent.ent_nombre,
+                        'fqdn'                 : fqdn[0]['fqdn']
                         }
-                kuber.createServiceStack(**kwargs)
-
+                
+                operation_result=kuber.createServiceStack(**kwargs)
+                
                 #form.setConOkStatus()
             except Exception as e:
                 logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))
 
 
             #rel_ent_pro= AfRelEntPro.objects.get(pro=proyecto,ent=entorno)
-
-            instancia=AfInstancia.objects.create(lca=lca,rep=entorno)
-            ciclo= AfCiclo.objects.create(ins=instancia)
-            
-            messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
-            return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
-        else:
-            return render(request, template_name, {'form': form, 'value': value})
+            if operation_result:
+                instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name)
+                ciclo= AfCiclo.objects.create(ins=instancia)
+                messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
+                return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
+        
+        return render(request, template_name, {'form': form, 'value': value})
+    
     else:
         nombre_proyecto= request.session.get('proyecto_seleccionado', False)
         id_servicios=AfLineaCatalogo.objects.filter(pro=proyecto).select_related('ser').values_list('ser_id', flat=True)
@@ -200,6 +214,36 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
 
 
+@login_required
+@group_required(None)
+def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 ):
+    
+    try:
+        instance=AfInstancia.objects.get(id=id_instancia)
+        entorno_file= instance.rep.ent.ent_config_file.path
+        replicas=int(replicas)
+        replicas_definidas_servicio=instance.lca.ser.ser_min_replicas
+        namespace = instance.lca.pro.pro_nombre
+        msg=''
+        
+        kuber=Kuber(entorno_file)
+        replicas_spec =replicas_definidas_servicio if replicas else 0 
+
+        kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas_spec)
+        
+        if replicas_spec:
+            messages.success(request,  'Despliegue lanzado con éxito', extra_tags='Estado de despliegue')
+        else:
+            messages.success(request,  'Repliegue lanzado con éxito', extra_tags='Estado de despliegue')
+            
+                
+    except Exception as e:
+        messages.error(request,  'Ocurrió algún error al tratar de cambiar el esatdo del despliegue', extra_tags='Estado de despligue')
+        print ('Exception modifyDeploymentReplicas')
+    
+    return HttpResponseRedirect('/despliegue/proyecto/%s' % (instance.lca.pro.id))
+    
+    
 
 @login_required
 @group_required(None)

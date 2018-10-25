@@ -70,6 +70,7 @@ def index(request, template_name='index.html', extra_context=None):
 
     usuario=request.user
     col=getProyectos(usuario,True)
+    current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
     conf_global= AfGlobalconf.objects.first()
     afuser=AfUsuario.objects.get(user=usuario)
     if afuser.usu_administrador and not conf_global.is_done:
@@ -82,6 +83,13 @@ def index(request, template_name='index.html', extra_context=None):
     
     request.session['globalconf_isdone']= conf_global.is_done
     request.session['proyectos']     = col['proyectos']
+    #request.session['proyecto_seleccionado'] = False
+    
+    p_seleccionado= request.session.get('id_proyecto_seleccionado', False)
+    if p_seleccionado and int(p_seleccionado) not in current_projects:
+        request.session['proyecto_seleccionado'] = False
+        
+    
     request.session['afcloud_admin'] = col['afcloud_admin']
 
     return TemplateResponse(request, template_name, context)
@@ -109,6 +117,9 @@ def selected_proyect(request, id_proyecto, template_name='index.html', extra_con
     usuario= request.user
     tipo_perfil=getPerfilProyecto(id_proyecto,usuario )
     col=getProyectos(usuario)
+    check_id_proyect= []
+    current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
+    
     selected=AfProyecto.objects.get(id=id_proyecto)
     numeric_profile={'Miembro': 1, 'Operador':2, 'Gestor':3 }
 
@@ -123,6 +134,8 @@ def selected_proyect(request, id_proyecto, template_name='index.html', extra_con
     request.session['proyectos'] = col['proyectos']
     request.session['afcloud_admin'] = col['afcloud_admin']
     request.session['proyecto_seleccionado'] = selected.pro_nombre
+    #if request.session.get('id_proyecto_seleccionado', False) and 
+        
     request.session['id_proyecto_seleccionado']=id_proyecto
 
     template_response=seccionActivaRedirect(request,id)
