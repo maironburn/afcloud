@@ -8,7 +8,7 @@ from django.template.response import TemplateResponse
 from portal.models import AfProyecto, AfUsuario,\
     AfTipoPerfil, AfPerfil,AfRelEntPro, AfLineaCatalogo, AfServicio, AfEntorno, AfInstancia,\
     AfCiclo, AfGlobalconf
-
+from django.http import JsonResponse
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.db import IntegrityError
@@ -161,7 +161,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         min= request.POST.get('ser_min_replicas', False)
         max= request.POST.get('ser_max_replicas', False)
         unique_instance_name = request.POST.get('ins_unique_name', False)
-        namespace= proyecto.pro_nombre
+        namespace= proyecto.pro_nombre_k8s
         fqdn= AfGlobalconf.objects.values('fqdn')
 
         '''
@@ -205,13 +205,28 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
 
         svc=AfServicio.objects.filter(id__in=[id_servicios])
         dict_serv_extra= getMaxMinReplic(svc)
-        data={'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
-              'service_queryset': svc
+        data={
+                'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
+                'service_queryset': svc
               }
         #.objects.filter(id__in=[c.ser.id for d in lst_despliegues])}
         form = InstanciaForm(data)
 
         return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
+
+
+@login_required
+@group_required(None)
+def refreshReplicas(request,id_proyecto):
+    
+    proyecto=AfProyecto.objects.get(id=id_proyecto)
+    response=getDetallesProyecto(proyecto)
+    replicas={}
+    for r in response:
+        replicas.update({r['id'] : r['status']})
+        
+    data={'action': 'refresh_replicas', 'response':replicas}
+    return JsonResponse({'data':data})
 
 
 @login_required

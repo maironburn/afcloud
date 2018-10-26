@@ -478,6 +478,10 @@ class Kuber(object):
             self.delete_kind_dict[op](kwargs)
 
 
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/AppsV1Api.md#read_namespaced_deployment
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/AppsV1Api.md#patch_namespaced_deployment
+    '''
     def modifyDeploymentReplicas(self, deployment_name, ns, replicas):
 
 
@@ -494,6 +498,29 @@ class Kuber(object):
             print("Exception when calling CoreV1Api->delete_namespaced_service: %s\n" % e)
 
 
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/AppsV1Api.md#list_namespaced_deployment
+    '''
+    def list_namespaced_deployment_info(self, namespace):
+
+        try:
+
+            api_instance = kubernetes.client.AppsV1Api()
+            api_response = api_instance.list_namespaced_deployment(namespace)
+            deployments=[]
+
+            for d in api_response.items:
+                    deployed={ 'name': d.metadata.name,     'creation_timestamp':d.metadata.creation_timestamp ,
+                               'status': d.spec.replicas ,   'imagen': d.spec.template.spec.containers[0].image}
+
+                    deployments.append(deployed)
+            pprint(api_response)
+
+            return deployments
+
+
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->delete_namespaced_service: %s\n" % e)
 
 
 

@@ -1,4 +1,4 @@
-from portal.models import AfProyecto, AfUsuario, AfPerfil, AfTipoPerfil
+from portal.models import AfProyecto, AfUsuario, AfPerfil, AfTipoPerfil,AfRelEntPro, AfInstancia
 from afcloud.settings import MEDIA_ROOT
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.logger import *
@@ -97,6 +97,25 @@ def handle_uploaded_file(f, dest=MEDIA_ROOT):
             destination.write(chunk)
 
     return filename
+
+
+def getDetallesProyecto(proyecto_instance):
+    
+    rel_ent_pro= AfRelEntPro.objects.filter(pro=proyecto_instance)
+    instancias_info=[]
+    iterado=[]
+    for e in rel_ent_pro:
+        if e.ent.ent_nombre not in iterado:
+            
+            kuber    = Kuber(e.ent.ent_config_file.path)
+            response = kuber.list_namespaced_deployment_info(proyecto_instance.pro_nombre)
+            for r in response:
+                instancia_id= AfInstancia.objects.filter(ins_unique_name=r['name']).values_list('id',flat=True).first()
+                r.update({'entorno': e.ent.ent_nombre, 'id': instancia_id})
+            instancias_info.extend(response)
+            iterado.append(e.ent.ent_nombre)
+        
+    return   instancias_info 
 
 
 def getKubernetesEnv(config_file):

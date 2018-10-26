@@ -20,7 +20,7 @@ class ProyectoForm(forms.ModelForm):
 
     class Meta:
         model=AfProyecto
-        fields='__all__'
+        fields=('pro_nombre','pro_descripcion', 'pro_activo')
 
 
     def __init__(self, *args,**kwargs):
@@ -59,7 +59,7 @@ class ProyectoForm(forms.ModelForm):
     def saveProyect(self, accion, proyecto=None):
         #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
         if accion=='new':
-            proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
+            proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre,pro_nombre_k8s=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
 
         vinculados=AfRelEntPro.objects.filter(pro=proyecto)
         '''
@@ -81,7 +81,7 @@ class ProyectoForm(forms.ModelForm):
             afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
             
             kuber=Kuber (ep.ent_config_file.path)
-            kuber.createNameSpace(self.pro_nombre)
+            kuber.createNameSpace(self.pro_nombre_k8s)
             #kuber.create_namespaced_ingress(proyecto.pro_nombre)
             afep.save()
 
@@ -101,9 +101,10 @@ class ProyectoForm(forms.ModelForm):
 
 class editProyectoForm(forms.ModelForm):
 
-    pro_nombre = forms.CharField(max_length=100, label='Nombre')
-    pro_descripcion= forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea )
-    pro_activo=forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
+    pro_nombre      = forms.CharField(max_length=100, label='Nombre')
+    pro_nombre_k8s  = forms.CharField(max_length=100, label='Nombre K8s', required=False)
+    pro_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea )
+    pro_activo      = forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
     '''
     entornos =forms.MultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple)#,
                                              #choices=[ (choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all()])
@@ -121,6 +122,7 @@ class editProyectoForm(forms.ModelForm):
 
         self.entornos_associated=[]
         super(editProyectoForm, self).__init__(*args, **kwargs)
+        self.fields['pro_nombre_k8s'].widget.attrs['readonly'] = True
         #self.fields['entornos'].initial=kwargs['entornos']
         if len(kwargs):
             if 'initial' in kwargs:
@@ -145,14 +147,16 @@ class editProyectoForm(forms.ModelForm):
         instancia.pro_descripcion=data['pro_descripcion']
         instancia.pro_activo=data['pro_activo']
 
-        vinculados=AfRelEntPro.objects.filter(pro=instancia)
-        '''
-        for v in vinculados:
+        vinculados=AfRelEntPro.objects.filter(pro=instancia).values_list('ent', flat=True)
+        to_delete=[x for x in list(vinculados) if str(x) not in data['entornos']]
+        
+        
+        for v in to_delete:
             kuber=Kuber (v.ent.ent_config_file.path)
             #kuber.deleteNamespace(self.pro_nombre)
             kuber.patch_Namespace(self.pro_nombre)
             v.delete()
-        '''
+        
         for ep in data['entornos']:
             entorno=AfEntorno.objects.get(id=ep)
             afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)

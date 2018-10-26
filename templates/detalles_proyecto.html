@@ -27,25 +27,47 @@
 {% endif %}
 
 
-
-        <h2 class="text-danger">Detalles {{proyecto.nombre }}</h2>
-		<h4><p>Descripción: {{proyecto.desc }}</p></h4>
         <div class="panel-body">
-                
 
-        {% if entornos %}
-        		 <p><strong>Entornos: </strong>
-                  {% for e in entornos %} 
-                		<p>{{ e }}</p>
+
+        {% if instancias_info %}
+        		    <h2 class="text-danger">Detalles {{proyecto.nombre }}</h2>
+        		    <table class="table table-hover panel">
+        		    <thead>
+	        		    <tr>
+	        		    	<th>Nombre instancia</th>
+	        		    	<th>Entorno</th>
+	        		    	<th>Fecha creación</th>
+	        		    	<th>Réplicas</th>
+	        		    	<th>Imagen</th>
+	        		    </tr>
+        		    </thead>
+        		     <tbody>
+                  {% for v in instancias_info %}
+                 
+					 <tr>
+							<td>
+								{{ v.name }}
+                  			</td>
+                  			<td>
+								{{ v.entorno }}
+                  			</td>
+                  			<td>							
+								{{ v.creation_timestamp }}
+                  			</td>
+                  			<td>							
+								{{v.status}}
+                  			</td>
+                  			<td>							
+								{{v.imagen}}
+                  			</td>                  			
+						</tr>
                   {% endfor %}
-		{% endif %}                  
-        {% if usuarios %}
-        		 <p><strong>Integrantes: </strong>
-                  {% for u in usuarios %} 
-                		<p>{{ u }}</p>
-                  {% endfor %}
-		{% endif %}  
-		<!-- 
+                    </tbody>
+                  </table>
+		{% endif %}
+
+		<!--
                 <button type="button" class="btn btn-danger" onclick="location.href='/administrar/proyectos/'">Cancelar</button>
          -->
         </div>

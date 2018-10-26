@@ -2,6 +2,58 @@
 {% load static %}
 
 {% block content %}
+
+<script>
+
+DESPLIEGUES_OPERATIONS={
+
+  'url_refresh_replicas': '/refesh_replicas/proyecto/',
+
+	GodZilla_callback: function(data){
+
+		//console.log("GodZilla_callback");
+		switch(data.action){
+
+			case 'refresh_replicas':
+				console.log("refresh_replicas del proyecto");
+
+				 $('#jquery_dialog').html(data.response);
+	          	 $( "#jquery_dialog" ).dialog({
+					  title: 'Detalles proyecto',
+	          	      resizable: true,
+	          	      width : 800,
+	          	      modal: true,
+	          	      buttons: {
+	          	    	 "Aceptar": function() {
+	          	    		$(this).dialog("close");
+	          	    	 }
+	          	      }
+	          	  });
+	            }
+	         }
+}; //END NS
+
+function refresh_replicas(){
+
+
+	var datos  = AJAXSTUFF.getSpecificRequest('','detalles_entorno',DESPLIEGUES_OPERATIONS.url_refresh_replicas );
+	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
+	datos.request = 'GET';
+	var content= AJAXSTUFF.RequestDefinition(datos);
+	AJAXSTUFF.makeRequest(content, DESPLIEGUES_OPERATIONS.GodZilla_callback);
+	
+
+}
+
+$(document).ready(function(){
+	DESPLIEGUES_OPERATIONS.url_refresh_replicas+=$('.cls_proyecto_seleccionado').attr('id_p')
+id_timeout=window.setTimeout(refresh_replicas, 3000);
+});
+
+</script>
+
+
+
 <div class="container">
 <div class="row"></div>
 <br>
@@ -43,7 +95,6 @@
     <table id="catalogo" class="table table-hover panel">
         <thead>
         <tr>
-        <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
             <th>Servicio
                 <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
@@ -60,9 +111,6 @@
                 <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
             </th>
-
-
-
             <th>Estado
             <!--
                 <a href="/administrar/entornos/3/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
@@ -101,7 +149,7 @@
 
                     <td>{{ instancia.nombre_entorno }}</td>
                       <td>{%if instancia.running %}
-                            {{instancia.running}}
+                            <span id={{instancia.id}}>{{instancia.running}}</span>
                           {%else%}
                             0
                           {%endif%}
@@ -198,6 +246,8 @@
         {% endif %}
         </tbody>
     </table>
+
+<input type="hidden" class="cls_proyecto_seleccionado" id_p="{{request.session.id_proyecto_seleccionado}}" />
 
     <!--  message framework-->
     {% if messages %}

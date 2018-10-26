@@ -39,7 +39,7 @@ def administrarProyectos(request, template_name='proyectosIndex.html', extra_con
     set_bulk_num_entornos(proyectos)
     set_bulk_num_integrantes(proyectos)
     paginator = Paginator(proyectos, 10)
-    
+
     usuario=request.user
     col=getProyectos(usuario,True)
     request.session['proyectos']     = col['proyectos']
@@ -62,17 +62,17 @@ def set_bulk_num_entornos(proyectos):
     for p in proyectos:
         lst_entornos=[]
         entornos=AfRelEntPro.objects.filter(pro=p)
-        p.set_num_entornos(len(entornos))
-        for e in entornos:
-            '''
-            kuber=Kuber(e.ent.ent_config_file.path)
-            ns=kuber.getNamespaces()
-            '''
-            if e.ent.ent_nombre not in entornos:
-                lst_entornos.append(e.ent.ent_nombre)
-
-        p.set_entornos(lst_entornos)
+        ent_iterados=[]
+        ids_entornos=AfRelEntPro.objects.filter(pro=p).values_list('ent_id', flat=True).distinct()
         
+        for e in entornos:
+
+            if e.ent.id not in ent_iterados:
+                lst_entornos.append(e.ent.ent_nombre)
+                ent_iterados.append(e.ent.id)
+                
+        p.set_entornos(lst_entornos)
+        p.set_num_entornos(len(lst_entornos))
         p.entornos_str=p.get_entornos_str()
 
 
@@ -93,36 +93,21 @@ def set_bulk_num_integrantes(proyectos):
         p.integrantes_str=p.get_integrantes_str()
 
 
+
+
+
 @login_required
-def detallesProyecto(request,id, template_name='detalles_proyecto.html'):
+def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
 
     proyecto_instance= AfProyecto.objects.get(id=id)
-    perfil_qs=AfPerfil.objects.filter(pro=proyecto_instance)
-    usuarios=[]
-    entornos=[]
-    proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion}
-
-    if perfil_qs:
-        for p in perfil_qs:
-            u=AfUsuario.objects.get(user=p.usu.user)
-            usuarios.append(u.user.username)
-
-    rel_ent_pro= AfRelEntPro.objects.filter(pro=proyecto_instance)
-    if rel_ent_pro:
-        for e in rel_ent_pro:
-            try:
-                #ent=AfEntorno.objects.get(id=e.id)
-                entornos.append(e.ent.ent_nombre)
-            except Exception as ex:
-                pass
-
-    response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'usuarios': usuarios, 'entornos': entornos }).rendered_content
-    '''
-    return TemplateResponse(request, template_name, {'proyecto': proyecto, 'usuarios': usuarios,
-                                           'entornos': entornos })
-    '''
+    instancias_info= getDetallesProyecto(proyecto_instance) # definido en aux_meth
+    
+    proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion, 'instancias_info': instancias_info}
+    response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'instancias_info': instancias_info }).rendered_content
+ 
     data={'action': 'detalles_proyecto', 'html':response}
     return JsonResponse({'data':data})
+
 
 @login_required
 @group_required('af_cloud_admin',)
@@ -192,14 +177,14 @@ def nuevoProyecto(request,template_name='newProject.html'):
 
             form.saveProyect('new')
             messages.success(request,  'Proyecto creado con éxito', extra_tags='Creación de proyecto')
-            
+
             col=getProyectos(request.user, False)
             request.session['proyectos'] = col['proyectos']
             return HttpResponseRedirect('/administrar/proyectos')
         else:
             if not len(form.get_entornos()):
                 messages.error(request, "No se puede crear un proyecto sin asociar a un entorno")
-                
+
             return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
 
     else:
@@ -237,7 +222,7 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
             messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
             return HttpResponseRedirect('/administrar/proyectos')
 
-    return render(request, template_name, {'form': form, 'value': value,'id': id, 
+    return render(request, template_name, {'form': form, 'value': value,'id': id,
                                            'nombre_proyecto': proyecto.pro_nombre,
                                            'entornos_associated': entornos_associated})
 
@@ -252,19 +237,19 @@ def borrarProyecto(request, id):
         for ep in rel_ent_pro:
             kuber=Kuber(ep.ent.ent_config_file.path)
             kuber.deleteNamespace(proyecto.pro_nombre)
-            
+
         proyecto.delete()
         logger.info("Proyecto borrado con exito")
-        
+
         messages.success(request, 'Proyecto borrado con éxito', extra_tags='Eliminación de proyecto')
         id_proyecto_seleccionado=request.session.get('id_proyecto_seleccionado', False)
         if not AfProyecto.objects.count() or id_proyecto_seleccionado==id:
             #fuerza la actualizacion del dropdown de la proyectos
             request.session['proyecto_seleccionado'] = False
             request.session['id_proyecto_seleccionado']=False
-        
+
         return HttpResponseRedirect('/startpage')
-        
+
     except IntegrityError as e:
 
         mensaje='No se puede eliminar este entorno : '
@@ -288,5 +273,5 @@ def borrarProyecto(request, id):
 
     except Exception as ex:
         logger.info("Exception al borrar el proyecto: %s" % (format(e)))
-    
+
     return HttpResponseRedirect('/administrar/proyectos')

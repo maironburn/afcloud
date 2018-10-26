@@ -137,6 +137,7 @@ class AfEntorno(models.Model):
 class AfProyecto(models.Model):
 
     pro_nombre       = models.CharField     (max_length=100,verbose_name='Nombre',unique=True)
+    pro_nombre_k8s   = models.CharField     (max_length=100,verbose_name='Nombre k8s', blank=True, null=True)
     pro_descripcion  = models.CharField     (max_length=250,verbose_name='Descripción', blank=True, null=True)
     pro_activo       = models.BooleanField  (default=1, verbose_name='Activo')
     num_integrantes  = 0

@@ -6,10 +6,36 @@
 
 <script>
 
-//lectura de entornos entornos_asociados_originales
+PROYECTS_OPERATIONS={
+
+	'url_detalles_proyecto': '/detalles/proyectos/',
+
+	GodZilla_callback: function(data){
+
+		//console.log("GodZilla_callback");
+		switch(data.action){
+
+			case 'detalles_proyecto':
+				console.log("detalles del proyecto");
+
+				 $('.info_instancias').html(data.html);
+
+	            }
+	         }
+}; //END NS
 
 
 $(document).ready(function(){
+
+	id=$('.proyecto_editado').attr('id');
+	PROYECTS_OPERATIONS.url_detalles_proyecto+= id;
+	var datos  = AJAXSTUFF.getSpecificRequest('','detalles_entorno',PROYECTS_OPERATIONS.url_detalles_proyecto );
+	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
+	datos.request = 'GET';
+	var content= AJAXSTUFF.RequestDefinition(datos);
+	AJAXSTUFF.makeRequest(content, PROYECTS_OPERATIONS.GodZilla_callback);
+	PROYECTS_OPERATIONS.url_detalles_proyecto='/detalles/proyectos/';
+
 
   $('[name="entornos"]').change(function() {
 
@@ -57,6 +83,17 @@ $(document).ready(function(){
 });
 
 </script>
+
+<style>
+  .info_instancias{
+    position: relative;
+    width: 80em;
+    height: 35em;
+    float: left;
+    top: 7em;
+    }
+</style>
+
 
 <div id="modal_modify_original_conf" style="display: none;" title="Eliminación de Entorno">
   <p>Ha desmarcado un entorno asociado a este proyecto.</p>
@@ -109,18 +146,28 @@ $(document).ready(function(){
               {% csrf_token %}
               <div class="row">
               <div class="col-md-3">
-                <h2 class="text-danger">Edición Proyecto {{ nombre_proyecto }}</h2>
+                <h2 class="text-danger">Edición Proyecto </h2>
                 <hr/>
                 <div class="well">
                   {% crispy form %}
                 </div>
+
                 <input type="submit" value="Guardar" class="btn btn-danger">
                 <button type="button" class="btn btn-danger" onclick="location.href='/administrar/proyectos/'">Cancelar</button>
             </form>
         </div>
+               <div class="info_instancias">
+
+                </div>
     {% endif %}
     </div>
 </div>
+
+{%if id %}
+
+    <input type="hidden" class="proyecto_editado" id="{{id}}"/>
+{%endif%}
+
 
 {%if entornos_associated %}
   {% for i in entornos_associated %}

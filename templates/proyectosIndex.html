@@ -2,6 +2,52 @@
 {% load static %}
 
 {% block content %}
+
+<script>
+
+PROYECTS_OPERATIONS={
+	'url_detalles_proyecto': '/detalles/proyectos/',
+
+	GodZilla_callback: function(data){
+
+		//console.log("GodZilla_callback");
+		switch(data.action){
+
+			case 'detalles_proyecto':
+				console.log("detalles del proyecto");
+
+				 $('#jquery_dialog').html(data.html);
+	          	 $( "#jquery_dialog" ).dialog({
+					  title: 'Detalles proyecto',
+	          	      resizable: true,
+	          	      width : 800,
+	          	      modal: true,
+	          	      buttons: {
+	          	    	 "Aceptar": function() {
+	          	    		$(this).dialog("close");
+	          	    	 }
+	          	      }
+	          	  });
+	            }
+	         }
+}; //END NS
+
+
+
+$(document).on('click', '.detalles_proyecto', function(){
+
+	PROYECTS_OPERATIONS.url_detalles_proyecto+= $(this).attr('id_p');
+	var datos  = AJAXSTUFF.getSpecificRequest('','detalles_entorno',PROYECTS_OPERATIONS.url_detalles_proyecto );
+	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
+	datos.request = 'GET';
+	var content= AJAXSTUFF.RequestDefinition(datos);
+	AJAXSTUFF.makeRequest(content, PROYECTS_OPERATIONS.GodZilla_callback);
+	PROYECTS_OPERATIONS.url_detalles_proyecto='/detalles/proyectos/';
+ });
+
+</script>
+
+
 <div class="container">
 <div class="row"></div>
 <br>
@@ -59,6 +105,9 @@
                 <a href="/administrar/proyectos/4/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="/administrar/proyectos/4/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
             </th>
+            <th>Detalles
+            </th>
+
             <th>Editar / Borrar</th>
 
         </tr>
@@ -90,6 +139,12 @@
                     {% else %}
                     <img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="proyecto inactivo">Inactivo</label></td>
                     {% endif %}
+                    </td>
+                    <td>
+                      <a href="#" style="position:relative;left: 1.4em;" class="detalles_proyecto" id_p="{{ proyecto.id }}">
+                          <span class="text-danger glyphicon glyphicon-eye-open"></span>
+                      </a>
+
                     </td>
                     <td>
                        <div id="container_icons" style="position: relative;left: 2em;">
