@@ -3,7 +3,7 @@ from afcloud.settings import MEDIA_ROOT
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.logger import *
 import datetime,os
-import yaml 
+import yaml , base64
 
 def get_extra_content(request):
 
@@ -130,3 +130,15 @@ def getKubernetesEnv(config_file):
         print ()
 
     return False
+
+
+
+
+def getFileEncodedB64(fichero):
+    
+    with open(fichero, 'rb') as f:
+        content=f.read()
+    f.close()
+
+    return base64.b64encode(content)
+    

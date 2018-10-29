@@ -1,9 +1,10 @@
 
 from django import forms
-from portal.models import AfProyecto, AfEntorno,AfRelEntPro
+from portal.models import AfProyecto, AfEntorno,AfRelEntPro,AfGlobalconf
 from django.forms.models import ModelForm
 from django.utils.translation import ugettext as _
 from portal.Kubernetes.Kuber import Kuber
+from portal.Utils.aux_meth import *
 
 #class ProyectoForm(forms.Form):
 class ProyectoForm(forms.ModelForm):
@@ -43,7 +44,7 @@ class ProyectoForm(forms.ModelForm):
         if len(kwargs):
             if 'initial' in kwargs:
                 self.fields['entornos'].queryset=AfEntorno.objects.all()
-                self.fields['entornos'].initial=kwargs['initial']['entornos']
+                #self.fields['entornos'].initial=kwargs['initial']['entornos']
             #self.fields['entornos'].queryset=AfEntorno.objects.all()
 
         
@@ -59,6 +60,7 @@ class ProyectoForm(forms.ModelForm):
     def saveProyect(self, accion, proyecto=None):
         #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
         if accion=='new':
+            
             proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre,pro_nombre_k8s=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
 
         vinculados=AfRelEntPro.objects.filter(pro=proyecto)
@@ -71,7 +73,8 @@ class ProyectoForm(forms.ModelForm):
             kuber=Kuber (v.ent.ent_config_file.path)
             kuber.deleteNamespace(self.pro_nombre)
             '''
-            v.delete()
+            #v.delete()
+            pass
 
         '''
         -Creacion de las nuevas relaciones entorno proyecto
@@ -81,7 +84,29 @@ class ProyectoForm(forms.ModelForm):
             afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
             
             kuber=Kuber (ep.ent_config_file.path)
-            kuber.createNameSpace(self.pro_nombre_k8s)
+            kuber.createNameSpace(self.pro_nombre)
+            
+            global_conf=AfGlobalconf.objects.first()
+            crt = getFileEncodedB64(global_conf.crt_file.path)
+            key = getFileEncodedB64(global_conf.key_file.path)
+            
+            dict_ingress={'fichero_yaml' : '/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress_template.yaml', 
+                          'namespace'    : self.pro_nombre, 
+                          'fqdn'         : global_conf.fqdn,
+                          'env_name'     : ep.ent_nombre,
+                          'registry_hash': ep.registry_hash,
+                          'crt'          : crt.decode("utf-8"),
+                          'key'          : key.decode("utf-8") 
+                          }
+            kuber.loadIngressTemplate(dict_ingress)
+            dict_ingress['fichero_yaml']='/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/secret_registry.yaml'
+            kuber.create_namespaced_secretRegistry(dict_ingress)
+
+            dict_ingress.update({
+                                 'ingress-secret-template': '/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress-secret-template.yaml'
+                                 })
+            
+            kuber.create_namespaced_secretIngress(dict_ingress)
             #kuber.create_namespaced_ingress(proyecto.pro_nombre)
             afep.save()
 

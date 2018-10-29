@@ -17,8 +17,12 @@ PROYECTS_OPERATIONS={
 				console.log("detalles del proyecto");
 
 				 $('#jquery_dialog').html(data.html);
+
+         if (!data.available_info){
+             $('#jquery_dialog').html('<p>No hay instancias en ejecución</p>');
+           }
 	          	 $( "#jquery_dialog" ).dialog({
-					  title: 'Detalles proyecto',
+					         title: 'Detalles proyecto',
 	          	      resizable: true,
 	          	      width : 800,
 	          	      modal: true,
@@ -28,8 +32,9 @@ PROYECTS_OPERATIONS={
 	          	    	 }
 	          	      }
 	          	  });
-	            }
+
 	         }
+         }
 }; //END NS
 
 

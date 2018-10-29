@@ -87,7 +87,7 @@ class AfEntorno(models.Model):
     ent_activo      = models.BooleanField (default=1, verbose_name='Activo')
     ent_config_file = models.FileField    (blank=True,verbose_name="Fichero de entorno",storage=fs)
     ent_json_file   = models.FileField    (blank=True,verbose_name="Json",storage=fs)
-    registry_hash   = models.CharField    (blank=True,max_length=250)
+    registry_hash   = models.CharField    (blank=True,max_length=1000)
     nfs_server      = models.GenericIPAddressField(blank=True,null=True)
 
 
@@ -109,7 +109,7 @@ class AfEntorno(models.Model):
             content=f.read()
         f.close()
 
-        return base64.encodestring(content).decode('utf-8').strip()
+        return base64.b64encode(content)
 
     def set_num_proyectos(self, n):
         self.num_proyectos=n

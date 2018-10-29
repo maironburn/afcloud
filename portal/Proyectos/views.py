@@ -105,7 +105,7 @@ def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
     proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion, 'instancias_info': instancias_info}
     response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'instancias_info': instancias_info }).rendered_content
  
-    data={'action': 'detalles_proyecto', 'html':response}
+    data={'action': 'detalles_proyecto', 'html':response, 'available_info': len(instancias_info)}
     return JsonResponse({'data':data})
 
 

@@ -1,5 +1,5 @@
 from kubernetes import client, config, watch
-import yaml
+import yaml, base64
 import sys
 from os import path
 from portal.Utils.logger import *
@@ -243,7 +243,9 @@ class Kuber(object):
             print("Exception when calling AppsV1Api->list_namespaced_deployment: %s\n" % e)
 
 
-
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#create_namespaced_ingress
+    '''
     def create_namespaced_ingress(self,ns):
 
         try:
@@ -510,8 +512,8 @@ class Kuber(object):
             deployments=[]
 
             for d in api_response.items:
-                    deployed={ 'name': d.metadata.name,     'creation_timestamp':d.metadata.creation_timestamp ,
-                               'status': d.spec.replicas ,   'imagen': d.spec.template.spec.containers[0].image}
+                    deployed={ 'name': d.metadata.name      ,   'creation_timestamp':d.metadata.creation_timestamp ,
+                               'status': d.spec.replicas    ,   'imagen': d.spec.template.spec.containers[0].image}
 
                     deployments.append(deployed)
             pprint(api_response)
@@ -526,7 +528,90 @@ class Kuber(object):
 
 
 
+    def loadIngressTemplate(self,kwargs):
 
+        fichero_yaml                    = kwargs.get('fichero_yaml')
+        self.namespace                  = kwargs.get('namespace')
+        self.fqdn                       = kwargs.get('fqdn')
+        self.env_name                   = kwargs.get('env_name')
+
+        with open(fichero_yaml, 'r') as f:
+            data=f.read()
+            parsed = yaml.load(data)
+
+        try:
+            
+            parsed['metadata']['name']= '%s%s' % (self.namespace,'-ingress')
+            parsed['spec']['tls'][0]['hosts'][0]   = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
+            parsed['spec']['tls'][0]['secretName'] = '%s%s' % (self.namespace, '-secret')
+            parsed['spec']['rules'][0]['host']     = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
+            api_instance = kubernetes.client.ExtensionsV1beta1Api()
+            api_response = api_instance.create_namespaced_ingress(self.namespace, parsed)
+            pprint(api_response)
+            
+        except ApiException as e:
+            print("Exception when calling ExtensionsV1beta1Api->create_namespaced_ingress: %s\n" % e)
+    
+        #@todo@ Rollback meths
+
+        return True
+
+    def create_namespaced_secretRegistry(self,kwargs):
+        
+        try: 
+            
+            self.namespace                  = kwargs.get('namespace')
+            fichero_yaml                    = kwargs.get('fichero_yaml')
+            self.env_name                   = kwargs.get('env_name')
+            
+            with open(fichero_yaml, 'r') as f:
+                data=f.read()
+                parsed = yaml.load(data)
+                
+            parsed['data']['.dockerconfigjson'] = kwargs.get('registry_hash')
+            parsed['metadata']['name']      = '%s%s' % ('registry-', self.env_name )
+            parsed['metadata']['namespace'] = self.namespace
+            
+            
+            api_instance = kubernetes.client.CoreV1Api()  
+            #secret=kubernetes.client.V1Secret()
+              
+            api_response = api_instance.create_namespaced_secret(self.namespace, parsed)
+            pprint(api_response)
+        except ApiException as e:
+            print ('')
+            print("Exception when calling CoreV1Api->create_namespaced_secret: %s\n" % e)
+    
+    
+    def create_namespaced_secretIngress(self,kwargs):
+        
+        try: 
+            
+            self.namespace                  = kwargs.get('namespace')
+            fichero_yaml                    = kwargs.get('ingress-secret-template')
+            crt                             = kwargs.get('crt')
+            key                             = kwargs.get('key')
+            
+            with open(fichero_yaml, 'r') as f:
+                data=f.read()
+                parsed = yaml.load(data)
+
+            parsed['metadata']['name']      = 'ingress-secret'
+            parsed['metadata']['namespace'] = self.namespace
+            parsed['data']['tls.crt']       = crt
+            parsed['data']['tls.key']       = key
+            
+            api_instance = kubernetes.client.CoreV1Api()  
+            api_response = api_instance.create_namespaced_secret(self.namespace, parsed)
+            pprint(api_response)
+            
+        except ApiException as e:
+            print ('')
+            print("Exception when calling CoreV1Api->create_namespaced_secret: %s\n" % e)
+    
+    
+        
+            
     def createServiceStack(self, **kwargs):
 
         fichero_yaml                    = kwargs.get('fichero_yaml')
