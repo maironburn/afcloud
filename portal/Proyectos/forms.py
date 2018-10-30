@@ -98,7 +98,7 @@ class ProyectoForm(forms.ModelForm):
                           'crt'          : crt.decode("utf-8"),
                           'key'          : key.decode("utf-8") 
                           }
-            kuber.loadIngressTemplate(dict_ingress)
+            kuber.createIngressFromTemplate(dict_ingress)
             dict_ingress['fichero_yaml']='/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/secret_registry.yaml'
             kuber.create_namespaced_secretRegistry(dict_ingress)
 
@@ -173,20 +173,25 @@ class editProyectoForm(forms.ModelForm):
         instancia.pro_activo=data['pro_activo']
 
         vinculados=AfRelEntPro.objects.filter(pro=instancia).values_list('ent', flat=True)
-        to_delete=[x for x in list(vinculados) if str(x) not in data['entornos']]
-        
+        to_delete = [x for x in list(vinculados) if str(x) not in data['entornos']]
+        to_add    = [x for x in data['entornos'] if str(x) not in list(vinculados)]
         
         for v in to_delete:
-            kuber=Kuber (v.ent.ent_config_file.path)
-            #kuber.deleteNamespace(self.pro_nombre)
-            kuber.patch_Namespace(self.pro_nombre)
-            v.delete()
-        
-        for ep in data['entornos']:
-            entorno=AfEntorno.objects.get(id=ep)
-            afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)
+            entorno=AfEntorno.objects.get(id=v)
             kuber=Kuber (entorno.ent_config_file.path)
-            kuber.createNameSpace(self.pro_nombre)
+            #kuber.deleteNamespace(self.pro_nombre)
+            kuber.delete_namespace(self.pro_nombre)
+            ent_pro= AfRelEntPro.objects.filter(ent=entorno, pro=instancia)
+            ent_pro.delete()
+            
+                    
+        for v in to_add:
+            entorno=AfEntorno.objects.get(id=v)
+            kuber=Kuber (entorno.ent_config_file.path)
+            #kuber.deleteNamespace(self.pro_nombre)
+            kuber.createNameSpace(self.pro_nombre)            
+            afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)
+            
 
         instancia.save()
 

@@ -55,7 +55,6 @@ def administrarProyectos(request, template_name='proyectosIndex.html', extra_con
 
 
 
-
 # funciones auxiliares para los campos calculados num de integrantes y entornos
 def set_bulk_num_entornos(proyectos):
 
@@ -91,8 +90,6 @@ def set_bulk_num_integrantes(proyectos):
 
         p.set_integrantes(lst_integrantes)
         p.integrantes_str=p.get_integrantes_str()
-
-
 
 
 
@@ -197,6 +194,7 @@ def nuevoProyecto(request,template_name='newProject.html'):
 @login_required
 @group_required('af_cloud_admin',)
 def editarProyecto(request, id,template_name='editarProyecto.html'):
+    
     value = 'editar'
     proyecto= get_object_or_404(AfProyecto, id=id)
     entornos_associated=[]
@@ -245,8 +243,8 @@ def borrarProyecto(request, id):
         id_proyecto_seleccionado=request.session.get('id_proyecto_seleccionado', False)
         if not AfProyecto.objects.count() or id_proyecto_seleccionado==id:
             #fuerza la actualizacion del dropdown de la proyectos
-            request.session['proyecto_seleccionado'] = False
-            request.session['id_proyecto_seleccionado']=False
+            request.session['proyecto_seleccionado']    = False
+            request.session['id_proyecto_seleccionado'] = False
 
         return HttpResponseRedirect('/startpage')
 

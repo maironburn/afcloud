@@ -119,6 +119,22 @@ class Kuber(object):
 
         return ns
 
+
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#delete_namespace
+    '''
+    def delete_namespace(self, ns):
+
+        try:
+            api_instance = kubernetes.client.CoreV1Api()
+            body = kubernetes.client.V1DeleteOptions()
+            api_response = api_instance.delete_namespace(ns, body)
+            pprint(api_response)
+
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->delete_namespace: %s\n" % e)
+
+
     '''
     https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#create_namespace
     '''
@@ -414,6 +430,7 @@ class Kuber(object):
             api_instance = kubernetes.client.CoreV1Api()
             body = kubernetes.client.V1DeleteOptions()
             api_response = api_instance.delete_namespaced_persistent_volume_claim(name, namespace, body)
+            self.logger.info("delete_namespaced_persistent_volume_claim:->  %s" % (api_response,))
             pprint(api_response)
 
         except ApiException as e:
@@ -430,6 +447,7 @@ class Kuber(object):
             api_instance = kubernetes.client.AppsV1Api()
             body = kubernetes.client.V1DeleteOptions()
             api_response = api_instance.delete_namespaced_deployment( name, namespace, body)
+            self.logger.info("delete_namespaced_deployment:->  %s" % (api_response,))
             pprint(api_response)
 
         except ApiException as e:
@@ -449,6 +467,7 @@ class Kuber(object):
             api_instance = kubernetes.client.AutoscalingV1Api()
             body = kubernetes.client.V1DeleteOptions()
             api_response = api_instance.delete_namespaced_horizontal_pod_autoscaler( name, namespace, body)
+            self.logger.info("delete_namespaced_horizontal_pod_autoscaler:->  %s" % (api_response,))
             pprint(api_response)
 
         except ApiException as e:
@@ -468,6 +487,7 @@ class Kuber(object):
             api_instance = kubernetes.client.CoreV1Api()
             body = kubernetes.client.V1DeleteOptions()
             api_response = api_instance.delete_namespaced_service(name, namespace, body)
+            self.logger.info("delete_namespaced_service:->  %s" % (api_response,))
             pprint(api_response)
 
         except ApiException as e:
@@ -477,7 +497,25 @@ class Kuber(object):
     def rollBackOperations(self, kwargs):
 
         for op in self.rollback_stack_methods:
+            self.logger.info("rollBackOperations: %s" % (op,))
             self.delete_kind_dict[op](kwargs)
+
+
+    def delete_Instacia(self,**kwargs):
+        
+        self.rollback_stack_methods=['PersistentVolumeClaim',
+                                     'Deployment',
+                                     'HorizontalPodAutoscaler',
+                                     'Service']
+        
+        try:
+            self.namespace                  = kwargs.get('namespace')
+            self.unique_instance_name       = kwargs.get('unique_instance_name')
+            self.rollBackOperations(kwargs)
+            self.logger.info("delete_Instacia: %s" % (self.unique_instance_name ,))
+            
+        except ApiException as e:
+            print("Exception delete_Instacia->delete_namespaced_service: %s\n" % format(e))
 
 
     '''
@@ -486,14 +524,13 @@ class Kuber(object):
     '''
     def modifyDeploymentReplicas(self, deployment_name, ns, replicas):
 
-
         try:
 
             api_instance = kubernetes.client.AppsV1Api()
             body= api_instance.read_namespaced_deployment(deployment_name, ns)
             body.spec.replicas=replicas
             api_response = api_instance.patch_namespaced_deployment(deployment_name, ns, body)
-
+            self.logger.info("modifyDeploymentReplicas:->  Modificando %s a %s" % (deployment_name,replicas))
             pprint(api_response)
 
         except ApiException as e:
@@ -512,23 +549,99 @@ class Kuber(object):
             deployments=[]
 
             for d in api_response.items:
-                    deployed={ 'name': d.metadata.name      ,   'creation_timestamp':d.metadata.creation_timestamp ,
-                               'status': d.spec.replicas    ,   'imagen': d.spec.template.spec.containers[0].image}
-
-                    deployments.append(deployed)
+                deployed={ 'name': d.metadata.name      ,   'creation_timestamp':d.metadata.creation_timestamp ,
+                            'status': d.spec.replicas    ,   'imagen': d.spec.template.spec.containers[0].image}
+                deployments.append(deployed)
+                
             pprint(api_response)
+            
+            self.logger.info("list_namespaced_deployment_info:->  %s" % (api_response,))
+            '''
+            Actualizamos Ingress
 
+            '''
             return deployments
 
 
         except ApiException as e:
-            print("Exception when calling CoreV1Api->delete_namespaced_service: %s\n" % e)
+            print("Exception when calling AppsV1Api->list_namespaced_deployment_info: %s\n" % e)
 
 
+    def updateIngressPostDeploy(self, kwargs):
 
 
+        self.namespace            = kwargs.get('namespace')
+        self.unique_instance_name = kwargs.get('unique_instance_name')
+        self.fqdn                 = kwargs.get('fqdn')
+        self.env_name             = kwargs.get('env_name')
+        
+        
+        self.logger.info("updateIngressPostDeploy:-> ns: %s\nnombre instancia:%s\nfqdn: %s\nentorno%s\n" % (self.namespace,
+                                                                           self.unique_instance_name,
+                                                                           self.fqdn,
+                                                                           self.env_name
+                                                                           ))
+        
+        
+        ingress=self.actualiza_namespaced_ingress(  
+                                                    self.namespace, 
+                                                    self.unique_instance_name,
+                                                    self.env_name,
+                                                    self.fqdn
+                                                  )
+        pprint(ingress)
+       
+        print()
 
-    def loadIngressTemplate(self,kwargs):
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#read_namespaced_ingress
+    '''
+    def actualiza_namespaced_ingress(self,ns=None, instancia=None, env= None,fqdn=None ):
+
+        try:
+            
+            instancia       = self.unique_instance_name if instancia is None else instancia
+            ns              = self.namespace if ns is None else ns
+            target_ingress  = '%s-ingress' % (ns,) 
+            fqdn            = self.fqdn if fqdn is None else fqdn
+            env             = self.env_name if env is None else env
+            
+            host = '%s.%s.%s' % (ns, env, fqdn)    
+                
+            api_response=None
+            api_instance = kubernetes.client.ExtensionsV1beta1Api()
+            api_response = api_instance.read_namespaced_ingress(target_ingress, ns)    
+            
+            i_backend= kubernetes.client.V1beta1IngressBackend(
+                    service_name = '%s-svc' % (instancia,) ,
+                    service_port = 80
+                )
+            
+            i_path= kubernetes.client.V1beta1HTTPIngressPath (
+                    backend=i_backend,
+                    path='/%s' % (instancia,)
+                )
+            
+            i_rule_value= kubernetes.client.V1beta1HTTPIngressRuleValue(
+                    paths=[i_path]
+                )
+            
+            i_irule=kubernetes.client.V1beta1IngressRule(
+                    host=host,
+                    http=i_rule_value
+                )
+            
+            
+            api_response.spec.rules.append(i_irule)
+            api_instance.patch_namespaced_ingress(target_ingress,ns,api_response)
+            self.logger.info("actualiza_namespaced_ingress:->  %s" % (api_response,))
+            
+        except ApiException as e:
+            print("Exception when calling ExtensionsV1beta1Api->read_namespaced_ingress: %s\n" % e)
+
+        return api_response
+
+    def createIngressFromTemplate(self,kwargs):
 
         fichero_yaml                    = kwargs.get('fichero_yaml')
         self.namespace                  = kwargs.get('namespace')
@@ -540,58 +653,61 @@ class Kuber(object):
             parsed = yaml.load(data)
 
         try:
-            
-            parsed['metadata']['name']= '%s%s' % (self.namespace,'-ingress')
+
+            parsed['metadata']['name']      = '%s%s' % (self.namespace,'-ingress')
+            parsed['metadata']['namespace'] = '%s'   % (self.namespace,)
             parsed['spec']['tls'][0]['hosts'][0]   = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
             parsed['spec']['tls'][0]['secretName'] = '%s%s' % (self.namespace, '-secret')
             parsed['spec']['rules'][0]['host']     = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
             api_instance = kubernetes.client.ExtensionsV1beta1Api()
             api_response = api_instance.create_namespaced_ingress(self.namespace, parsed)
-            pprint(api_response)
+            self.logger.info("createIngressFromTemplate:->  %s" % (api_response,))
             
+            pprint(api_response)
+
         except ApiException as e:
             print("Exception when calling ExtensionsV1beta1Api->create_namespaced_ingress: %s\n" % e)
-    
+
         #@todo@ Rollback meths
 
         return True
 
     def create_namespaced_secretRegistry(self,kwargs):
-        
-        try: 
-            
+
+        try:
+
             self.namespace                  = kwargs.get('namespace')
             fichero_yaml                    = kwargs.get('fichero_yaml')
             self.env_name                   = kwargs.get('env_name')
-            
+
             with open(fichero_yaml, 'r') as f:
                 data=f.read()
                 parsed = yaml.load(data)
-                
+
             parsed['data']['.dockerconfigjson'] = kwargs.get('registry_hash')
             parsed['metadata']['name']      = '%s%s' % ('registry-', self.env_name )
             parsed['metadata']['namespace'] = self.namespace
-            
-            
-            api_instance = kubernetes.client.CoreV1Api()  
-            #secret=kubernetes.client.V1Secret()
-              
+
+            api_instance = kubernetes.client.CoreV1Api()
             api_response = api_instance.create_namespaced_secret(self.namespace, parsed)
+            self.logger.info("create_namespaced_secretRegistry:->  %s" % (api_response,))
+            
             pprint(api_response)
         except ApiException as e:
             print ('')
             print("Exception when calling CoreV1Api->create_namespaced_secret: %s\n" % e)
-    
+
+
     
     def create_namespaced_secretIngress(self,kwargs):
-        
-        try: 
-            
+
+        try:
+
             self.namespace                  = kwargs.get('namespace')
             fichero_yaml                    = kwargs.get('ingress-secret-template')
             crt                             = kwargs.get('crt')
             key                             = kwargs.get('key')
-            
+
             with open(fichero_yaml, 'r') as f:
                 data=f.read()
                 parsed = yaml.load(data)
@@ -600,18 +716,20 @@ class Kuber(object):
             parsed['metadata']['namespace'] = self.namespace
             parsed['data']['tls.crt']       = crt
             parsed['data']['tls.key']       = key
-            
-            api_instance = kubernetes.client.CoreV1Api()  
+
+            api_instance = kubernetes.client.CoreV1Api()
             api_response = api_instance.create_namespaced_secret(self.namespace, parsed)
-            pprint(api_response)
+            self.logger.info("create_namespaced_secretIngress:->  %s" % (api_response,))
             
+            pprint(api_response)
+            self.logger.info(api_response)
         except ApiException as e:
             print ('')
             print("Exception when calling CoreV1Api->create_namespaced_secret: %s\n" % e)
-    
-    
-        
-            
+
+
+
+
     def createServiceStack(self, **kwargs):
 
         fichero_yaml                    = kwargs.get('fichero_yaml')
@@ -623,9 +741,6 @@ class Kuber(object):
         replicas_min                    = kwargs.get('replicas_min')
         replicas_max                    = kwargs.get('replicas_max')
 
-
-
-        #filename=f.name
         with open(fichero_yaml, 'r') as f:
             data=f.read()
             parsed = list(yaml.load_all(data))
@@ -634,11 +749,14 @@ class Kuber(object):
                 for i in parsed:
                     kind = i.get('kind')
                     pprint ("llamando al meth asociado al kind: %s" % (kind))
+                    self.logger.info("llamando al meth asociado al kind: %s" % (kind))
                     self.create_kind_dict[kind](i, kwargs)
                     if not self.operation_result and len(self.rollback_stack_methods):
+                        self.logger.info("Ocurrio un error durante el despliegue, se lanza el Rollback")
                         self.rollBackOperations(kwargs)
                         return False
-
+                
+                self.updateIngressPostDeploy(kwargs)
 
         #@todo@ Rollback meths
 

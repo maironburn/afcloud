@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: [NAMESPACE]-ingress
+  namespace: NAMESPACE
 spec:
   tls:
   - hosts:
@@ -9,3 +10,10 @@ spec:
     secretName: [NAMESPACE]-secret
   rules:
   - host: [NAMESPACE].[ENVIROMENT].[FQDN]
+    http:
+      paths:
+      - path: /INSTANCE
+        backend:
+          serviceName: [INSTANCE]-svc
+          servicePort: 80
+          

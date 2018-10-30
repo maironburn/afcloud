@@ -6,6 +6,18 @@
 <script>
 $(document).ready(function(){
 
+$('#div_id_ent_config_file a').on('click', function(e){
+
+  e.preventDefault();
+
+});
+
+$('#div_id_ent_json_file a').on('click', function(e){
+
+  e.preventDefault();
+
+});
+
    $('#id_ent_nombre').on( "input", function(e){
 
      if (e.originalEvent.data.match(/[a-z0-9\-]/g)==null) {

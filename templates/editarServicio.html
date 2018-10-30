@@ -6,6 +6,14 @@
 <script>
 $(document).ready(function(){
 
+//deshabilita el link del fichero del servicio (ref)
+$('#div_id_ser_yaml_file a').on('click', function(e){
+
+  e.preventDefault();
+
+});
+
+
    $('#id_ser_nombre').on( "input", function(e){
 
      if (e.originalEvent.data.match(/[a-z0-9\-]/g)==null) {
