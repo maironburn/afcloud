@@ -2,8 +2,6 @@
 # coding=utf-8
 
 from django import forms
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
@@ -15,7 +13,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse
 
 from django.http import HttpResponseRedirect, QueryDict, HttpResponse
-from django.shortcuts import resolve_url, render_to_response, redirect, render
+from django.shortcuts import render
 from keyring.core import set_password
 from django.db import IntegrityError
 from collections import defaultdict
@@ -38,8 +36,7 @@ def users(request, template_name='users.html', extra_context=None):
 @login_required
 @group_required('af_cloud_admin',)
 def userChangePass(request, id, template_name='cambiar_passwd.html', extra_context=None):
-    #usuario = User.objects.get(id=id)
-    #afuser  = AfUsuario.objects.get(user=usuario)
+
     afuser=AfUsuario.objects.get(id=id)
     user=User.objects.get(id=afuser.user.id)
 
@@ -83,13 +80,11 @@ def index(request, template_name='index.html', extra_context=None):
     
     request.session['globalconf_isdone']= conf_global.is_done
     request.session['proyectos']     = col['proyectos']
-    #request.session['proyecto_seleccionado'] = False
     
     p_seleccionado= request.session.get('id_proyecto_seleccionado', False)
     if p_seleccionado and int(p_seleccionado) not in current_projects:
         request.session['proyecto_seleccionado'] = False
         
-    
     request.session['afcloud_admin'] = col['afcloud_admin']
 
     return TemplateResponse(request, template_name, context)
@@ -133,9 +128,7 @@ def selected_proyect(request, id_proyecto, template_name='index.html', extra_con
     request.session['numeric_profile'] = numeric_profile [tipo_perfil]
     request.session['proyectos'] = col['proyectos']
     request.session['afcloud_admin'] = col['afcloud_admin']
-    request.session['proyecto_seleccionado'] = selected.pro_nombre
-    #if request.session.get('id_proyecto_seleccionado', False) and 
-        
+    request.session['proyecto_seleccionado'] = selected.pro_nombre    
     request.session['id_proyecto_seleccionado']=id_proyecto
 
     template_response=seccionActivaRedirect(request,id)
@@ -212,7 +205,7 @@ def administrarUsuariosOrdered(request, orden, ascendente, template_name='users.
 @login_required
 @user_or_admin_is_allowed 
 def modificarPerfil(request, id, template_name='userEditProfile.html'):
-    #userEditProfileForm
+    
     afuser =AfUsuario.objects.get(user__id=id)
 
     if request.method == "POST":
@@ -230,14 +223,12 @@ def modificarPerfil(request, id, template_name='userEditProfile.html'):
             messages.success(request,  'Usuario editado con éxito', extra_tags='Edición de usuarios')
             
             return HttpResponseRedirect('/startpage')
-            #return index(request,template_name='index.html')
         else:
             return render(request, template_name, {'form': form})
     else:
         form =userEditProfileForm(request.POST or None, instance=afuser.user)
         return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
 
-    
     
 
 @login_required
@@ -284,7 +275,6 @@ def nuevoUsuario(request, template_name='newUser.html'):
             user_created=form.save(commit=True)
             user_created.set_password(password)
             user_created.save()
-            #user_created.password=set_password(request.POST.get('password'))
             afcloud_admin= True if request.POST.get('usu_administrador')=='on' else False
             afusuario = AfUsuario(user=user_created, usu_administrador=afcloud_admin)
             afusuario.save()

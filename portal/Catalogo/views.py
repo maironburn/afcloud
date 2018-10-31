@@ -45,6 +45,7 @@ def getCatalogoProyecto(request,id_proyecto):
                 catalog.append(s)
     return dict_servicios, lst_serv, catalog
 
+
 @login_required
 @group_required('Gestor',)
 def index(request, template_name='CatalogoIndex.html', extra_context=None):
@@ -65,7 +66,6 @@ def  catalogosIndex(request, id_proyecto, template_name='CatalogoIndex.html', ex
     try:
         # para las busquedas
         name = request.GET['p']
-
     except:
         name = ''
     request.session['seccion_activa'] = 'catalogos'
@@ -126,8 +126,7 @@ def nuevoCatalogo(request,id_proyecto, template_name='newCatalogo.html'):
         #exluimos del nuevo catalogo servicios inactivos
         #data={'service_queryset': AfServicio.objects.filter(ser_activo=True).exclude(id__in=[c.ser.id for c in catalog ])}
         # se admiten multiples servicios 
-        
-        # para la precarga de las tarifas base de los servicios
+        # precarga de las tarifas base de los servicios
         svc=AfServicio.objects.filter(ser_activo=True)
         data={'service_queryset': svc}
         dict_svc={}
@@ -187,7 +186,6 @@ def eliminarCatalogo(request, id_proyecto, id_servicio):
         c = paginator.page(number)
         context = {'p': c, 'e': e, 'mensaje': 'No se puede eliminar este catáolog porque tiene servicios asociados'}
         return TemplateResponse(request, 'users.html', context)
-        #return administrarEntornos(request, template_name='entornosIndex.html', context)
-    #return HttpResponseRedirect('/administrar/entornos')
+
     messages.success(request,  'Catálogo eliminado con éxito', extra_tags='Eliminación de catálogos')
     return HttpResponseRedirect('/catalogo/proyecto/%s' % (id_proyecto))

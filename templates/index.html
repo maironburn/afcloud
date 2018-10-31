@@ -31,8 +31,15 @@
 
 
 <script>
+   INDEX = {
+
+     'id_timeout' : 0
+   }
 
    $(document).ready(function(){
+
+     clearInterval(INDEX.id_timeout);
+
      $(document).on('click', '.nav-list li', function() {
         $(".nav-list li").removeClass("active");
         $(this).addClass("active");

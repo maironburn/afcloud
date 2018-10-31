@@ -15,8 +15,7 @@ class ServicioForm(forms.ModelForm):
     class Meta:
         model = AfServicio
         fields=('ser_nombre','ser_descripcion','ser_tarifa', 'ser_activo','ser_yaml_file', 'ser_min_replicas', 'ser_max_replicas')
-        #exclude = ('user','usu_username',)
-
+        
 
     def setConfigfile(self,fichero):
         try:

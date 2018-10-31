@@ -8,6 +8,7 @@
 DESPLIEGUES_OPERATIONS={
 
   'url_refresh_replicas': '/refesh_replicas/proyecto/',
+  'id_timeout' : 0,
 
 	GodZilla_callback: function(data){
 
@@ -42,7 +43,7 @@ function refresh_replicas(){
 
 $(document).ready(function(){
 	DESPLIEGUES_OPERATIONS.url_refresh_replicas+=$('.cls_proyecto_seleccionado').attr('id_p')
-  id_timeout=setInterval(refresh_replicas, 5000);
+  INDEX.id_timeout=setInterval(refresh_replicas, 5000);
 });
 
 </script>

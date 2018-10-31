@@ -215,7 +215,7 @@ def editarIntegrante(request,id_proyecto, id_integrante,template_name='editarInt
 
     data={'user' : user_instance,'tperfil' :tperfil}
     form = IntegrantesRawForm(initial=data)
-        #v fields=('username','password','first_name','last_name','email','is_staff','is_active')
+        
     if request.method == 'POST':
         if form.is_valid():
             tperfil=request.POST.get('perfil', False)
@@ -231,7 +231,6 @@ def editarIntegrante(request,id_proyecto, id_integrante,template_name='editarInt
 @group_required('Gestor',)
 def eliminarIntegrante(request, id_proyecto, id_integrante):
 
-    #afuser=AfUsuario.objects.get(id=id_integrante)
     user=User.objects.get(id=id_integrante)
     afuser=AfUsuario.objects.get(user=user)
     proyecto=AfProyecto.objects.get(id=id_proyecto)

@@ -45,9 +45,7 @@ class ProyectoForm(forms.ModelForm):
         if len(kwargs):
             if 'initial' in kwargs:
                 self.fields['entornos'].queryset=AfEntorno.objects.all()
-                #self.fields['entornos'].initial=kwargs['initial']['entornos']
-            #self.fields['entornos'].queryset=AfEntorno.objects.all()
-
+                self.fields['entornos'].initial=kwargs['initial']['entornos']
         
     
     def is_valid(self):
@@ -59,14 +57,17 @@ class ProyectoForm(forms.ModelForm):
     
                         
     def saveProyect(self, accion, proyecto=None):
-        #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
-        if accion=='new':
-            
+        
+        if accion=='new':    
             proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre,pro_nombre_k8s=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
 
         '''
-        -Creacion de las nuevas relaciones entorno proyecto
-        -conexion con KB y creacion del namespace correspondiente
+        - Creacion de las nuevas relaciones entorno proyecto
+        - conexion con Kb8 
+        - creacion del namespace correspondiente
+        - secret de Ingress
+        - secret de Registry
+        - ingress del svc
         '''
         for ep in self.entornos_associated:
             afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
@@ -99,13 +100,11 @@ class ProyectoForm(forms.ModelForm):
             # creacion del ingress secret (kind: Secret/ type: kubernetes.io/tls)
             kuber.create_namespaced_secretIngress(dict_ingress)
             dict_ingress['fichero_yaml']='/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress_template_base.yaml'
-            #kuber.createIngressFromTemplate(dict_ingress)
-            #kuber.create_namespaced_ingress(proyecto.pro_nombre)
             afep.save()
 
 
     def saveRelations(self, instance):
-        #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
+        
         for ep in self.entornos_associated:
             afep=AfRelEntPro.objects.create(ent=ep, pro=instance)
             afep.save()
@@ -123,10 +122,6 @@ class editProyectoForm(forms.ModelForm):
     pro_nombre_k8s  = forms.CharField(max_length=100, label='Nombre K8s', required=False)
     pro_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea )
     pro_activo      = forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
-    '''
-    entornos =forms.MultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple)#,
-                                             #choices=[ (choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all()])
-    '''
     entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.all())
     entornos_associated=[]
 
@@ -141,7 +136,7 @@ class editProyectoForm(forms.ModelForm):
         self.entornos_associated=[]
         super(editProyectoForm, self).__init__(*args, **kwargs)
         self.fields['pro_nombre_k8s'].widget.attrs['readonly'] = True
-        #self.fields['entornos'].initial=kwargs['entornos']
+        
         if len(kwargs):
             if 'initial' in kwargs:
                 self.fields['entornos'].queryset=AfEntorno.objects.all()
@@ -160,7 +155,7 @@ class editProyectoForm(forms.ModelForm):
     
     
     def saveProyect(self, data,instancia):
-        #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
+        
         instancia.pro_nombre=data['pro_nombre']
         instancia.pro_descripcion=data['pro_descripcion']
         instancia.pro_activo=data['pro_activo']
@@ -172,7 +167,6 @@ class editProyectoForm(forms.ModelForm):
         for v in to_delete:
             entorno=AfEntorno.objects.get(id=v)
             kuber=Kuber (entorno.ent_config_file.path)
-            #kuber.deleteNamespace(self.pro_nombre)
             kuber.delete_namespace(self.pro_nombre)
             ent_pro= AfRelEntPro.objects.filter(ent=entorno, pro=instancia)
             ent_pro.delete()
@@ -181,7 +175,6 @@ class editProyectoForm(forms.ModelForm):
         for v in to_add:
             entorno=AfEntorno.objects.get(id=v)
             kuber=Kuber (entorno.ent_config_file.path)
-            #kuber.deleteNamespace(self.pro_nombre)
             kuber.createNameSpace(self.pro_nombre)            
             afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)
             
@@ -190,12 +183,10 @@ class editProyectoForm(forms.ModelForm):
 
 
     def saveRelations(self, instance):
-        #proyecto=AfProyecto(pro_nombre=self.nombre, pro_descripcion=self.descripcion)
-
+        
         for ep in self.entornos_associated:
             afep=AfRelEntPro.objects.create(ent=ep, pro=instance)
             afep.save()
-
 
 
     def get_entornos(self):

@@ -111,7 +111,7 @@ def editarServicio(request, id,template_name='editarServicio.html'):
     value = 'editar'
     servicio= AfServicio.objects.get(id=id)
     form = ServicioForm(request.POST or None, instance=servicio)
-        #v fields=('username','password','first_name','last_name','email','is_staff','is_active')
+       
     if request.method == 'POST':
         if form.is_valid():
             servicio.save()
@@ -125,7 +125,7 @@ def editarServicio(request, id,template_name='editarServicio.html'):
 def borrarServicio(request, id):
 
     servicio= AfServicio.objects.get(id=id)
-    # if request.method == "POST":
+    
     try:
         servicio.delete()
     except IntegrityError:

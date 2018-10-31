@@ -687,7 +687,8 @@ class Kuber(object):
             api_instance.patch_namespaced_ingress(target_ingress,self.namespace ,api_response)
             
         except ApiException as e:
-            print("Exception when calling ExtensionsV1beta1Api->read_namespaced_ingress: %s\n" % e)
+            self.logger.error("unpublishFromIngress parcheada: %s  " % (format(e)))
+            print("Exception when calling unpublishFromIngress-> %s\n" % (format(e),))
 
 
 

@@ -30,7 +30,6 @@ def set_bulk_num_proyectos(entornos):
             proyectos.append(ep.pro.pro_nombre)
         e.proyectos_list=proyectos
         e.proyectos_list_str=e.get_proyectos_str()
-        #e.proyectos_list.append()
 
 
 @login_required
@@ -173,7 +172,7 @@ def editarEntorno(request, id,template_name='editarEntorno.html'):
     value = 'editar'
     entorno= AfEntorno.objects.get(id=id)
     form = EntornoForm(request.POST or None, instance=entorno)
-        #v fields=('username','password','first_name','last_name','email','is_staff','is_active')
+       
     if request.method == 'POST':
         if form.is_valid():
             entorno.save()
@@ -186,9 +185,8 @@ def editarEntorno(request, id,template_name='editarEntorno.html'):
 @group_required('af_cloud_admin',)
 def borrarEntorno(request, id):
 
-    entorno= AfEntorno.objects.get(id=id)
-    # if request.method == "POST":
     try:
+        entorno= AfEntorno.objects.get(id=id)
         entorno.delete()
         '''borrar el fichero de configuracion del entorno '''
     except IntegrityError:
@@ -205,7 +203,7 @@ def borrarEntorno(request, id):
         c = paginator.page(number)
         context = {'p': c, 'e': e, 'mensaje': 'No se puede eliminar este entorno porque tiene despliegues asociados'}
         return TemplateResponse(request, 'entornosIndex.html', context)
-        #return administrarEntornos(request, template_name='entornosIndex.html', context)
+        
     messages.success(request,  'Entorno borrado con éxito', extra_tags='Borrado de entornos')
     return HttpResponseRedirect('/administrar/entornos')
-    #return administrarEntornos(request, template_name='entornosIndex.html')
+    

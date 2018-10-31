@@ -1,8 +1,6 @@
 # Create your views here.
 # coding=utf-8
 from django.shortcuts import render
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
@@ -145,7 +143,7 @@ def administrarProyectosOrdered(request, orden, ascendente, template_name='proye
             e = 'si'
             set_bulk_num_entornos(p)
             set_bulk_num_integrantes(p)
-    #set_bulk_num_entornos(proyectos)
+    
     paginator = Paginator(p, 10)
     try:
         number = int(request.GET.get('page', '1'))
@@ -162,7 +160,7 @@ def administrarProyectosOrdered(request, orden, ascendente, template_name='proye
 @group_required('af_cloud_admin',)
 def nuevoProyecto(request,template_name='newProject.html'):
     value = 'nuevo'
-    #entornos= AfEntorno.objects.all()
+    
     if request.method == "POST":
         form = ProyectoForm(request.POST or None)
 
@@ -186,9 +184,13 @@ def nuevoProyecto(request,template_name='newProject.html'):
             return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
 
     else:
+        
         entornos=AfEntorno.objects.all()
         form = ProyectoForm(initial={'entornos' : entornos})
-        return TemplateResponse(request, template_name,  {'form': form, 'value': value })#,'entornos': entornos})
+        return TemplateResponse(request, template_name,  {'form': form, 
+                                                          'value': value ,
+                                                          'entornos_associated': entornos
+                                                          })
 
 
 
@@ -230,7 +232,7 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
 def borrarProyecto(request, id):
 
     proyecto= AfProyecto.objects.get(id=id)
-    #entorno=AfEntorno.objects.
+    
     try:
         rel_ent_pro=AfRelEntPro.objects.filter(pro=proyecto)
         for ep in rel_ent_pro:

@@ -30,8 +30,6 @@ def seccionActivaRedirect(request,id):
         return method_redirect[region_activa](request,id)
 
 
-
-
 @login_required
 def getInstancias(request, id_proyecto):
 
@@ -50,7 +48,7 @@ def getInstancias(request, id_proyecto):
             
             kuber=Kuber(fichero_entorno)
             resp= kuber.list_namespaced_deployment(i.ins_unique_name, ns)
-            #resp= kuber.list_namespaced_horizontal_pod_autoscaler(i.ins_unique_name, ns)
+
             if resp:
                 dictio_inst_list.append(
                            {'nombre_entorno'    : i.rep.ent.ent_nombre ,
@@ -84,8 +82,6 @@ def index(request, template_name='DesplieguesIndex.html', extra_context=None):
     return TemplateResponse(request, template_name, context)
 
 
-
-
 @login_required
 @group_required(None,'Miembro')
 def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html', extra_context=None):
@@ -100,7 +96,6 @@ def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html
 
     if name == '':
         lst_despliegues=sorted(lst_despliegues, key=lambda p: lst_despliegues, reverse=False)
-
         e = 'no'
     else:
 
@@ -111,7 +106,6 @@ def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html
                 if name in e['nombre_servicio']:
                     filtrado.append(e)
         instancias=filtrado
-        #lst_despliegues=sorted(lst_despliegues, key=lambda p: p.lca.ser.ser_nombre, reverse=False)
         filtrado={}
         e = 'si'
 
@@ -191,8 +185,6 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
             except Exception as e:
                 logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))
 
-
-            #rel_ent_pro= AfRelEntPro.objects.get(pro=proyecto,ent=entorno)
             if operation_result:
                 instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name)
                 ciclo= AfCiclo.objects.create(ins=instancia)
@@ -204,14 +196,13 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
     else:
         nombre_proyecto= request.session.get('proyecto_seleccionado', False)
         id_servicios=AfLineaCatalogo.objects.filter(pro=proyecto).select_related('ser').values_list('ser_id', flat=True)
-
         svc=AfServicio.objects.filter(id__in=[id_servicios])
         dict_serv_extra= getMaxMinReplic(svc)
         data={
                 'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
                 'service_queryset': svc
               }
-        #.objects.filter(id__in=[c.ser.id for d in lst_despliegues])}
+        
         form = InstanciaForm(data)
 
         return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
@@ -242,10 +233,8 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
         replicas_definidas_servicio=instance.lca.ser.ser_min_replicas
         namespace = instance.lca.pro.pro_nombre
    
-        
         kuber=Kuber(entorno_file)        
         replicas_spec =replicas_definidas_servicio if replicas else 0 
-
         kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas_spec)
         
         if replicas_spec:
@@ -277,10 +266,9 @@ def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
         for lc in lineas_catalog:
             lst_ins.extend(AfInstancia.objects.filter(lca=lc))
 
-        #instancias_asociadas = AfInstancia.objects.exclude (id__in=[instance.id]).values_list('ins_unique_name', flat=True)
-        instancias_asociadas = [i for i in list(lst_ins) if i !=instance]
-        
+        instancias_asociadas = [i for i in list(lst_ins) if i !=instance]        
         fqdn= AfGlobalconf.objects.values('fqdn')
+        
         kwargs={
                 'unique_instance_name' :  instance.ins_unique_name,
                 'namespace'            :  proyecto.pro_nombre_k8s,
@@ -296,20 +284,6 @@ def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
 
     except IntegrityError as ie:
         e = 'no'
-        '''
-        afusers=AfUsuario.objects.all()
-        paginator = Paginator(afusers, 10)
-        try:
-            number = int(request.GET.get('page', '1'))
-        except PageNotAnInteger:
-            number = paginator.page(1)
-        except EmptyPage:
-            number = paginator.page(paginator.num_pages)
-        c = paginator.page(number)
-        context = {'p': c, 'e': e, 'mensaje': 'No se puede eliminar este despliegue porque tiene  movidas asociados'}
-        return TemplateResponse(request, 'users.html', context)
-        #return administrarEntornos(request, template_name='entornosIndex.html', context)
-    #return HttpResponseRedirect('/administrar/entornos')
-        '''
+        
     messages.success(request,  'Despligue elminado con éxito', extra_tags='Eliminación de despliegues')
     return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))

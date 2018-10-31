@@ -47,7 +47,7 @@ class IntegrantesRawForm(forms.ModelForm):
     def is_valid(self):
         return  isinstance(self.user, AfUsuario) and  isinstance(self.perfil, AfTipoPerfil)
 
-    #form.save(user_instance,obj_perfil,proyecto)
+
     def save(self,user,tperfil,proyecto):
         
         af_perfil=AfPerfil.objects.create(usu=user, pro=proyecto,tpe=tperfil,per_activo=True)
