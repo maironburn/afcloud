@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: namespace-ingress
+  namespace: namespace  
+spec:
+  tls:
+  - hosts:
+    - namespace.environment.fqdn
+    secretName: namespace-secret
+  rules:
+  - host: namespace.environment.fqdn

@@ -5,6 +5,7 @@ from django.forms.models import ModelForm
 from django.utils.translation import ugettext as _
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.aux_meth import *
+from afcloud.settings import BASE_DIR, KUBER_TEMPLATES
 
 #class ProyectoForm(forms.Form):
 class ProyectoForm(forms.ModelForm):
@@ -63,19 +64,6 @@ class ProyectoForm(forms.ModelForm):
             
             proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre,pro_nombre_k8s=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
 
-        vinculados=AfRelEntPro.objects.filter(pro=proyecto)
-        '''
-        -borrar de la BBDD las relaciones entornos proyectos
-        -conexion con KB y borrado del namespace correspondiente
-        '''
-        for v in vinculados:
-            '''
-            kuber=Kuber (v.ent.ent_config_file.path)
-            kuber.deleteNamespace(self.pro_nombre)
-            '''
-            #v.delete()
-            pass
-
         '''
         -Creacion de las nuevas relaciones entorno proyecto
         -conexion con KB y creacion del namespace correspondiente
@@ -90,7 +78,7 @@ class ProyectoForm(forms.ModelForm):
             crt = getFileEncodedB64(global_conf.crt_file.path)
             key = getFileEncodedB64(global_conf.key_file.path)
             
-            dict_ingress={'fichero_yaml' : '/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress_template.yaml', 
+            dict_ingress={'fichero_yaml' : '%s/ingress_template_base.yaml' % (KUBER_TEMPLATES,), # ingress del servicio q debe ser periodicamente actualizado con los despliegues 
                           'namespace'    : self.pro_nombre, 
                           'fqdn'         : global_conf.fqdn,
                           'env_name'     : ep.ent_nombre,
@@ -98,15 +86,20 @@ class ProyectoForm(forms.ModelForm):
                           'crt'          : crt.decode("utf-8"),
                           'key'          : key.decode("utf-8") 
                           }
+
+            # creacion del tipo Ingress (kind: Ingress)
             kuber.createIngressFromTemplate(dict_ingress)
-            dict_ingress['fichero_yaml']='/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/secret_registry.yaml'
+            dict_ingress['fichero_yaml']='%s/secret_registry.yaml' % (KUBER_TEMPLATES,)
+            # creacion del tipo secret (kind: Secret)
             kuber.create_namespaced_secretRegistry(dict_ingress)
 
             dict_ingress.update({
-                                 'ingress-secret-template': '/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress-secret-template.yaml'
+                                 'ingress-secret-template': '%s/ingress-secret-template.yaml' % (KUBER_TEMPLATES,)
                                  })
-            
+            # creacion del ingress secret (kind: Secret/ type: kubernetes.io/tls)
             kuber.create_namespaced_secretIngress(dict_ingress)
+            dict_ingress['fichero_yaml']='/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress_template_base.yaml'
+            #kuber.createIngressFromTemplate(dict_ingress)
             #kuber.create_namespaced_ingress(proyecto.pro_nombre)
             afep.save()
 

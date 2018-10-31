@@ -20,6 +20,8 @@ SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
+KUBER_TEMPLATES= '%s/portal/Kuber_stuff' % (BASE_DIR,)
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'n)ux$5$f8#(l5_fuin!wbg82ld8z%31ow61*m&pz7s33etht@m'
 
@@ -28,8 +30,8 @@ DEBUG = True
 
 MEDIA_ROOT='/var/www/afcloud/'
 MEDIA_URL='/var/www/afcloud/'
-CRT_FILE = 'cert/' 
-KEY_FILE = 'key/' 
+CRT_FILE = 'cert/'
+KEY_FILE = 'key/'
 
 ALLOWED_HOSTS = ['*']
 #AUTH_USER_MODEL = 'portal.AfUsuario'

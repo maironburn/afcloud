@@ -243,9 +243,7 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
         namespace = instance.lca.pro.pro_nombre
    
         
-        kuber=Kuber(entorno_file)
-        #kuber.updateIngressPostDeploy()
-        
+        kuber=Kuber(entorno_file)        
         replicas_spec =replicas_definidas_servicio if replicas else 0 
 
         kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas_spec)
@@ -268,23 +266,33 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
 @group_required(None)
 def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
 
-    
-
     try:
         
-        instance            = AfInstancia.objects.get  (id=id_instancia)
-        proyecto            = AfProyecto.objects.get(id=id_proyecto)
-        f_config_entorno    = instance.rep.ent.ent_config_file.path
-           
+        instance             = AfInstancia.objects.get  (id=id_instancia)
+        env_name             = instance.rep.ent.ent_nombre
+        proyecto             = AfProyecto.objects.get(id=id_proyecto)
+        f_config_entorno     = instance.rep.ent.ent_config_file.path
+        lineas_catalog       = AfLineaCatalogo.objects.filter(pro=proyecto)
+        lst_ins=[]
+        for lc in lineas_catalog:
+            lst_ins.extend(AfInstancia.objects.filter(lca=lc))
+
+        #instancias_asociadas = AfInstancia.objects.exclude (id__in=[instance.id]).values_list('ins_unique_name', flat=True)
+        instancias_asociadas = [i for i in list(lst_ins) if i !=instance]
+        
+        fqdn= AfGlobalconf.objects.values('fqdn')
         kwargs={
                 'unique_instance_name' :  instance.ins_unique_name,
-                'namespace'            :  proyecto.pro_nombre_k8s
+                'namespace'            :  proyecto.pro_nombre_k8s,
+                'services'             :  instancias_asociadas,
+                'fqdn'                 :  fqdn[0]['fqdn'],
+                'env_name'             :  env_name       
                 }
         
         kuber=Kuber(f_config_entorno)
+        kuber.unpublishFromIngress(kwargs)
         kuber.delete_Instacia(**kwargs)
         instance.delete()
-
 
     except IntegrityError as ie:
         e = 'no'

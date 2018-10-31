@@ -177,6 +177,7 @@ def nuevoProyecto(request,template_name='newProject.html'):
 
             col=getProyectos(request.user, False)
             request.session['proyectos'] = col['proyectos']
+            request.session['id_proyecto_seleccionado'] = False
             return HttpResponseRedirect('/administrar/proyectos')
         else:
             if not len(form.get_entornos()):
