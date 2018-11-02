@@ -663,7 +663,7 @@ class Kuber(object):
             self.namespace  = kwargs.get('namespace')
             target_ingress  = '%s-ingress' % (self.namespace,)
             target_svc      = '%s-svc' % kwargs.get('unique_instance_name')
-            services        = kwargs.get('services')
+            services        = kwargs.get('services') #list de nombres de instancias q deben permanecer en el Ingress
             lst_svc         = []
             api_response    = None
             api_instance    = kubernetes.client.ExtensionsV1beta1Api()

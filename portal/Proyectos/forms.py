@@ -41,12 +41,12 @@ class ProyectoForm(forms.ModelForm):
                 for e in self.entornos:
                     instance=AfEntorno.objects.get(id=e)
                     self.entornos_associated.append(instance)
-
+        '''
         if len(kwargs):
             if 'initial' in kwargs:
                 self.fields['entornos'].queryset=AfEntorno.objects.all()
                 self.fields['entornos'].initial=kwargs['initial']['entornos']
-        
+        '''
     
     def is_valid(self):
         

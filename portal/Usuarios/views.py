@@ -70,15 +70,19 @@ def index(request, template_name='index.html', extra_context=None):
     current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
     conf_global= AfGlobalconf.objects.first()
     afuser=AfUsuario.objects.get(user=usuario)
-    if afuser.usu_administrador and not conf_global.is_done:
+    
+    if afuser.usu_administrador and (not conf_global or not conf_global.is_done):
         messages.success(request, "La configuración global del portal aun no ha sido realizada, " \
                                   "las opciones de administación de proyectos y servicios no estarán disponibles ")
-        
+    if  conf_global:
+        globalconf_isdone=conf_global.is_done
+    else:
+        globalconf_isdone=False
     context =   { 'proyectos': col['proyectos'], 
                   'afcloud_admin': col['afcloud_admin'], 
-                  'globalconf_isdone': conf_global.is_done}
+                  'globalconf_isdone': globalconf_isdone}
     
-    request.session['globalconf_isdone']= conf_global.is_done
+    request.session['globalconf_isdone']= globalconf_isdone
     request.session['proyectos']     = col['proyectos']
     
     p_seleccionado= request.session.get('id_proyecto_seleccionado', False)

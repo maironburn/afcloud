@@ -180,7 +180,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
                         }
                 
                 operation_result=kuber.createServiceStack(**kwargs)
-                kuber.updateIngressPostDeploy(**kwargs)
+                #kuber.updateIngressPostDeploy(**kwargs)
                 #form.setConOkStatus()
             except Exception as e:
                 logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))

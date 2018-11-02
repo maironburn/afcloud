@@ -109,7 +109,7 @@ class AfEntorno(models.Model):
             content=f.read()
         f.close()
 
-        return base64.b64encode(content)
+        return base64.b64encode(content).decode('utf-8')
 
     def set_num_proyectos(self, n):
         self.num_proyectos=n
