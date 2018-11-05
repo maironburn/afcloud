@@ -212,15 +212,21 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
 @group_required(None)
 def refreshReplicas(request,id_proyecto):
     
-    proyecto=AfProyecto.objects.get(id=id_proyecto)
-    response=getDetallesProyecto(proyecto)
-    replicas={}
-    for r in response:
-        replicas.update({r['id'] : r['status']})
-        
-    data={'action': 'refresh_replicas', 'response':replicas}
+    try:
+        proyecto=AfProyecto.objects.get(id=id_proyecto)
+        response=getDetallesProyecto(proyecto)
+        replicas={}
+        for r in response:
+            replicas.update({r['id'] : r['status']})
+            
+        data={'action': 'refresh_replicas', 'response':replicas}
+        return JsonResponse({'data':data})
+    
+    except Exception as e:
+        pass
+    
+    data={'action': 'refresh_replicas', 'response':False}
     return JsonResponse({'data':data})
-
 
 @login_required
 @group_required(None)

@@ -503,10 +503,13 @@ class Kuber(object):
 
     def delete_Instacia(self,**kwargs):
 
-        self.rollback_stack_methods=['PersistentVolumeClaim',
+        self.rollback_stack_methods=[
+                                     'PersistentVolumeClaim',
                                      'Deployment',
                                      'HorizontalPodAutoscaler',
-                                     'Service']
+                                     'Service',
+                                     'PersistentVolume'
+                                     ]
 
         try:
             self.namespace                  = kwargs.get('namespace')
@@ -691,11 +694,43 @@ class Kuber(object):
             print("Exception when calling unpublishFromIngress-> %s\n" % (format(e),))
 
 
+    def createIngressFromTemplate(self,kwargs):
+
+        fichero_yaml                    = kwargs.get('fichero_yaml')
+        self.namespace                  = kwargs.get('namespace')
+        self.fqdn                       = kwargs.get('fqdn')
+        self.env_name                   = kwargs.get('env_name')
+
+        with open(fichero_yaml, 'r') as f:
+            data=f.read()
+            parsed = yaml.load(data)
+
+        try:
+
+            parsed['metadata']['name']      = '%s%s' % (self.namespace,'-ingress')
+            parsed['metadata']['namespace'] = '%s'   % (self.namespace,)
+            parsed['spec']['tls'][0]['hosts'][0]   = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
+            parsed['spec']['tls'][0]['secretName'] = '%s%s' % (self.namespace, '-secret')
+            parsed['spec']['rules'][0]['host']     = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
+            api_instance = kubernetes.client.ExtensionsV1beta1Api()
+            api_response = api_instance.create_namespaced_ingress(self.namespace, parsed)
+            self.logger.info("createIngressFromTemplate:->  %s" % (api_response,))
+            self.logger.info("creado el ingress del servicio a partir del fichero:->  %s" % (fichero_yaml,))
+            pprint(api_response)
+
+        except ApiException as e:
+            print("Exception when calling ExtensionsV1beta1Api->create_namespaced_ingress: %s\n" % e)
+
+        #@todo@ Rollback meths
+
+        return True
+
+        
     '''
     https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#delete_namespaced_ingress
     '''
     def delete_namespaced_ingress(self,kwargs):
-        
+
         self.namespace  = kwargs.get('namespace')
         target_ingress  = '%s-ingress' % (self.namespace,)
         self.namespace                  = kwargs.get('namespace')
@@ -706,7 +741,7 @@ class Kuber(object):
             body = kubernetes.client.V1DeleteOptions()
             api_response = api_instance.delete_namespaced_ingress(target_ingress, self.namespace, body)
             self.logger.info("delete_namespaced_ingress:->  %s" % (api_response,))
-            
+
         except ApiException as e:
             print("Exception when calling delete_namespaced_ingress-> %s\n" % format(e))
 

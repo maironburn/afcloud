@@ -5,6 +5,7 @@
 
 <script>
 
+
 DESPLIEGUES_OPERATIONS={
 
   'url_refresh_replicas': '/refesh_replicas/proyecto/',
@@ -18,7 +19,7 @@ DESPLIEGUES_OPERATIONS={
 			case 'refresh_replicas':
 				console.log("refresh_replicas del proyecto");
 
-				if (data.response){
+				if (data.response && !$.isEmptyObject(data.response)){
 						$.each(data.response, function(k,v){
 
 							//$('.instancias_running#'+k).parent().next().find('span.status_running')
@@ -34,7 +35,7 @@ DESPLIEGUES_OPERATIONS={
 							}
 							else {
 								$('.instancias_running#'+k).parent().next().find('.action_href').attr('href', url + k + "/0");
-								$('.instancias_running#'+k).parent().next().find('.a_href_modal').attr('href','#replegar' + k);
+                $('.instancias_running#'+k).parent().next().find('.a_href_modal').attr('href','#replegar' + k);
                 $('.instancias_running#'+k).parent().next().find('.modal').first('div').attr('id', 'replegar' + k);
 								$('.instancias_running#'+k).parent().next().find('span.status_running').removeClass('glyphicon-play-circle').addClass('glyphicon-pause');
 								$('.modal_text').text($('.modal_text').text().replace('desplegar','replegar'));
@@ -42,6 +43,14 @@ DESPLIEGUES_OPERATIONS={
 							console.log('Seteando span: k' + k + ", valor: "+ v);
 						});
 			  }
+        else{
+          //clear all timeout
+          var id = window.setTimeout(function() {}, 0);
+          while (id--) {
+              window.clearTimeout(id); // will do nothing if no timeout with id is present
+          }
+
+        }
 
 	    }
 	 }
@@ -154,10 +163,10 @@ $(document).ready(function(){
                     <td>{{ instancia.nombre_despliegue }}</td>
                     <td>{{ instancia.creation_date }}</td>
                     <td>
-                    {% if instancia.running %}<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">
+                    {% if instancia.running %}<img class="estado_replicas" src="{% static 'images/active_user.png' %}" width="16px" height="16px">
                       <label for="entorno activo">Activo</label></td>
                     {% else %}
-                    <img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="entorno inactivo">Inactivo</label></td>
+                    <img class="estado_replicas" src="{% static 'images/inactive_user.png' %}" width="16px" height="16px"><label for="entorno inactivo">Inactivo</label></td>
                     {% endif %}
                     </td>
 

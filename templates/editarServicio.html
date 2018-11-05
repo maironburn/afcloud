@@ -83,7 +83,7 @@ $('#div_id_ser_yaml_file a').on('click', function(e){
               <h2 class="text-danger">Edición Servicio {{ nombre_servicio }} </h2>
                 <hr/>
                 <div class="well">
-                  {% crispy form %}
+                  {{ form| crispy}}
                 </div>
                 <input type="submit" value="Guardar" class="btn btn-danger">
                 <button type="button" class="btn btn-danger" onclick="location.href='/administrar/servicios/'">Cancelar</button>

@@ -65,7 +65,7 @@ var AJAXSTUFF={
 
 		    	console.log('success Request');
 		    	callback(json.data);
-		    	
+
 
 		    },
 
@@ -83,12 +83,12 @@ var AJAXSTUFF={
 		});
 
 	}
-	,	
-	
+	,
+
 	get_csrfmiddlewaretoken: function() {
 	     return $('[name="csrfmiddlewaretoken"]').val();
 	},
-	
+
 	BuildDictionaryFromObjectRequest: function (data, searchedKeysArray, KeysCollection){
 
 		var dictio={};
@@ -129,6 +129,14 @@ var AJAXSTUFF={
 	}
 }
 
+
+Object.prototype.isEmpty = function() {
+    for(var key in this) {
+        if(this.hasOwnProperty(key))
+            return false;
+    }
+    return true;
+}
 
 
 function encode_utf8(s) {
