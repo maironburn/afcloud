@@ -1,5 +1,5 @@
-# Create your views here.
 # coding=utf-8
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -17,7 +17,7 @@ from django.contrib import messages
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
-from setuptools.unicode_utils import try_encode
+
 
 logger=getLogger()
 
@@ -278,7 +278,11 @@ def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
                 }
         
         kuber=Kuber(f_config_entorno)
-        kuber.unpublishFromIngress(kwargs)
+        if len(instancias_asociadas):
+            kuber.unpublishFromIngress(kwargs)
+        else:
+            kuber.delete_namespaced_ingress(kwargs)
+            
         kuber.delete_Instacia(**kwargs)
         instance.delete()
 

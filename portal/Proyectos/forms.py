@@ -11,7 +11,7 @@ from afcloud.settings import BASE_DIR, KUBER_TEMPLATES
 class ProyectoForm(forms.ModelForm):
 
     pro_nombre = forms.CharField(max_length=100, label='Nombre')
-    pro_descripcion= forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea )
+    pro_descripcion= forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea (attrs={'rows':4, 'cols':15}))
     pro_activo=forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
 
     entornos =forms.MultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple,
@@ -27,7 +27,7 @@ class ProyectoForm(forms.ModelForm):
 
     def __init__(self, *args,**kwargs):
         self.entornos_associated=[]
-        super(ProyectoForm, self).__init__(*args, **kwargs)
+        
         #self.fields['entornos'].initial=kwargs['entornos']
         if len(args):
 
@@ -41,6 +41,7 @@ class ProyectoForm(forms.ModelForm):
                 for e in self.entornos:
                     instance=AfEntorno.objects.get(id=e)
                     self.entornos_associated.append(instance)
+        super(ProyectoForm, self).__init__(*args, **kwargs)
         '''
         if len(kwargs):
             if 'initial' in kwargs:
@@ -120,7 +121,7 @@ class editProyectoForm(forms.ModelForm):
 
     pro_nombre      = forms.CharField(max_length=100, label='Nombre')
     pro_nombre_k8s  = forms.CharField(max_length=100, label='Nombre K8s', required=False)
-    pro_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea )
+    pro_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea (attrs={'rows':4, 'cols':15}))
     pro_activo      = forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
     entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.all())
     entornos_associated=[]

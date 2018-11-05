@@ -593,7 +593,7 @@ class Kuber(object):
 
 
     def getIngressPath(self, service):
-        
+
         i_backend= kubernetes.client.V1beta1IngressBackend(
                     service_name = '%s-svc' % (service,) ,
                     service_port = 80
@@ -603,11 +603,11 @@ class Kuber(object):
                     backend=i_backend,
                     path='/%s' % (service,)
                 )
-        
+
         return i_path
-            
-            
-            
+
+
+
 
     def getIngressRule(self, instancia, host, i_path= None):
 
@@ -622,7 +622,7 @@ class Kuber(object):
                     host=host,
                     http=i_rule_value
                 )
-            
+
 
         return i_irule
 
@@ -668,57 +668,47 @@ class Kuber(object):
             api_response    = None
             api_instance    = kubernetes.client.ExtensionsV1beta1Api()
             api_response    = api_instance.read_namespaced_ingress(target_ingress, self.namespace)
-            
+
             self.fqdn                 = kwargs.get('fqdn')
             self.env_name             = kwargs.get('env_name')
-        
-        
+
+
             host = '%s.%s.%s' % (self.namespace, self.env_name , self.fqdn)
-            
+
             self.logger.info("unpublishFromIngress:->  %s" % (api_response,))
             self.logger.info("target_ingress: %s , target_svc: % s " % (target_ingress,target_svc))
-            
+
             for s in services:
                 lst_svc.append(self.getIngressPath(s.ins_unique_name))
             i_r= self.getIngressRule(None, host, lst_svc)
-            
+
             api_response.spec.rules=[i_r]
             self.logger.info("api_response parcheada: %s  " % (api_response))
             api_instance.patch_namespaced_ingress(target_ingress,self.namespace ,api_response)
-            
+
         except ApiException as e:
             self.logger.error("unpublishFromIngress parcheada: %s  " % (format(e)))
             print("Exception when calling unpublishFromIngress-> %s\n" % (format(e),))
 
 
-
-
-    def createIngressFromTemplate(self,kwargs):
-
-        fichero_yaml                    = kwargs.get('fichero_yaml')
+    '''
+    https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#delete_namespaced_ingress
+    '''
+    def delete_namespaced_ingress(self,kwargs):
+        
+        self.namespace  = kwargs.get('namespace')
+        target_ingress  = '%s-ingress' % (self.namespace,)
         self.namespace                  = kwargs.get('namespace')
-        self.fqdn                       = kwargs.get('fqdn')
-        self.env_name                   = kwargs.get('env_name')
-
-        with open(fichero_yaml, 'r') as f:
-            data=f.read()
-            parsed = yaml.load(data)
 
         try:
 
-            parsed['metadata']['name']      = '%s%s' % (self.namespace,'-ingress')
-            parsed['metadata']['namespace'] = '%s'   % (self.namespace,)
-            parsed['spec']['tls'][0]['hosts'][0]   = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
-            parsed['spec']['tls'][0]['secretName'] = '%s%s' % (self.namespace, '-secret')
-            parsed['spec']['rules'][0]['host']     = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
             api_instance = kubernetes.client.ExtensionsV1beta1Api()
-            api_response = api_instance.create_namespaced_ingress(self.namespace, parsed)
-            self.logger.info("createIngressFromTemplate:->  %s" % (api_response,))
-            self.logger.info("creado el ingress del servicio a partir del fichero:->  %s" % (fichero_yaml,))
-            pprint(api_response)
-
+            body = kubernetes.client.V1DeleteOptions()
+            api_response = api_instance.delete_namespaced_ingress(target_ingress, self.namespace, body)
+            self.logger.info("delete_namespaced_ingress:->  %s" % (api_response,))
+            
         except ApiException as e:
-            print("Exception when calling ExtensionsV1beta1Api->create_namespaced_ingress: %s\n" % e)
+            print("Exception when calling delete_namespaced_ingress-> %s\n" % format(e))
 
         #@todo@ Rollback meths
 

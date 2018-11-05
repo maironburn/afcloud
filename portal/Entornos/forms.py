@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 class EntornoForm(forms.ModelForm):
 
     ent_nombre      = forms.CharField(max_length=100,label='Nombre',required=True)
-    ent_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea ,required=False)
+    ent_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea(attrs={'rows':4, 'cols':15}) ,required=False)
     ent_activo      = forms.BooleanField(label=_("Entorno activo"), initial=True,required=False)
     ent_config_file = forms.FileField(label='Configuración cluster')
     ent_json_file   = forms.FileField(label='Configuración registry (json)')

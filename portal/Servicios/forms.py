@@ -7,7 +7,7 @@ from django import forms
 
 class ServicioForm(forms.ModelForm):
 
-    ser_descripcion  = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea )
+    ser_descripcion  = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea (attrs={'rows':4, 'cols':15}))
     ser_yaml_file    = forms.FileField(label='Deployment yaml')
     ser_min_replicas = forms.IntegerField(min_value=1,max_value=5, label='Mínimo de réplicas: ')
     ser_max_replicas = forms.IntegerField(min_value=1,max_value=5, label='Máximo de réplicas: ')

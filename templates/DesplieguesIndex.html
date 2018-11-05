@@ -20,7 +20,25 @@ DESPLIEGUES_OPERATIONS={
 
 				if (data.response){
 						$.each(data.response, function(k,v){
+
+							//$('.instancias_running#'+k).parent().next().find('span.status_running')
 							$('.instancias_running#'+k).text(v);
+
+							url="/despliegue/modifyDeploymentReplicas/";
+							if (v==0){
+								$('.instancias_running#'+k).parent().next().find('.a_href_modal').attr('href','#despliegue' + k);
+                $('.instancias_running#'+k).parent().next().find('.modal').first('div').attr('id', 'despliegue' + k);
+								$('.instancias_running#'+k).parent().next().find('.action_href').attr('href', url + k + "/1");
+								$('.instancias_running#'+k).parent().next().find('span.status_running').removeClass('glyphicon-pause').addClass('glyphicon-play-circle');
+								$('.modal_text').text($('.modal_text').text().replace('replegar','desplegar'));
+							}
+							else {
+								$('.instancias_running#'+k).parent().next().find('.action_href').attr('href', url + k + "/0");
+								$('.instancias_running#'+k).parent().next().find('.a_href_modal').attr('href','#replegar' + k);
+                $('.instancias_running#'+k).parent().next().find('.modal').first('div').attr('id', 'replegar' + k);
+								$('.instancias_running#'+k).parent().next().find('span.status_running').removeClass('glyphicon-play-circle').addClass('glyphicon-pause');
+								$('.modal_text').text($('.modal_text').text().replace('desplegar','replegar'));
+							}
 							console.log('Seteando span: k' + k + ", valor: "+ v);
 						});
 			  }
@@ -156,8 +174,8 @@ $(document).ready(function(){
 
                       {%if not instancia.running %}
 
-                          <a href="#despliegue{{ instancia.id }}" data-toggle="modal">
-                          <span class="text-danger glyphicon glyphicon-play-circle"></span>
+                          <a href="#despliegue{{ instancia.id }}" class="a_href_modal" data-toggle="modal">
+                          <span class="text-danger glyphicon glyphicon-play-circle status_running"></span>
                           </a>
                                 <div id="despliegue{{ instancia.id }}" class="modal fade">
                                     <div class="modal-dialog">
@@ -165,11 +183,11 @@ $(document).ready(function(){
                                             <button type="button" class="close" data-dismiss="modal"
                                                     aria-hidden="true">&times;</button>
                                             <div class="modal-body">
-                                                <h4>¿Esta seguro de querer
+                                                <h4 class="modal_text">¿Esta seguro de querer
                                                     desplegar {{ instancia.nombre_despliegue }}?</h4>
 
                                                     <a href="/despliegue/modifyDeploymentReplicas/{{instancia.id}}/1"
-                                                       class="btn btn-danger "> Sí </a>
+                                                       class="btn btn-danger action_href"> Sí </a>
 
                                                 <button class="btn btn-danger" data-dismiss="modal"
                                                         type="button"> No
@@ -182,8 +200,8 @@ $(document).ready(function(){
 
                           {%if instancia.running %}
 
-                              <a href="#replegar{{ instancia.id }}" data-toggle="modal">
-                              <span class="text-danger glyphicon glyphicon-pause"></span>
+                              <a href="#replegar{{ instancia.id }}" class="a_href_modal" data-toggle="modal">
+                              <span class="text-danger glyphicon glyphicon-pause status_running"></span>
                               </a>
 
                               <div id="replegar{{ instancia.id }}" class="modal fade">
@@ -192,11 +210,11 @@ $(document).ready(function(){
                                           <button type="button" class="close" data-dismiss="modal"
                                                   aria-hidden="true">&times;</button>
                                           <div class="modal-body">
-                                              <h4>¿Esta seguro de querer
+                                              <h4 class="modal_text">¿Esta seguro de querer
                                                   replegar {{ instancia.nombre_despliegue }}?</h4>
 
                                                   <a href="/despliegue/modifyDeploymentReplicas/{{instancia.id}}/0"
-                                                     class="btn btn-danger "> Sí </a>
+                                                     class="btn btn-danger action_href"> Sí </a>
 
                                               <button class="btn btn-danger" data-dismiss="modal"
                                                       type="button"> No
