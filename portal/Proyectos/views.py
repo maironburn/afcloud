@@ -216,9 +216,9 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
         entornos_associated.append(AfEntorno.objects.get(id=ea.ent.id))
 
     entornos_associated=rel_ent_pro.values_list('ent', flat=True)
-    instances=AfEntorno.objects.filter(id__in=entornos_associated)
+    envs=AfEntorno.objects.filter(id__in=entornos_associated)
 
-    form = editProyectoForm(request.POST or None, instance=proyecto,initial={'entornos': instances})
+    form = editProyectoForm(request.POST or None, instance=proyecto,initial={'entornos': envs})
 
     if request.method == 'POST':
         if form.is_valid():
@@ -230,7 +230,9 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
             form.saveProyect(data, instancia=proyecto)
             messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
             return HttpResponseRedirect('/administrar/proyectos')
-
+        else:
+            messages.error(request, "No se puede modificar un proyecto sin entornos asociados")
+            
     return render(request, template_name, {'form': form, 'value': value,'id': id,
                                            'nombre_proyecto': proyecto.pro_nombre,
                                            'entornos_associated': entornos_associated})

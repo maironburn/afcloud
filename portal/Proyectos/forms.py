@@ -128,12 +128,16 @@ class editProyectoForm(forms.ModelForm):
                 self.pro_activo=kwargs['instance'].pro_activo
 
 
+        if len(args) and args[0] is not None:
+            if 'entornos' in args[0] :
+                self.entornos=args[0].getlist('entornos')
+
 
     def is_valid(self):
         
         valid = super(editProyectoForm, self).is_valid() 
         
-        return valid #and len(self.entornos_associated)
+        return valid and (len(self.entornos_associated) or len(self.entornos))
     
     
     def saveProyect(self, data,instancia):
@@ -150,7 +154,7 @@ class editProyectoForm(forms.ModelForm):
             entorno=AfEntorno.objects.get(id=v)
             kuber=Kuber (entorno.ent_config_file.path)
             kuber.delete_namespace(self.pro_nombre)
-            #kuber.delete_persistent_volume
+            
             ent_pro= AfRelEntPro.objects.filter(ent=entorno, pro=instancia)
             for ep in list(ent_pro):
                 instancias=AfInstancia.objects.filter(rep=ep)

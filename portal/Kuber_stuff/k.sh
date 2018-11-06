@@ -28,8 +28,6 @@ if [ "$#" -eq 2 ];then
 				kubectl delete pv "$1-pv"
 			 done
 		;;
-
-				
 			ingress)
 
 				kubectl --namespace="$NS" get ingress "$INGRESS" -ojson
