@@ -1,5 +1,5 @@
-from portal.models import AfProyecto, AfUsuario, AfPerfil, AfTipoPerfil,AfRelEntPro, AfInstancia
-from afcloud.settings import MEDIA_ROOT
+from portal.models import AfProyecto, AfUsuario, AfPerfil, AfTipoPerfil,AfRelEntPro,AfInstancia,AfGlobalconf
+from afcloud.settings import MEDIA_ROOT,KUBER_TEMPLATES
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.logger import *
 import datetime,os
@@ -100,13 +100,13 @@ def handle_uploaded_file(f, dest=MEDIA_ROOT):
 
 
 def getDetallesProyecto(proyecto_instance):
-    
+
     rel_ent_pro= AfRelEntPro.objects.filter(pro=proyecto_instance)
     instancias_info=[]
     iterado=[]
     for e in rel_ent_pro:
         if e.ent.ent_nombre not in iterado:
-            
+
             kuber    = Kuber(e.ent.ent_config_file.path)
             response = kuber.list_namespaced_deployment_info(proyecto_instance.pro_nombre)
             for r in response:
@@ -114,8 +114,8 @@ def getDetallesProyecto(proyecto_instance):
                 r.update({'entorno': e.ent.ent_nombre, 'id': instancia_id})
             instancias_info.extend(response)
             iterado.append(e.ent.ent_nombre)
-        
-    return   instancias_info 
+
+    return   instancias_info
 
 
 def getKubernetesEnv(config_file):
@@ -132,13 +132,53 @@ def getKubernetesEnv(config_file):
     return False
 
 
-
-
 def getFileEncodedB64(fichero):
-    
+
     with open(fichero, 'rb') as f:
         content=f.read()
     f.close()
 
     return base64.b64encode(content)
-    
+
+
+def createNameSpaceStack(**kwargs):
+
+    env_file_path = kwargs.get ('env_file_path')
+    namespace     = kwargs.get ('namespace')
+    env_name      = kwargs.get ('env_name')
+    registry_hash = kwargs.get ('registry_hash')
+
+    try:
+        kuber=Kuber (env_file_path)
+        kuber.createNameSpace(namespace)
+        global_conf=AfGlobalconf.objects.first()
+        crt = getFileEncodedB64(global_conf.crt_file.path)
+        key = getFileEncodedB64(global_conf.key_file.path)
+
+        dict_ingress={
+                        'fichero_yaml' : '%s/ingress_template_base.yaml' % (KUBER_TEMPLATES,), # ingress del servicio q debe ser periodicamente actualizado con los despliegues
+                        'namespace'    : namespace,
+                        'fqdn'         : global_conf.fqdn,
+                        'env_name'     : env_name,
+                        'registry_hash': registry_hash,
+                        'crt'          : crt.decode("utf-8"),
+                        'key'          : key.decode("utf-8")
+                              }
+
+        # creacion del tipo Ingress (kind: Ingress)
+        kuber.createIngressFromTemplate(dict_ingress)
+        dict_ingress['fichero_yaml']='%s/secret_registry.yaml' % (KUBER_TEMPLATES,)
+        # creacion del tipo secret (kind: Secret)
+        kuber.create_namespaced_secretRegistry(dict_ingress)
+        dict_ingress.update({
+                             'ingress-secret-template': '%s/ingress-secret-template.yaml' % (KUBER_TEMPLATES,)
+                                     })
+                # creacion del ingress secret (kind: Secret/ type: kubernetes.io/tls)
+        kuber.create_namespaced_secretIngress(dict_ingress)
+
+        return True
+
+    except Exception as e:
+        pass
+
+    return False

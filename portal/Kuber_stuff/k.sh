@@ -1,5 +1,7 @@
 #!/bin/bash
 
+KUBE_ROOT=/root/.kube
+
 if [ "$#" -eq 2 ];then
 
 	NS="$1"
@@ -23,10 +25,11 @@ if [ "$#" -eq 2 ];then
 		del_pv)
 		
 			for i in `kubectl get pv | tail -n +2 | awk '{print $1}'`;do
-				kubectl delete pv "$i"
+				kubectl delete pv "$1-pv"
 			 done
 		;;
-		
+
+				
 			ingress)
 
 				kubectl --namespace="$NS" get ingress "$INGRESS" -ojson
@@ -50,6 +53,9 @@ if [ "$#" -eq 2 ];then
 					echo -e "\nIngress"
 					echo -e "--------------------------\n"
 					kubectl --namespace="$NS" get ingress
+					echo -e "\nPersistentVolumeClaim"
+					echo -e "--------------------------\n"					
+					kubectl --namespace="$NS" get pvc
 					echo -e "\nDeployments"
 					echo -e "--------------------------\n"
 					kubectl --namespace="$NS" get deployments
@@ -68,5 +74,44 @@ if [ "$#" -eq 2 ];then
 
 	esac
 
+else
+
+	case "$1" in
+	
+			cc)
+				
+				FORMER=''
+				CURRENT=''
+				pushd .
+				
+				cd "$KUBE_ROOT"
+				clear
+				if [ `diff config config_solis | wc -l` -eq 0 ];then
+					# configacion de k8s remota
+					FORMER="config_solis"
+					cp -v config_minikube config
+					CURRENT="config_minikube"
+				else
+					# la config establecida es minikube local 
+					FORMER="config_minikube"
+					cp -v config_solis config
+					CURRENT="config_solis"
+				fi
+				popd 
+				echo "Se ha cambiado la configuracion de $FORMER -> $CURRENT"
+				echo "Listando proyectos"
+				kubectl get ns
+			;;	
+			
+		  where)
+			cd "$KUBE_ROOT"
+			clear
+			if [ `diff config config_solis | wc -l` -eq 0 ];then
+				echo "Configuracion actual: config_solis"
+			else
+				echo "Configuracion actual: minikube local"
+			fi
+	esac
+	
 fi
 

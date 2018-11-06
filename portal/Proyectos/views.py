@@ -94,13 +94,19 @@ def set_bulk_num_integrantes(proyectos):
 @login_required
 def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
 
-    proyecto_instance= AfProyecto.objects.get(id=id)
-    instancias_info= getDetallesProyecto(proyecto_instance) # definido en aux_meth
+    try:
+        proyecto_instance= AfProyecto.objects.get(id=id)
+        instancias_info= getDetallesProyecto(proyecto_instance) # definido en aux_meth
     
-    proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion, 'instancias_info': instancias_info}
-    response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'instancias_info': instancias_info }).rendered_content
+        proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion, 'instancias_info': instancias_info}
+        response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'instancias_info': instancias_info }).rendered_content
  
-    data={'action': 'detalles_proyecto', 'html':response, 'available_info': len(instancias_info)}
+        data={'action': 'detalles_proyecto', 'html':response, 'available_info': len(instancias_info)}
+        
+    except Exception as e:
+        #messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
+        pass
+
     return JsonResponse({'data':data})
 
 
@@ -109,7 +115,9 @@ def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
 def administrarProyectosOrdered(request, orden, ascendente, template_name='proyectosIndex.html', extra_content=None):
     try:
         name = request.GET['p']
-    except:
+    except:    
+
+        
         name = ''
     e = 'no' # parametro q actua como flag indicando q se ha realizado una busqueda
     ordenar = ''
@@ -238,7 +246,11 @@ def borrarProyecto(request, id):
         for ep in rel_ent_pro:
             kuber=Kuber(ep.ent.ent_config_file.path)
             kuber.deleteNamespace(proyecto.pro_nombre)
-
+            instancias=AfInstancia.objects.filter(rep=ep)
+            for i in list(instancias):
+                print('trying to delete pv: %s-pv' % (i.ins_unique_name,))
+                kuber.delete_persistent_volume({'unique_instance_name': i.ins_unique_name})
+                
         proyecto.delete()
         logger.info("Proyecto borrado con exito")
 

@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.aux_meth import *
 from afcloud.settings import BASE_DIR, KUBER_TEMPLATES
+from portal.Utils import *
 
 #class ProyectoForm(forms.Form):
 class ProyectoForm(forms.ModelForm):
@@ -71,37 +72,17 @@ class ProyectoForm(forms.ModelForm):
         - ingress del svc
         '''
         for ep in self.entornos_associated:
-            afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
             
-            kuber=Kuber (ep.ent_config_file.path)
-            kuber.createNameSpace(self.pro_nombre)
+            kwargs={
+                    'env_file_path' : ep.ent_config_file.path,
+                    'namespace'     : self.pro_nombre,
+                    'env_name'      : ep.ent_nombre,
+                    'registry_hash' : ep.registry_hash
+                    }
             
-            global_conf=AfGlobalconf.objects.first()
-            crt = getFileEncodedB64(global_conf.crt_file.path)
-            key = getFileEncodedB64(global_conf.key_file.path)
-            
-            dict_ingress={'fichero_yaml' : '%s/ingress_template_base.yaml' % (KUBER_TEMPLATES,), # ingress del servicio q debe ser periodicamente actualizado con los despliegues 
-                          'namespace'    : self.pro_nombre, 
-                          'fqdn'         : global_conf.fqdn,
-                          'env_name'     : ep.ent_nombre,
-                          'registry_hash': ep.registry_hash,
-                          'crt'          : crt.decode("utf-8"),
-                          'key'          : key.decode("utf-8") 
-                          }
-
-            # creacion del tipo Ingress (kind: Ingress)
-            kuber.createIngressFromTemplate(dict_ingress)
-            dict_ingress['fichero_yaml']='%s/secret_registry.yaml' % (KUBER_TEMPLATES,)
-            # creacion del tipo secret (kind: Secret)
-            kuber.create_namespaced_secretRegistry(dict_ingress)
-
-            dict_ingress.update({
-                                 'ingress-secret-template': '%s/ingress-secret-template.yaml' % (KUBER_TEMPLATES,)
-                                 })
-            # creacion del ingress secret (kind: Secret/ type: kubernetes.io/tls)
-            kuber.create_namespaced_secretIngress(dict_ingress)
-            dict_ingress['fichero_yaml']='/home/mdiaz-isotrol/eclipse-workspace/afcloud/afcloud/portal/Kuber_stuff/ingress_template_base.yaml'
-            afep.save()
+            if createNameSpaceStack(**kwargs):
+                afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
+                afep.save()
 
 
     def saveRelations(self, instance):
@@ -163,23 +144,36 @@ class editProyectoForm(forms.ModelForm):
 
         vinculados=AfRelEntPro.objects.filter(pro=instancia).values_list('ent', flat=True)
         to_delete = [x for x in list(vinculados) if str(x) not in data['entornos']]
-        to_add    = [x for x in data['entornos'] if str(x) not in list(vinculados)]
+        to_add    = [x for x in data['entornos'] if int(x) not in list(vinculados)]
         
         for v in to_delete:
             entorno=AfEntorno.objects.get(id=v)
             kuber=Kuber (entorno.ent_config_file.path)
             kuber.delete_namespace(self.pro_nombre)
+            #kuber.delete_persistent_volume
             ent_pro= AfRelEntPro.objects.filter(ent=entorno, pro=instancia)
-            ent_pro.delete()
+            for ep in list(ent_pro):
+                instancias=AfInstancia.objects.filter(rep=ep)
+                for i in list(instancias):
+                    print('trying to delete pv: %s-pv' % (i.ins_unique_name,))
+                    kuber.delete_persistent_volume({'unique_instance_name': i.ins_unique_name})
+                ep.delete()
             
                     
         for v in to_add:
-            entorno=AfEntorno.objects.get(id=v)
-            kuber=Kuber (entorno.ent_config_file.path)
-            kuber.createNameSpace(self.pro_nombre)            
-            afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)
             
-
+            entorno=AfEntorno.objects.get(id=v)
+            kwargs={
+                    'env_file_path' : entorno.ent_config_file.path,
+                    'namespace'     : instancia.pro_nombre,
+                    'env_name'      : entorno.ent_nombre,
+                    'registry_hash' : entorno.registry_hash
+                    }
+                        
+            if createNameSpaceStack(**kwargs):
+                afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)
+                afep.save()
+            
         instancia.save()
 
 
