@@ -17,7 +17,7 @@ from django.contrib import messages
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
-
+from django.core.exceptions import ObjectDoesNotExist
 
 logger=getLogger()
 
@@ -87,13 +87,17 @@ def index(request, template_name='DesplieguesIndex.html', extra_context=None):
 def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html', extra_context=None):
 
     try:
-        name = request.GET['p']
-
-    except:
-        name = ''
-    request.session['seccion_activa'] = 'despliegues'
-    instancias,lst_despliegues = getInstancias (request,id_proyecto)
-
+        name = request.GET.get('p') if request.GET.get('p') else ''
+        request.session['seccion_activa'] = 'despliegues'
+        instancias,lst_despliegues = getInstancias (request,id_proyecto)
+    
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "No existen despliegues asociados al proyecto solicitado")
+        return TemplateResponse(request, template_name, None)
+        
+    except Exception as e:
+        pass
+    
     if name == '':
         lst_despliegues=sorted(lst_despliegues, key=lambda p: lst_despliegues, reverse=False)
         e = 'no'

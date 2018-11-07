@@ -13,6 +13,7 @@ from portal.Catalogo.forms import CatalogRawForm,editCatalogRawForm
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 
 logger=getLogger()
 
@@ -65,11 +66,19 @@ def index(request, template_name='CatalogoIndex.html', extra_context=None):
 def  catalogosIndex(request, id_proyecto, template_name='CatalogoIndex.html', extra_context=None):
     try:
         # para las busquedas
-        name = request.GET['p']
-    except:
-        name = ''
-    request.session['seccion_activa'] = 'catalogos'
-    dict_servicios,lst_servicios,catalog = getCatalogoProyecto (request,id_proyecto)
+        name = request.GET.get('p') if request.GET.get('p') else ''
+        request.session['seccion_activa'] = 'catalogos'
+        dict_servicios,lst_servicios,catalog = getCatalogoProyecto (request,id_proyecto)
+
+    except ObjectDoesNotExist as dne:
+
+        messages.error(request, "EL catálogo del proyecto solicitado no existe")
+        return TemplateResponse(request, template_name, None)
+
+    except Exception as e:
+        pass
+
+
     if name == '':
         servicios = sorted(lst_servicios)
         e = 'no'
@@ -107,14 +116,14 @@ def nuevoCatalogo(request,id_proyecto, template_name='newCatalogo.html'):
     value = 'nuevo'
 
     dict_servicios, lst_serv, catalog= getCatalogoProyecto (request, id_proyecto)
-    
+
     if request.method == "POST":
 
         form = CatalogRawForm(request.POST or None)
         form.setProyect(id_proyecto)
-        
+
         if form.is_valid():
-            
+
             form.save()
 
             messages.success(request,  'Catálogo añadido con éxito', extra_tags='Creación de catálogos')
@@ -125,14 +134,14 @@ def nuevoCatalogo(request,id_proyecto, template_name='newCatalogo.html'):
         nombre_proyecto= request.session.get('proyecto_seleccionado', False)
         #exluimos del nuevo catalogo servicios inactivos
         #data={'service_queryset': AfServicio.objects.filter(ser_activo=True).exclude(id__in=[c.ser.id for c in catalog ])}
-        # se admiten multiples servicios 
+        # se admiten multiples servicios
         # precarga de las tarifas base de los servicios
         svc=AfServicio.objects.filter(ser_activo=True)
         data={'service_queryset': svc}
         dict_svc={}
         for s in svc:
             dict_svc.update({s.id : s.ser_tarifa})
-            
+
         form = CatalogRawForm(initial=data)
         return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto, 'id': id_proyecto, 'dict_svc': dict_svc})
 
@@ -156,8 +165,8 @@ def editarCatalogo(request,id_proyecto, id_servicio,template_name='editarCatalog
 
             messages.success(request,  'Catálogo editado con éxito', extra_tags='Edición de catálogos')
             return HttpResponseRedirect('/catalogo/proyecto/%s' % (id_proyecto))
-        
-    svc=AfServicio.objects.filter(ser_activo=True)    
+
+    svc=AfServicio.objects.filter(ser_activo=True)
     dict_svc={}
     for s in svc:
         dict_svc.update({s.id : s.ser_tarifa})

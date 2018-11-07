@@ -13,7 +13,7 @@ from portal.Utils.aux_meth import *
 from portal.Utils.logger import *
 from django.contrib import messages
 from django.core.files import File
-
+from django.core.exceptions import ObjectDoesNotExist
 
 
 logger=getLogger()
@@ -40,6 +40,7 @@ def administrarEntornos(request, template_name='entornosIndex.html', extra_conte
         name = request.GET['p']
     except:
         name = ''
+
     if name == '':
         entornos = AfEntorno.objects.all().order_by('ent_nombre')
         e = 'no'
@@ -64,10 +65,9 @@ def administrarEntornos(request, template_name='entornosIndex.html', extra_conte
 @login_required
 @group_required('af_cloud_admin',)
 def administrarEntornosOrdered(request, orden, ascendente, template_name='entornosIndex.html', extra_content=None):
-    try:
-        name = request.GET['p']
-    except:
-        name = ''
+
+    name = request.GET.get('p') if request.GET.get('p') else ''
+
     ordenar = ''
     e = 'no' # parametro q actua como flag indicando q se ha realizado una busqueda
 
@@ -119,41 +119,40 @@ def administrarEntornosOrdered(request, orden, ascendente, template_name='entorn
 def nuevoEntorno(request,template_name='newEntorno.html'):
 
     value = 'nuevo'
-    test_env=False
     kuber = None
-    
+
     logger.debug("*AFCLOUD*: %s, Meth: %s, urlConf: %s" % (__name__, request.method, request.path))
-    
+
     if request.method == "POST" and request.FILES:
         form = EntornoForm(request.POST, request.FILES)
         fichero_config=handle_uploaded_file(request.FILES['ent_config_file'])
         fichero_json_registry= handle_uploaded_file(request.FILES['ent_json_file'])
         rook_ip= None
-        
+
         try:
             kuber=Kuber( (MEDIA_ROOT+ '%s') %(fichero_config))
             client=kuber.getClient()
             rook_ip= kuber.get_rook_nfs_ip()
             form.setConOkStatus()
-            
+
         except Exception as e:
             logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,fichero_config))
 
         if form.is_valid():
-            
+
             entorno = form.save(commit=False)
             entorno.setConfigfile  ((MEDIA_ROOT+ '%s') %(fichero_config))
             entorno.setRegistryfile((MEDIA_ROOT+ '%s') %(fichero_json_registry))
-            
+
             local_file = open((MEDIA_ROOT+ '%s') %(fichero_config))
             djangofile= File(local_file)
-            
+
             entorno.ent_config_file.save(fichero_config,djangofile )
             entorno.registry_hash = entorno.getRegistryHash ((MEDIA_ROOT+ '%s') %(fichero_json_registry))
             entorno.nfs_server = rook_ip
             entorno.save()
             local_file.close()
-            
+
             messages.success(request,  'Entorno creado con éxito', extra_tags='Creación de entornos')
             return HttpResponseRedirect('/administrar/entornos')
         else:
@@ -169,10 +168,17 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
 @login_required
 @group_required('af_cloud_admin',)
 def editarEntorno(request, id,template_name='editarEntorno.html'):
-    value = 'editar'
-    entorno= AfEntorno.objects.get(id=id)
-    form = EntornoForm(request.POST or None, instance=entorno)
-       
+
+    try:
+        value = 'editar'
+        entorno= AfEntorno.objects.get(id=id)
+        form = EntornoForm(request.POST or None, instance=entorno)
+
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El entorno solicitado para edición no existe")
+        return TemplateResponse(request, template_name, None)
+        #return render(request, template_name, {'form': form, 'value': value,'id': id})
+
     if request.method == 'POST':
         if form.is_valid():
             entorno.save()
@@ -188,6 +194,10 @@ def borrarEntorno(request, id):
     try:
         entorno= AfEntorno.objects.get(id=id)
         entorno.delete()
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El entorno a eliminar solicitado no existe")
+        return HttpResponseRedirect('/administrar/entornos')
+
         '''borrar el fichero de configuracion del entorno '''
     except IntegrityError:
         entornos = AfEntorno.objects.all()
@@ -203,7 +213,6 @@ def borrarEntorno(request, id):
         c = paginator.page(number)
         context = {'p': c, 'e': e, 'mensaje': 'No se puede eliminar este entorno porque tiene despliegues asociados'}
         return TemplateResponse(request, 'entornosIndex.html', context)
-        
+
     messages.success(request,  'Entorno borrado con éxito', extra_tags='Borrado de entornos')
     return HttpResponseRedirect('/administrar/entornos')
-    

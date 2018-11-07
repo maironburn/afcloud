@@ -16,6 +16,7 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 #from portal.Proyectos.forms_ori import ProyectoForm
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 
 
 logger=getLogger()
@@ -88,12 +89,12 @@ def nuevoServicio(request,template_name='newService.html'):
 
     value = 'nuevo'
     if request.method == "POST":
-       
+
         fichero_yaml=handle_uploaded_file(request.FILES['ser_yaml_file'])
         form = ServicioForm(request.POST, request.FILES)
         form.setConfigfile(fichero_yaml)
         if form.is_valid():
-            
+
             AfServicio = form.save(commit=False)
             AfServicio.save()
             messages.success(request,  'Servicio creado con éxito', extra_tags='Creación de servicios')
@@ -108,10 +109,16 @@ def nuevoServicio(request,template_name='newService.html'):
 @login_required
 @group_required('af_cloud_admin',)
 def editarServicio(request, id,template_name='editarServicio.html'):
+
     value = 'editar'
-    servicio= AfServicio.objects.get(id=id)
-    form = ServicioForm(request.POST or None, instance=servicio)
-       
+    try:
+        servicio= AfServicio.objects.get(id=id)
+        form = ServicioForm(request.POST or None, instance=servicio)
+
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El servicio a editar solicitado no existe")
+        return HttpResponseRedirect('/administrar/servicios')
+
     if request.method == 'POST':
         if form.is_valid():
             servicio.save()
@@ -124,10 +131,15 @@ def editarServicio(request, id,template_name='editarServicio.html'):
 @group_required('af_cloud_admin',)
 def borrarServicio(request, id):
 
-    servicio= AfServicio.objects.get(id=id)
-    
     try:
+
+        servicio= AfServicio.objects.get(id=id)
         servicio.delete()
+
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El servicio a eliminar no existe")
+        return HttpResponseRedirect('/administrar/servicios')
+
     except IntegrityError:
         servicios = AfServicio.objects.all()
         e = 'no'

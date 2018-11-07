@@ -13,7 +13,7 @@ from portal.Integrantes.forms import IntegrantesRawForm
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
- 
+from django.core.exceptions import ObjectDoesNotExist
 
 @login_required
 def seccionActivaRedirect(request,id):
@@ -75,16 +75,20 @@ def get_integrante_by_filtered_username(name, usu_integrantes, integrantes):
 def  integrantesIndex(request, id_proyecto, template_name='integrantesIndex.html', extra_context=None):
     try:
         # para las busquedas
-        name = request.GET['p']
+        name = request.GET.get('p') if request.GET.get('p') else ''
+        integrantes,usu_integrantes = getIntegrantesProyecto (request,id_proyecto)
         e=''
-    except:
-        name = ''
+
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "No existen integrantes asociados al proyecto solicitado")
+        return TemplateResponse(request, template_name, None)
+
+    except Exception as e:
+        pass
 
     if extra_context is None:
         extra_context=get_extra_content(request)
 
-
-    integrantes,usu_integrantes = getIntegrantesProyecto (request,id_proyecto)
     if name == '':
         usu_integrantes = sorted(usu_integrantes, key=lambda p: p.user.username, reverse=False)
         e = 'no'
@@ -205,39 +209,51 @@ def nuevoIntegrante(request,id_proyecto, template_name='newIntegrante.html'):
 @login_required
 @group_required('Gestor',)
 def editarIntegrante(request,id_proyecto, id_integrante,template_name='editarIntegrante.html'):
-    from portal.Integrantes.forms import IntegrantesRawForm
-    value = 'editar'
+    
+    try:
+        from portal.Integrantes.forms import IntegrantesRawForm
+        value = 'editar'
+        user_instance=AfUsuario.objects.get(user__id=id_integrante)
+        proyecto=AfProyecto.objects.get(id=id_proyecto)
+        perfil_instance= AfPerfil.objects.get(usu=user_instance,pro=proyecto)
+        tperfil=perfil_instance.tpe
+    
+        data={'user' : user_instance,'tperfil' :tperfil}
+        form = IntegrantesRawForm(initial=data)
+    
+        if request.method == 'POST':
+            if form.is_valid():
+                tperfil=request.POST.get('perfil', False)
+                obj_perfil=AfTipoPerfil.objects.get(id=tperfil)
+                perfil_instance.delete()
+                form.save(user_instance,obj_perfil,proyecto)
+                messages.success(request,  'Integrante editado con éxito', extra_tags='Edición de integrantes')
+                return HttpResponseRedirect('/integrantes/proyecto/%s' % (proyecto.id))
+    
+        return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id, 'nombre_proyecto': proyecto.pro_nombre, 'nombre_integrante': user_instance.user.username})
 
-    user_instance=AfUsuario.objects.get(user__id=id_integrante)
-    proyecto=AfProyecto.objects.get(id=id_proyecto)
-    perfil_instance= AfPerfil.objects.get(usu=user_instance,pro=proyecto)
-    tperfil=perfil_instance.tpe
-
-    data={'user' : user_instance,'tperfil' :tperfil}
-    form = IntegrantesRawForm(initial=data)
-        
-    if request.method == 'POST':
-        if form.is_valid():
-            tperfil=request.POST.get('perfil', False)
-            obj_perfil=AfTipoPerfil.objects.get(id=tperfil)
-            perfil_instance.delete()
-            form.save(user_instance,obj_perfil,proyecto)
-            messages.success(request,  'Integrante editado con éxito', extra_tags='Edición de integrantes')
-            return HttpResponseRedirect('/integrantes/proyecto/%s' % (proyecto.id))
-
-    return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id, 'nombre_proyecto': proyecto.pro_nombre, 'nombre_integrante': user_instance.user.username})
-
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El integrante solicitado a editar no existe")
+        pass
+    
+    except Exception as ex:
+        messages.error(request, "Uhmmm... %s"  % (format(ex)))
+        pass
+    id_proyecto_seleccionado=request.session.get('id_proyecto_seleccionado', False)
+    return HttpResponseRedirect('/integrantes/proyecto/%s' % (id_proyecto_seleccionado))
+    
 @login_required
 @group_required('Gestor',)
 def eliminarIntegrante(request, id_proyecto, id_integrante):
-
-    user=User.objects.get(id=id_integrante)
-    afuser=AfUsuario.objects.get(user=user)
-    proyecto=AfProyecto.objects.get(id=id_proyecto)
-    perfil_instance= AfPerfil.objects.get(usu=afuser,pro=proyecto)
     try:
+        user=User.objects.get(id=id_integrante)
+        afuser=AfUsuario.objects.get(user=user)
+        proyecto=AfProyecto.objects.get(id=id_proyecto)
+        perfil_instance= AfPerfil.objects.get(usu=afuser,pro=proyecto)
         perfil_instance.delete()
-
+        messages.success(request,  'Integrante editado con éxito', extra_tags='Eliminación de integrantes')
+        return HttpResponseRedirect('/integrantes/proyecto/%s' % (proyecto.id))
+    
     except IntegrityError as ie:
         e = 'no'
         afusers=AfUsuario.objects.all()
@@ -250,7 +266,10 @@ def eliminarIntegrante(request, id_proyecto, id_integrante):
             number = paginator.page(paginator.num_pages)
         c = paginator.page(number)
         context = {'p': c, 'e': e, 'mensaje': 'No se puede eliminar este usuario porque tiene despliegues asociados'}
-        return TemplateResponse(request, 'users.html', context)
-    
-    messages.success(request,  'Integrante editado con éxito', extra_tags='Eliminación de integrantes')
-    return HttpResponseRedirect('/integrantes/proyecto/%s' % (proyecto.id))
+        
+
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El integrante solicitado a eliminar no existe")
+        pass
+
+    return TemplateResponse(request, 'users.html', None)

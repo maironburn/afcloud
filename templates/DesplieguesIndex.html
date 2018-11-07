@@ -31,14 +31,15 @@ DESPLIEGUES_OPERATIONS={
                 $('.instancias_running#'+k).parent().next().find('.modal').first('div').attr('id', 'despliegue' + k);
 								$('.instancias_running#'+k).parent().next().find('.action_href').attr('href', url + k + "/1");
 								$('.instancias_running#'+k).parent().next().find('span.status_running').removeClass('glyphicon-pause').addClass('glyphicon-play-circle');
-								$('.modal_text').text($('.modal_text').text().replace('replegar','desplegar'));
+								//$('.modal_text').text($('.modal_text').text().replace('replegar','desplegar'));
+                //$('.modal_text').text($('.modal_text').text().replace('replegar','desplegar'));
 							}
 							else {
 								$('.instancias_running#'+k).parent().next().find('.action_href').attr('href', url + k + "/0");
                 $('.instancias_running#'+k).parent().next().find('.a_href_modal').attr('href','#replegar' + k);
                 $('.instancias_running#'+k).parent().next().find('.modal').first('div').attr('id', 'replegar' + k);
 								$('.instancias_running#'+k).parent().next().find('span.status_running').removeClass('glyphicon-play-circle').addClass('glyphicon-pause');
-								$('.modal_text').text($('.modal_text').text().replace('desplegar','replegar'));
+								//$('.modal_text').text($('.modal_text').text().replace('desplegar','replegar'));
 							}
 							console.log('Seteando span: k' + k + ", valor: "+ v);
 						});

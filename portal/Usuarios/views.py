@@ -23,7 +23,7 @@ from portal.Despliegues.views import desplieguesIndex
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
-
+from django.core.exceptions import ObjectDoesNotExist
 
 
 @login_required
@@ -70,7 +70,7 @@ def index(request, template_name='index.html', extra_context=None):
     current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
     conf_global= AfGlobalconf.objects.first()
     afuser=AfUsuario.objects.get(user=usuario)
-    
+
     if afuser.usu_administrador and (not conf_global or not conf_global.is_done):
         messages.success(request, "La configuración global del portal aun no ha sido realizada, " \
                                   "las opciones de administación de proyectos y servicios no estarán disponibles ")
@@ -78,17 +78,17 @@ def index(request, template_name='index.html', extra_context=None):
         globalconf_isdone=conf_global.is_done
     else:
         globalconf_isdone=False
-    context =   { 'proyectos': col['proyectos'], 
-                  'afcloud_admin': col['afcloud_admin'], 
+    context =   { 'proyectos': col['proyectos'],
+                  'afcloud_admin': col['afcloud_admin'],
                   'globalconf_isdone': globalconf_isdone}
-    
+
     request.session['globalconf_isdone']= globalconf_isdone
     request.session['proyectos']     = col['proyectos']
-    
+
     p_seleccionado= request.session.get('id_proyecto_seleccionado', False)
     if p_seleccionado and int(p_seleccionado) not in current_projects:
         request.session['proyecto_seleccionado'] = False
-        
+
     request.session['afcloud_admin'] = col['afcloud_admin']
 
     return TemplateResponse(request, template_name, context)
@@ -118,7 +118,7 @@ def selected_proyect(request, id_proyecto, template_name='index.html', extra_con
     col=getProyectos(usuario)
     check_id_proyect= []
     current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
-    
+
     selected=AfProyecto.objects.get(id=id_proyecto)
     numeric_profile={'Miembro': 1, 'Operador':2, 'Gestor':3 }
 
@@ -132,7 +132,7 @@ def selected_proyect(request, id_proyecto, template_name='index.html', extra_con
     request.session['numeric_profile'] = numeric_profile [tipo_perfil]
     request.session['proyectos'] = col['proyectos']
     request.session['afcloud_admin'] = col['afcloud_admin']
-    request.session['proyecto_seleccionado'] = selected.pro_nombre    
+    request.session['proyecto_seleccionado'] = selected.pro_nombre
     request.session['id_proyecto_seleccionado']=id_proyecto
 
     template_response=seccionActivaRedirect(request,id)
@@ -146,17 +146,12 @@ def selected_proyect(request, id_proyecto, template_name='index.html', extra_con
 @group_required('af_cloud_admin',)
 def admin_users(request, template_name='users.html', extra_context=None):
 
-    try:
-        # para las busquedas
-        name = request.GET['p']
-    except:
-        name = ''
-    if name == '':
+    name = request.GET.get('p') if request.GET.get('p') else ''
 
+    if name == '':
         usuarios = AfUsuario.objects.all().order_by('user__username')
         e = 'no'
     else:
-
         usuarios =AfUsuario.objects.filter(user__username__icontains=name) | AfUsuario.objects.filter(user__first_name__icontains=name)
         e = 'si'
     paginator = Paginator(usuarios, 10)
@@ -174,10 +169,8 @@ def admin_users(request, template_name='users.html', extra_context=None):
 @login_required
 @group_required('af_cloud_admin',)
 def administrarUsuariosOrdered(request, orden, ascendente, template_name='users.html', extra_content=None):
-    try:
-        name = request.GET['p']
-    except:
-        name = ''
+
+    name = request.GET.get('p') if request.GET.get('p') else ''
     ordenar = ''
     if int(ascendente) == 0:
         ordenar = '-'
@@ -207,63 +200,82 @@ def administrarUsuariosOrdered(request, orden, ascendente, template_name='users.
 
 
 @login_required
-@user_or_admin_is_allowed 
+@user_or_admin_is_allowed
 def modificarPerfil(request, id, template_name='userEditProfile.html'):
+
+    try:
+        afuser =AfUsuario.objects.get(user__id=id)
+
+        if request.method == "POST":
     
-    afuser =AfUsuario.objects.get(user__id=id)
-
-    if request.method == "POST":
-
-        form = userEditProfileForm(request.POST or None, instance=afuser.user)
-        if form.is_valid():
-
-            password= request.POST.get('password', False)
-            user_updated=form.save(commit=False)
-            if password:
-                user_updated.set_password(password)
-            user_updated.save()
-            afuser.user=user_updated
-            afuser.save()
-            messages.success(request,  'Usuario editado con éxito', extra_tags='Edición de usuarios')
-            
-            return HttpResponseRedirect('/startpage')
+            form = userEditProfileForm(request.POST or None, instance=afuser.user)
+            if form.is_valid():
+    
+                password= request.POST.get('password', False)
+                user_updated=form.save(commit=False)
+                if password:
+                    user_updated.set_password(password)
+                user_updated.save()
+                afuser.user=user_updated
+                afuser.save()
+                messages.success(request,  'Usuario editado con éxito', extra_tags='Edición de usuarios')
+    
+                return HttpResponseRedirect('/startpage')
+            else:
+                return render(request, template_name, {'form': form})
         else:
-            return render(request, template_name, {'form': form})
-    else:
-        form =userEditProfileForm(request.POST or None, instance=afuser.user)
-        return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
+            form =userEditProfileForm(request.POST or None, instance=afuser.user)
+            return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
 
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El proyecto solicitado a eliminar no existe")
+        pass
+        
+    except Exception as ex:
+        messages.error(request, "Uhmmm... %s"  % (format(ex)))
+        pass        
     
+    return HttpResponseRedirect('/startpage')
 
 @login_required
 @group_required('af_cloud_admin',)
 def editAFUser(request, id, template_name='editUser.html'):
 
-    afuser =AfUsuario.objects.get(user__id=id)
+    try:
+        afuser =AfUsuario.objects.get(user__id=id)
 
-    if request.method == "POST":
-
-        form = editUserRawForm(request.POST or None, instance=afuser.user)
-        if form.is_valid():
-
-            afcloud_admin= True if request.POST.get('usu_administrador')=='on' else False
-            password= request.POST.get('password', False)
-            user_updated=form.save(commit=False)
-            if password:
-                user_updated.set_password(password)
-            user_updated.save()
-            afuser.user=user_updated
-            afuser.usu_administrador=afcloud_admin
-            afuser.save()
-            messages.success(request,  'Usuario editado con éxito', extra_tags='Edición de usuarios')
-            
-            
-            return HttpResponseRedirect('/administrar/usuarios')
+        if request.method == "POST":
+    
+            form = editUserRawForm(request.POST or None, instance=afuser.user)
+            if form.is_valid():
+    
+                afcloud_admin= True if request.POST.get('usu_administrador')=='on' else False
+                password= request.POST.get('password', False)
+                user_updated=form.save(commit=False)
+                if password:
+                    user_updated.set_password(password)
+                user_updated.save()
+                afuser.user=user_updated
+                afuser.usu_administrador=afcloud_admin
+                afuser.save()
+                messages.success(request,  'Usuario editado con éxito', extra_tags='Edición de usuarios')
+    
+                return HttpResponseRedirect('/administrar/usuarios')
+            else:
+                return render(request, template_name, {'form': form})
         else:
-            return render(request, template_name, {'form': form})
-    else:
-        form =editUserRawForm(request.POST or None, instance=afuser.user)
-        return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
+            form =editUserRawForm(request.POST or None, instance=afuser.user)
+            return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
+
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El usuario solicitado a editar no existe")
+        pass
+        
+    except Exception as ex:
+        messages.error(request, "Uhmmm... %s"  % (format(ex)))
+        pass        
+    
+    return HttpResponseRedirect('/administrar/usuarios')
 
 @login_required
 @group_required('af_cloud_admin',)
@@ -272,7 +284,7 @@ def nuevoUsuario(request, template_name='newUser.html'):
 
     if request.method == "POST":
         form = UserRawForm(request.POST or None)
-    
+
         if form.is_valid():
 
             password  = form.cleaned_data['password']
@@ -296,17 +308,20 @@ def nuevoUsuario(request, template_name='newUser.html'):
 @group_required('af_cloud_admin',)
 def deleteAFUser(request, id):
 
-    afuser=AfUsuario.objects.get(id=id)
-
     try:
+        afuser=AfUsuario.objects.get(id=id)
         if request.user==afuser.user:
             messages.error(request, 'No puede eliminarse así mismo !! ', extra_tags='Eliminación de usuarios')
         else:
-            
+
             id_user=afuser.user.id
             user=User.objects.get(id=id_user)
             user.delete()
 
+    
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El usuario solicitado a eliminar no existe")
+        pass
 
     except IntegrityError as ie:
         e = 'no'
@@ -320,7 +335,7 @@ def deleteAFUser(request, id):
             number = paginator.page(paginator.num_pages)
         c = paginator.page(number)
         context = {'p': c, 'e': e, 'mensaje': 'No se puede eliminar este usuario porque tiene despliegues asociados'}
-        
+
         return TemplateResponse(request, 'users.html', context)
 
     messages.success(request,  'Usuario borrado con éxito', extra_tags='Eliminación de usuarios')

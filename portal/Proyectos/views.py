@@ -15,7 +15,7 @@ from portal.Utils.aux_meth import *
 from django.contrib import messages
 from portal.Kubernetes.Kuber import Kuber
 from afcloud import settings
-
+from django.core.exceptions import ObjectDoesNotExist
 
 logger=getLogger()
 
@@ -61,13 +61,13 @@ def set_bulk_num_entornos(proyectos):
         entornos=AfRelEntPro.objects.filter(pro=p)
         ent_iterados=[]
         ids_entornos=AfRelEntPro.objects.filter(pro=p).values_list('ent_id', flat=True).distinct()
-        
+
         for e in entornos:
 
             if e.ent.id not in ent_iterados:
                 lst_entornos.append(e.ent.ent_nombre)
                 ent_iterados.append(e.ent.id)
-                
+
         p.set_entornos(lst_entornos)
         p.set_num_entornos(len(lst_entornos))
         p.entornos_str=p.get_entornos_str()
@@ -97,12 +97,15 @@ def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
     try:
         proyecto_instance= AfProyecto.objects.get(id=id)
         instancias_info= getDetallesProyecto(proyecto_instance) # definido en aux_meth
-    
+
         proyecto={'nombre': proyecto_instance.pro_nombre, 'desc': proyecto_instance.pro_descripcion, 'instancias_info': instancias_info}
         response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'instancias_info': instancias_info }).rendered_content
- 
+
         data={'action': 'detalles_proyecto', 'html':response, 'available_info': len(instancias_info)}
-        
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El proyecto sobre el que se solicita información no existe")
+        return HttpResponseRedirect('/administrar/proyectos')
+
     except Exception as e:
         #messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
         pass
@@ -115,9 +118,9 @@ def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
 def administrarProyectosOrdered(request, orden, ascendente, template_name='proyectosIndex.html', extra_content=None):
     try:
         name = request.GET['p']
-    except:    
+    except:
 
-        
+
         name = ''
     e = 'no' # parametro q actua como flag indicando q se ha realizado una busqueda
     ordenar = ''
@@ -151,7 +154,7 @@ def administrarProyectosOrdered(request, orden, ascendente, template_name='proye
             e = 'si'
             set_bulk_num_entornos(p)
             set_bulk_num_integrantes(p)
-    
+
     paginator = Paginator(p, 10)
     try:
         number = int(request.GET.get('page', '1'))
@@ -168,7 +171,7 @@ def administrarProyectosOrdered(request, orden, ascendente, template_name='proye
 @group_required('af_cloud_admin',)
 def nuevoProyecto(request,template_name='newProject.html'):
     value = 'nuevo'
-    
+
     if request.method == "POST":
         form = ProyectoForm(request.POST or None)
 
@@ -192,10 +195,10 @@ def nuevoProyecto(request,template_name='newProject.html'):
             return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
 
     else:
-        
+
         entornos=AfEntorno.objects.all()
         form = ProyectoForm(initial={'entornos' : entornos})
-        return TemplateResponse(request, template_name,  {'form': form, 
+        return TemplateResponse(request, template_name,  {'form': form,
                                                           'value': value ,
                                                           'entornos_associated': entornos
                                                           })
@@ -205,45 +208,54 @@ def nuevoProyecto(request,template_name='newProject.html'):
 @login_required
 @group_required('af_cloud_admin',)
 def editarProyecto(request, id,template_name='editarProyecto.html'):
-    
-    value = 'editar'
-    proyecto= get_object_or_404(AfProyecto, id=id)
-    entornos_associated=[]
 
-    rel_ent_pro=AfRelEntPro.objects.filter(pro=proyecto)
+    try:
 
-    for ea in rel_ent_pro:
-        entornos_associated.append(AfEntorno.objects.get(id=ea.ent.id))
+        value = 'editar'
+        proyecto= AfProyecto.objects.get(id=id)
+        entornos_associated=[]
+        rel_ent_pro=AfRelEntPro.objects.filter(pro=proyecto)
 
-    entornos_associated=rel_ent_pro.values_list('ent', flat=True)
-    envs=AfEntorno.objects.filter(id__in=entornos_associated)
+        for ea in rel_ent_pro:
+            entornos_associated.append(AfEntorno.objects.get(id=ea.ent.id))
 
-    form = editProyectoForm(request.POST or None, instance=proyecto,initial={'entornos': envs})
+        entornos_associated=rel_ent_pro.values_list('ent', flat=True)
+        envs=AfEntorno.objects.filter(id__in=entornos_associated)
 
-    if request.method == 'POST':
-        if form.is_valid():
-            data={'pro_nombre': request.POST.get('pro_nombre'),
-                  'pro_descripcion': request.POST.get('pro_descripcion'),
-                  'pro_activo': True if request.POST.get('pro_activo')=='on' else False,
-                  'entornos' : request.POST.getlist('entornos')
-                  }
-            form.saveProyect(data, instancia=proyecto)
-            messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
-            return HttpResponseRedirect('/administrar/proyectos')
-        else:
-            messages.error(request, "No se puede modificar un proyecto sin entornos asociados")
-            
-    return render(request, template_name, {'form': form, 'value': value,'id': id,
-                                           'nombre_proyecto': proyecto.pro_nombre,
-                                           'entornos_associated': entornos_associated})
+        form = editProyectoForm(request.POST or None, instance=proyecto,initial={'entornos': envs})
+
+        if request.method == 'POST':
+            if form.is_valid():
+                data={'pro_nombre': request.POST.get('pro_nombre'),
+                      'pro_descripcion': request.POST.get('pro_descripcion'),
+                      'pro_activo': True if request.POST.get('pro_activo')=='on' else False,
+                      'entornos' : request.POST.getlist('entornos')
+                      }
+                form.saveProyect(data, instancia=proyecto)
+                messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
+                return HttpResponseRedirect('/administrar/proyectos')
+            else:
+                messages.error(request, "No se puede modificar un proyecto sin entornos asociados")
+
+        return render(request, template_name, {'form': form, 'value': value,'id': id,
+                                               'nombre_proyecto': proyecto.pro_nombre,
+                                               'entornos_associated': entornos_associated})
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El proyecto solicitado para edición no existe")
+        pass
+
+    except Exception as ex:
+        messages.error(request, "Uhmmm... %s"  % (format(ex)))
+        pass
+
+    return TemplateResponse(request, template_name, None)
 
 @login_required
 @group_required('af_cloud_admin',)
 def borrarProyecto(request, id):
 
-    proyecto= AfProyecto.objects.get(id=id)
-    
     try:
+        proyecto= AfProyecto.objects.get(id=id)
         rel_ent_pro=AfRelEntPro.objects.filter(pro=proyecto)
         for ep in rel_ent_pro:
             kuber=Kuber(ep.ent.ent_config_file.path)
@@ -252,7 +264,7 @@ def borrarProyecto(request, id):
             for i in list(instancias):
                 print('trying to delete pv: %s-pv' % (i.ins_unique_name,))
                 kuber.delete_persistent_volume({'unique_instance_name': i.ins_unique_name})
-                
+
         proyecto.delete()
         logger.info("Proyecto borrado con exito")
 
@@ -265,9 +277,14 @@ def borrarProyecto(request, id):
 
         return HttpResponseRedirect('/startpage')
 
+    except ObjectDoesNotExist as dne:
+        messages.error(request, "El proyecto solicitado a eliminar no existe")
+        pass
+
+
     except IntegrityError as e:
 
-        mensaje='No se puede eliminar este entorno : '
+        mensaje='No se puede eliminar este proyecto : '
         proyectos = AfRelEntPro.objects.filter(pro=proyecto)
         if len(proyectos):
             mensaje+='entornos asociados'
@@ -287,6 +304,7 @@ def borrarProyecto(request, id):
         return TemplateResponse(request, 'proyectosIndex.html', context)
 
     except Exception as ex:
-        logger.info("Exception al borrar el proyecto: %s" % (format(e)))
-
+        messages.error(request, "Uhmmm... %s"  % (format(ex)))
+        pass
+    
     return HttpResponseRedirect('/administrar/proyectos')
