@@ -175,6 +175,8 @@ def editarEntorno(request, id,template_name='editarEntorno.html'):
         form = EntornoForm(request.POST or None, instance=entorno)
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False        
         messages.error(request, "El entorno solicitado para edición no existe")
         return TemplateResponse(request, template_name, None)
         #return render(request, template_name, {'form': form, 'value': value,'id': id})
@@ -195,6 +197,8 @@ def borrarEntorno(request, id):
         entorno= AfEntorno.objects.get(id=id)
         entorno.delete()
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False        
         messages.error(request, "El entorno a eliminar solicitado no existe")
         return HttpResponseRedirect('/administrar/entornos')
 

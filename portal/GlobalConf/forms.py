@@ -8,7 +8,7 @@ class GlobalConfForm(forms.ModelForm):
 
     crt_file = forms.FileField(label='Fichero .crt ')
     key_file = forms.FileField(label='Fichero .key', required=False)
-    fqdn     = forms.CharField(max_length=100,label='FQDN', help_text="Se creará a partir del .crt", initial="Autogenerado")
+    fqdn     = forms.CharField(max_length=100,label='FQDN', help_text="Se creaa partir del .crt", initial="Autogenerado", disabled=True)
    
 
     error_messages = {
@@ -28,8 +28,10 @@ class GlobalConfForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super(GlobalConfForm, self).__init__(*args, **kwargs)
-        self.fields['fqdn'].widget.attrs['readonly'] = True
-    
+        if len(kwargs)  and 'global_conf' in kwargs['initial']:
+            #self.fields['fqdn'].initial = kwargs['initial']['global_conf'].fqdn
+            self.set_fqdn(kwargs['initial']['global_conf'])
+            
     def set_fqdn(self,instance):
         self.fields['fqdn'].initial= instance.fqdn
         

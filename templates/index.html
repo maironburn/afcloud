@@ -101,7 +101,8 @@
  <span style="color:olive"><strong>{{ perfil }}</strong></span>
 
  {% if  request.session.numeric_profile > 0 or request.session.afcloud_admin %}
-    {%if request.session.id_proyecto_seleccionado %}
+    {%if request.session.id_proyecto_seleccionado and request.session.globalconf_isdone  %}
+
     <ul class="nav navbar-nav " style="margin-left: 1em;">
       <li><a href="/despliegue/proyecto/{{ request.session.id_proyecto_seleccionado }}"> <img src="{% static 'images/cube.png' %}" width="32px" height="32px">Despliegues</a></li>
     </ul>
@@ -109,7 +110,7 @@
   {%endif%}
  {% if  request.session.numeric_profile > 2 or request.session.afcloud_admin  %}
        <ul class="nav navbar-nav ">
-       {%if request.session.id_proyecto_seleccionado %}
+       {%if request.session.id_proyecto_seleccionado and request.session.globalconf_isdone %}
           <!-- Opciones solo visibles si hay un proyecto seleccionado-->
           <li><a href="/catalogo/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/catalog.svg'  %}" width="32px" height="32px">Cat&aacute;logo</a></li>
           <li><a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/members.svg'  %}" width="32px" height="32px"> Integrantes</a></li>
@@ -141,14 +142,12 @@
                 class="caret"></span></a>
             <ul class="dropdown-menu ">
                 <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="32px" height="32px">Usuarios</a></li>
-                {% if not request.session.globalconf_isdone %}
+
                 <li><a href="{% url 'globalconf' %}">    <img src="{% static 'images/global_conf.png' %}" width="32px" height="32px">Configuración</a></li>
-                {%else%}
+                {% if request.session.globalconf_isdone %}
                 <li><a href="{% url 'admin_projects' %}"><img src="{% static 'images/adm_proyectos.svg' %}" width="32px" height="32px">Proyectos</a></li>
                 <li><a href="{% url 'admin_services' %}"><img src="{% static 'images/adm_servicios.svg' %}" width="32px" height="32px">Servicios</a></li>
                 {%endif%}
-
-
                 <li><a href="{% url 'admin_env' %}">     <img src="{% static 'images/adm_entornos.svg' %}" width="32px" height="32px">Entornos</a></li>
 
             </ul>

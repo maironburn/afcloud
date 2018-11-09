@@ -69,6 +69,7 @@ class AfServicio(models.Model):
     ser_yaml_file    = models.FileField     (blank=True,verbose_name="Deployment yaml",storage=fs)
     ser_min_replicas = models.IntegerField  (default=1,verbose_name="Min replicas")
     ser_max_replicas = models.IntegerField  (default=1,verbose_name="Min replicas")
+    ser_deleted      = models.BooleanField  (default=0, verbose_name='Eliminado')
 
     def __str__(self):
         return str(self.ser_nombre.encode('utf-8', 'ignore'))
@@ -217,13 +218,18 @@ class AfRelEntPro(models.Model):
 class AfLineaCatalogo(models.Model):
 
     pro                 = models.ForeignKey     (AfProyecto, on_delete=models.CASCADE)
-    ser                 = models.ForeignKey     (AfServicio, on_delete=models.CASCADE)
+    ser                 = models.ForeignKey     (AfServicio, null=True, on_delete=models.SET_NULL)
     lca_tarifa          = models.FloatField     (blank=True, null=True)
     #lca_configuracion   = models.CharField      (max_length=250, blank=True, null=True)
     lca_activo          = models.BooleanField   (default=1, verbose_name='Activo')
 
     def __str__(self):
-        return '%s %s' % (self.pro.pro_nombre, self.ser.ser_nombre)
+        servicio_asociado = 'sin servicio asociado'
+        serv_nombre       = ''
+        if self.ser:
+            servicio_asociado = self.ser.ser_nombre
+            serv_nombre       = self.pro.pro_nombre
+        return '%s %s' % (serv_nombre, servicio_asociado)
 
     class Meta:
         managed = True
@@ -240,7 +246,12 @@ class AfInstancia(models.Model):
     ins_unique_name = models.CharField     (max_length=100, verbose_name='Nombre del Despliegue', blank=True)
 
     def __str__(self):
-        return 'lc_id: %s servicio: %s entorno: %s unique_name: %s' % (self.lca.id, self.lca.ser.ser_nombre, self.rep.ent.ent_nombre, self.ins_unique_name)
+        svc_name = ''
+        svc = self.lca.ser
+        if svc:
+            svc_name= self.lca.ser.ser_nombre
+
+        return 'lc_id: %s servicio: %s entorno: %s unique_name: %s' % (self.lca.id, svc_name, self.rep.ent.ent_nombre, self.ins_unique_name)
 
     class Meta:
         managed = True

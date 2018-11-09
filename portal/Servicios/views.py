@@ -30,10 +30,10 @@ def administrarServicios(request, template_name='serviciosIndex.html', extra_con
     except:
         name = ''
     if name == '':
-        servicios = AfServicio.objects.all().order_by('ser_nombre')
+        servicios = AfServicio.objects.filter(ser_deleted=False).order_by('ser_nombre')
         e = 'no'
     else:
-        servicios = AfServicio.objects.filter(ser_nombre__icontains=name)
+        servicios = AfServicio.objects.filter(ser_nombre__icontains=name, ser_deleted=False)
         e = 'si'
     paginator = Paginator(servicios, 10)
     try:
@@ -64,10 +64,10 @@ def administrarServiciosOrdered(request, orden, ascendente, template_name='servi
 
 
     if name == '':
-        servicios = AfServicio.objects.all().order_by(ordenar)
+        servicios = AfServicio.objects.filter(ser_deleted=False).order_by(ordenar)
         e = 'no'
     else:
-        servicios = AfServicio.objects.filter(ser_nombre__icontains=name)
+        servicios = AfServicio.objects.filter(ser_nombre__icontains=name, ser_deleted=False)
         e = 'si'
 
     paginator = Paginator(servicios, 10)
@@ -116,6 +116,8 @@ def editarServicio(request, id,template_name='editarServicio.html'):
         form = ServicioForm(request.POST or None, instance=servicio)
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El servicio a editar solicitado no existe")
         return HttpResponseRedirect('/administrar/servicios')
 
@@ -134,9 +136,12 @@ def borrarServicio(request, id):
     try:
 
         servicio= AfServicio.objects.get(id=id)
-        servicio.delete()
+        servicio.ser_deleted=True
+        servicio.save()
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El servicio a eliminar no existe")
         return HttpResponseRedirect('/administrar/servicios')
 

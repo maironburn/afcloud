@@ -37,7 +37,7 @@ def getInstancias(request, id_proyecto):
     lcas= AfLineaCatalogo.objects.filter(pro=proyecto)
     dictio_inst_list=[]
     lst_instancias=[]
-
+   
     for lc in lcas:
 
         despliegues=AfInstancia.objects.filter(lca=lc)
@@ -45,11 +45,11 @@ def getInstancias(request, id_proyecto):
             lst_instancias.append(i)
             ns=proyecto.pro_nombre
             fichero_entorno= i.rep.ent.ent_config_file.path
-            
             kuber=Kuber(fichero_entorno)
             resp= kuber.list_namespaced_deployment(i.ins_unique_name, ns)
 
             if resp:
+                
                 dictio_inst_list.append(
                            {'nombre_entorno'    : i.rep.ent.ent_nombre ,
                             'nombre_servicio'   : lc.ser.ser_nombre,
@@ -92,7 +92,10 @@ def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html
         instancias,lst_despliegues = getInstancias (request,id_proyecto)
     
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "No existen despliegues asociados al proyecto solicitado")
+        
         return TemplateResponse(request, template_name, None)
         
     except Exception as e:
@@ -146,9 +149,16 @@ def getMaxMinReplic(svc):
 def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
     value = 'nuevo'
 
-    instancias,lst_despliegues = getInstancias (request,id_proyecto)
-    proyecto=AfProyecto.objects.get(id=id_proyecto)
-
+    try:
+        instancias,lst_despliegues = getInstancias (request,id_proyecto)
+        proyecto=AfProyecto.objects.get(id=id_proyecto)
+    
+    except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
+        messages.error(request, "Despliegue solicitado de un proyecto inexistente")
+        return TemplateResponse(request, template_name, None)
+    
     if request.method == "POST":
 
         form = creaInstanciaForm(request.POST or None)
@@ -190,7 +200,9 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
                 logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))
 
             if operation_result:
-                instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name)
+                #host: ns.env.fqdn/unique_name_ins-svc
+                uri= ('https://%s.%s.%s/%s-svc' % (namespace, entorno.ent.ent_nombre, fqdn[0]['fqdn'], unique_instance_name))
+                instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name, ins_uri=uri)
                 ciclo= AfCiclo.objects.create(ins=instancia)
                 messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
                 return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
@@ -198,14 +210,17 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         return render(request, template_name, {'form': form, 'value': value})
     
     else:
+        data= {}
+        dict_serv_extra= []
         nombre_proyecto= request.session.get('proyecto_seleccionado', False)
         id_servicios=AfLineaCatalogo.objects.filter(pro=proyecto).select_related('ser').values_list('ser_id', flat=True)
-        svc=AfServicio.objects.filter(id__in=[id_servicios])
-        dict_serv_extra= getMaxMinReplic(svc)
-        data={
-                'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
-                'service_queryset': svc
-              }
+        svc=AfServicio.objects.filter(id__in=[id_servicios], ser_deleted=False)
+        if len(svc):
+            dict_serv_extra= getMaxMinReplic(svc)
+            data={
+                    'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
+                    'service_queryset': svc
+                  }
         
         form = InstanciaForm(data)
 

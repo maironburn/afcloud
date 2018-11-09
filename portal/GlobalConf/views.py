@@ -32,10 +32,7 @@ def creaGlogalConf(request, template_name='globalconf.html', extra_context=None)
         form        = GlobalConfForm(request.POST, request.FILES)
  
         if form.is_valid():
-            '''
-            la configuración es unica 
-            ...
-            '''
+
             instance= None
             is_done_previously_conf_global= AfGlobalconf.objects.count()
             if is_done_previously_conf_global:
@@ -59,5 +56,9 @@ def creaGlogalConf(request, template_name='globalconf.html', extra_context=None)
         else:
             return render(request, template_name, {'form': form, 'value': value})
     else:
-        form = GlobalConfForm()
+        
+        glb_conf=AfGlobalconf.objects.count()
+        if glb_conf:
+            
+            form = GlobalConfForm(initial={'global_conf': AfGlobalconf.objects.first()})
         return render(request, template_name, {'form': form, 'value': value})

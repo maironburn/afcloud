@@ -6,7 +6,9 @@
 <div class="row"></div>
 <br>
     <h2 class="text-danger text-warning" style="margin-top:1em">Catálogo <strong>{{request.session.proyecto_seleccionado}}</strong></h2>
+    {%if request.session.proyecto_seleccionado %}
     <form class="navbar-right"  style="position:relative;right:1em"  role="search" method="get">{% csrf_token %}
+
         {#            <div class="form-group">#}
         <a href="/catalogo/proyecto/{{request.session.id_proyecto_seleccionado}}/nuevoEntrada/" class="btn btn-danger btn-sm">
         <span class="glyphicon glyphicon-plus"></span>Crear entrada</a>
@@ -14,6 +16,7 @@
         <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
         {#            </div>#}
     </form>
+      {%endif%}
     {% if e == 'no' %}
 {#        <h5>Los catálogos que se han dado de alta: </h5>#}
     {% else %}

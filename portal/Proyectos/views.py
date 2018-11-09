@@ -102,7 +102,10 @@ def detallesProyecto(request, id, template_name='detalles_proyecto.html'):
         response=TemplateResponse(request, template_name, {'proyecto': proyecto, 'instancias_info': instancias_info }).rendered_content
 
         data={'action': 'detalles_proyecto', 'html':response, 'available_info': len(instancias_info)}
+    
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El proyecto sobre el que se solicita información no existe")
         return HttpResponseRedirect('/administrar/proyectos')
 
@@ -174,14 +177,20 @@ def nuevoProyecto(request,template_name='newProject.html'):
 
     if request.method == "POST":
         form = ProyectoForm(request.POST or None)
-
+        envs=request.POST.getlist('entornos', None)
+        if envs:
+            form.setEntornos(envs)
+            
         if form.is_valid():
             form.clean()
             nombre=form.cleaned_data['pro_nombre']
             descripcion = form.cleaned_data['pro_descripcion']
             activo = form.cleaned_data['pro_activo']
-
-            form.saveProyect('new')
+            #form.saveProyect('new')
+            p=form.save(commit=True)
+            p.pro_nombre_k8s=nombre
+            form.saveProyect(p)
+            p.save()
             messages.success(request,  'Proyecto creado con éxito', extra_tags='Creación de proyecto')
 
             col=getProyectos(request.user, False)
@@ -197,7 +206,8 @@ def nuevoProyecto(request,template_name='newProject.html'):
     else:
 
         entornos=AfEntorno.objects.all()
-        form = ProyectoForm(initial={'entornos' : entornos})
+        form = ProyectoForm()
+        #form = ProyectoForm(initial={'entornos' : entornos})
         return TemplateResponse(request, template_name,  {'form': form,
                                                           'value': value ,
                                                           'entornos_associated': entornos
@@ -241,6 +251,8 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
                                                'nombre_proyecto': proyecto.pro_nombre,
                                                'entornos_associated': entornos_associated})
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El proyecto solicitado para edición no existe")
         pass
 
@@ -278,6 +290,8 @@ def borrarProyecto(request, id):
         return HttpResponseRedirect('/startpage')
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El proyecto solicitado a eliminar no existe")
         pass
 

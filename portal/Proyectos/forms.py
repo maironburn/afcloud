@@ -8,16 +8,19 @@ from portal.Utils.aux_meth import *
 from afcloud.settings import BASE_DIR, KUBER_TEMPLATES
 from portal.Utils import *
 
+ENV_CHOICES=((choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all())
+
 #class ProyectoForm(forms.Form):
 class ProyectoForm(forms.ModelForm):
 
     pro_nombre = forms.CharField(max_length=100, label='Nombre')
     pro_descripcion= forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea (attrs={'rows':4, 'cols':15}))
     pro_activo=forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
-
+    '''
     entornos =forms.MultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple,
                                              choices=[ (choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all()])
-
+    '''
+    entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.all())
     entornos_associated=[]
 
 
@@ -25,6 +28,11 @@ class ProyectoForm(forms.ModelForm):
         model=AfProyecto
         fields=('pro_nombre','pro_descripcion', 'pro_activo')
 
+    '''
+    def __init__(self, *args,**kwargs):
+        ENV_CHOICES=((choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all())
+        super(ProyectoForm, self).__init__(*args, **kwargs)
+        
 
     def __init__(self, *args,**kwargs):
         self.entornos_associated=[]
@@ -43,12 +51,12 @@ class ProyectoForm(forms.ModelForm):
                     instance=AfEntorno.objects.get(id=e)
                     self.entornos_associated.append(instance)
         super(ProyectoForm, self).__init__(*args, **kwargs)
-        '''
+        
         if len(kwargs):
             if 'initial' in kwargs:
                 self.fields['entornos'].queryset=AfEntorno.objects.all()
                 self.fields['entornos'].initial=kwargs['initial']['entornos']
-        '''
+    '''
     
     def is_valid(self):
         
@@ -57,13 +65,22 @@ class ProyectoForm(forms.ModelForm):
         
         return valid and len(self.entornos_associated)
     
+    def setEntornos(self, envs):
+        if envs:
+            for e in envs:
+                entorno=AfEntorno.objects.get(id=int(e))
+                self.entornos_associated.append(entorno)
+            
                         
-    def saveProyect(self, accion, proyecto=None):
+    def saveProyect(self, proyecto=None):
         
-        if accion=='new':    
-            proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre,pro_nombre_k8s=self.pro_nombre, pro_descripcion=self.pro_descripcion, pro_activo=self.pro_activo)
-
         '''
+        proyecto= AfProyecto.objects.create(pro_nombre=self.pro_nombre,
+                                                pro_nombre_k8s=self.pro_nombre, 
+                                                pro_descripcion=self.pro_descripcion, 
+                                                pro_activo=self.pro_activo)
+        
+        
         - Creacion de las nuevas relaciones entorno proyecto
         - conexion con Kb8 
         - creacion del namespace correspondiente
@@ -72,18 +89,18 @@ class ProyectoForm(forms.ModelForm):
         - ingress del svc
         '''
         for ep in self.entornos_associated:
-            
+        
             kwargs={
                     'env_file_path' : ep.ent_config_file.path,
-                    'namespace'     : self.pro_nombre,
+                    'namespace'     : proyecto.pro_nombre,
                     'env_name'      : ep.ent_nombre,
                     'registry_hash' : ep.registry_hash
                     }
-            
-            if createNameSpaceStack(**kwargs):
-                afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
-                afep.save()
-
+           
+        if createNameSpaceStack(**kwargs):
+            afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
+            afep.save()
+        
 
     def saveRelations(self, instance):
         

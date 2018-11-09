@@ -67,6 +67,10 @@ def index(request, template_name='index.html', extra_context=None):
 
     usuario=request.user
     col=getProyectos(usuario,True)
+    if not len(col['proyectos']):
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
+        
     current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
     conf_global= AfGlobalconf.objects.first()
     afuser=AfUsuario.objects.get(user=usuario)
@@ -78,9 +82,10 @@ def index(request, template_name='index.html', extra_context=None):
         globalconf_isdone=conf_global.is_done
     else:
         globalconf_isdone=False
-    context =   { 'proyectos': col['proyectos'],
-                  'afcloud_admin': col['afcloud_admin'],
-                  'globalconf_isdone': globalconf_isdone}
+    context =   { 'proyectos'           : col['proyectos'],
+                  'afcloud_admin'       : col['afcloud_admin'],
+                  'globalconf_isdone'   : globalconf_isdone
+                  }
 
     request.session['globalconf_isdone']= globalconf_isdone
     request.session['proyectos']     = col['proyectos']
@@ -228,6 +233,8 @@ def modificarPerfil(request, id, template_name='userEditProfile.html'):
             return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El proyecto solicitado a eliminar no existe")
         pass
         
@@ -268,6 +275,8 @@ def editAFUser(request, id, template_name='editUser.html'):
             return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False        
         messages.error(request, "El usuario solicitado a editar no existe")
         pass
         
@@ -320,6 +329,8 @@ def deleteAFUser(request, id):
 
     
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El usuario solicitado a eliminar no existe")
         pass
 

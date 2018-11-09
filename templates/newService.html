@@ -71,9 +71,8 @@ $(document).ready(function(){
             <form class="well" enctype="multipart/form-data" method="POST">
               {% csrf_token %}
               <div class="row">
-              <div class="col-md-3">
+              <div class="col-md-4">
               <h2 class="text-danger">Nuevo Servicio</h2>
-                <hr/>
                 <div class="well">
                   {% crispy form %}
                 </div>

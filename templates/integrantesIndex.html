@@ -5,19 +5,18 @@
 <div class="container">
 <div class="row"></div>
 <br>
+
     <h2 class="text-danger text-warning" style="margin-top:1em">Integrantes del proyecto <strong>{{request.session.proyecto_seleccionado}}</strong></h2>
     <form class="navbar-right"  style="position:relative;right:1em"  role="search" method="get">{% csrf_token %}
         {#            <div class="form-group">#}
-          {% if  request.session.id_proyecto_seleccionado %}
+          {% if request.session.proyecto_seleccionado%}
 
             <a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/nuevoIntegrante" class="btn btn-danger btn-sm">
-          {% else %}
-            <a href="#perla" class="btn btn-danger btn-sm">
-          {% endif %}
         <span class="glyphicon glyphicon-plus"></span>Crear integrante</a>
         <input type="text" name="p" placeholder="Nombre del usuario">
         <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
         {#            </div>#}
+        {% endif %}
     </form>
     <!--
     {% if e == 'no' %}

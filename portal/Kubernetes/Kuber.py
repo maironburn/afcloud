@@ -35,7 +35,7 @@ class Kuber(object):
             self.config_file=fichero
             self.checkConfigFile(self.config_file)
             if  self.v1 is None or not self.checkConnection():
-                raise ValueError("Error en la conexion con Kubernates")
+                raise ValueError("Error en la conexion con Kubernetes")
 
             self.rollback_stack_methods=[] # borrado de cambios en el cluster si ocurre algun error durante su creacion
 
@@ -212,8 +212,12 @@ class Kuber(object):
 
             for i in api_response.items:
                 if ins_unique_name== i.metadata.name:
-                    response={'replicas': i.status.replicas, 'creation_timestamp': i.metadata.creation_timestamp}
+                    self.logger.info("list_namespaced_deployment: %s" % (i.metadata.name))
+                    self.logger.info("%s" % (i))
                     pprint('list_namespaced_deployment: %s'  % (i))
+                    #api_response = api_instance.read_namespaced_ingress( ('%s-ingress') %  ns, ns)
+                    response={'replicas': i.status.replicas, 'creation_timestamp': i.metadata.creation_timestamp}
+
 
             pprint('list_namespaced_deployment: %s'  % (api_response))
 
@@ -725,7 +729,7 @@ class Kuber(object):
 
         return True
 
-        
+
     '''
     https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#delete_namespaced_ingress
     '''

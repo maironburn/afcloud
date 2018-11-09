@@ -83,7 +83,7 @@ $(document).ready(function(){
 <br>
     <h2 class="text-danger text-warning" style="margin-top:1em">Despliegues <strong>{{request.session.proyecto_seleccionado}}</strong></h2>
     <form class="navbar-right"  style="position:relative;right:1em"   role="search" method="get">{% csrf_token %}
-
+      {%if request.session.proyecto_seleccionado %}
         {#            <div class="form-group">#}
            <!--  -->
         <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}/crearInstancia/" class="btn btn-danger btn-sm">
@@ -92,7 +92,7 @@ $(document).ready(function(){
         <input type="text" name="p" placeholder="Nombre de la instancia">
         <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
         {#            </div>#}
-
+        {%endif%}
     </form>
     {% if e == 'no' %}
 {#        <h5>Los despliegues que se han dado de alta: </h5>#}
@@ -126,6 +126,7 @@ $(document).ready(function(){
             <th>
               Min/Max
             </th>
+
             <th>Nombre despliegue
                 <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
@@ -142,7 +143,9 @@ $(document).ready(function(){
                  -->
             </th>
             <th>Entorno
-
+            </th>
+            <th>
+              URL del servicio
             </th>
             <th>Réplicas
 
@@ -172,6 +175,9 @@ $(document).ready(function(){
                     </td>
 
                     <td>{{ instancia.nombre_entorno }}</td>
+                    <th>
+                      <a href="#" style="font-size: 0.9em;">{{ instancia.uri }}</a>
+                    </th>
                       <td>
                             <span class="instancias_running" id={{instancia.id}}>{{instancia.running}}</span>
 

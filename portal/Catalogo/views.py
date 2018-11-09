@@ -40,10 +40,11 @@ def getCatalogoProyecto(request,id_proyecto):
     if len(lca):
         for s in lca:
             servicio=AfServicio.objects.get(id=s.ser.id)
-            dict_servicios.update({servicio.ser_nombre: servicio})
-            lst_serv.append(servicio.ser_nombre)
-            if s.lca_activo:
-                catalog.append(s)
+            if not servicio.ser_deleted:
+                dict_servicios.update({servicio.ser_nombre: servicio})
+                lst_serv.append(servicio.ser_nombre)
+                if s.lca_activo:
+                    catalog.append(s)
     return dict_servicios, lst_serv, catalog
 
 
@@ -71,7 +72,8 @@ def  catalogosIndex(request, id_proyecto, template_name='CatalogoIndex.html', ex
         dict_servicios,lst_servicios,catalog = getCatalogoProyecto (request,id_proyecto)
 
     except ObjectDoesNotExist as dne:
-
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "EL catálogo del proyecto solicitado no existe")
         return TemplateResponse(request, template_name, None)
 
@@ -136,7 +138,7 @@ def nuevoCatalogo(request,id_proyecto, template_name='newCatalogo.html'):
         #data={'service_queryset': AfServicio.objects.filter(ser_activo=True).exclude(id__in=[c.ser.id for c in catalog ])}
         # se admiten multiples servicios
         # precarga de las tarifas base de los servicios
-        svc=AfServicio.objects.filter(ser_activo=True)
+        svc=AfServicio.objects.filter(ser_activo=True, ser_deleted=False)
         data={'service_queryset': svc}
         dict_svc={}
         for s in svc:

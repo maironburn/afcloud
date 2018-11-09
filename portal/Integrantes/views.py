@@ -80,6 +80,8 @@ def  integrantesIndex(request, id_proyecto, template_name='integrantesIndex.html
         e=''
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False        
         messages.error(request, "No existen integrantes asociados al proyecto solicitado")
         return TemplateResponse(request, template_name, None)
 
@@ -233,6 +235,8 @@ def editarIntegrante(request,id_proyecto, id_integrante,template_name='editarInt
         return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id, 'nombre_proyecto': proyecto.pro_nombre, 'nombre_integrante': user_instance.user.username})
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False        
         messages.error(request, "El integrante solicitado a editar no existe")
         pass
     
@@ -269,6 +273,8 @@ def eliminarIntegrante(request, id_proyecto, id_integrante):
         
 
     except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "El integrante solicitado a eliminar no existe")
         pass
 
