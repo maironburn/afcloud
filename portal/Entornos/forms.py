@@ -20,7 +20,9 @@ class EntornoForm(forms.ModelForm):
     }
     class Meta:
         model = AfEntorno
-        fields = '__all__'
+        fields = ('ent_nombre', 'ent_descripcion', 'ent_activo',
+                  'ent_config_file', 'ent_json_file',
+                  'registry_hash', 'nfs_server')
 
     def __init__(self, *args, **kwargs):
         super(EntornoForm, self).__init__(*args, **kwargs)
@@ -32,7 +34,7 @@ class EntornoForm(forms.ModelForm):
     def is_valid(self):
 
         valid = super(EntornoForm, self).is_valid()
-        if not self.data['ent_config_file']:
+        if not 'ent_config_file' in self.data:
             return valid
         return valid and self.connection
 

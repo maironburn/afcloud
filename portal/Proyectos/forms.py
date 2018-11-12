@@ -20,7 +20,7 @@ class ProyectoForm(forms.ModelForm):
     entornos =forms.MultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple,
                                              choices=[ (choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all()])
     '''
-    entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.all())
+    entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.filter(ent_deleted=False))
     entornos_associated=[]
 
 
@@ -121,7 +121,7 @@ class editProyectoForm(forms.ModelForm):
     pro_nombre_k8s  = forms.CharField(max_length=100, label='Nombre K8s', required=False)
     pro_descripcion = forms.CharField( max_length=250, label='Descripción',widget=forms.Textarea (attrs={'rows':4, 'cols':15}))
     pro_activo      = forms.BooleanField(label=_("Proyecto activo"), initial=True,required=False)
-    entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.all())
+    entornos= forms.ModelMultipleChoiceField(required=False,widget=forms.CheckboxSelectMultiple, queryset=AfEntorno.objects.filter(ent_deleted=False))
     entornos_associated=[]
 
 
@@ -138,7 +138,7 @@ class editProyectoForm(forms.ModelForm):
         
         if len(kwargs):
             if 'initial' in kwargs:
-                self.fields['entornos'].queryset=AfEntorno.objects.all()
+                self.fields['entornos'].queryset=AfEntorno.objects.filter(ent_deleted=False)
                 self.fields['entornos'].initial=kwargs['initial']['entornos']
                 self.pro_nombre=kwargs['instance'].pro_nombre
                 self.pro_descripcion=kwargs['instance'].pro_descripcion

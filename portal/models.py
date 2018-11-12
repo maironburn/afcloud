@@ -90,7 +90,7 @@ class AfEntorno(models.Model):
     ent_json_file   = models.FileField    (blank=True,verbose_name="Json",storage=fs)
     registry_hash   = models.CharField    (blank=True,max_length=1000)
     nfs_server      = models.GenericIPAddressField(blank=True,null=True)
-
+    ent_deleted     = models.BooleanField  (default=0, verbose_name='Eliminado')
 
     num_proyectos   = 0
     proyectos_list =[]
@@ -317,7 +317,8 @@ class AfGlobalconf(models.Model):
     crt_file  = models.FileField    (blank=True,verbose_name="Fichero crt", upload_to=CRT_FILE)
     key_file  = models.FileField    (blank=True,verbose_name="Fichero key", upload_to=KEY_FILE)
     is_done   = models.BooleanField (default=0, verbose_name='Configuracion realizada')
-
+    email     = models.EmailField(max_length=100,blank=True)
+    
     def __str__(self):
         return '%s' % (self.fqdn)
 

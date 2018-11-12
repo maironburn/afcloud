@@ -100,6 +100,7 @@ def nuevoServicio(request,template_name='newService.html'):
             messages.success(request,  'Servicio creado con éxito', extra_tags='Creación de servicios')
             return HttpResponseRedirect('/administrar/servicios')
         else:
+            messages.success(request,  'El mínimo de replicas debe ser menor que el máximo', extra_tags='Replicas Error')
             return render(request, template_name, {'form': form, 'value': value})
     else:
         form = ServicioForm()

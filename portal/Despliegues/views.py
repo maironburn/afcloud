@@ -269,12 +269,31 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
             
                 
     except Exception as e:
-        messages.error(request,  'Ocurrió algún error al tratar de cambiar el esatdo del despliegue', extra_tags='Estado de despligue')
+        messages.error(request,  'Ocurrió algún error al tratar de cambiar el estado del despliegue', extra_tags='Estado de despliegue')
         print ('Exception modifyDeploymentReplicas')
     
     return HttpResponseRedirect('/despliegue/proyecto/%s' % (instance.lca.pro.id))
     
+@login_required
+@group_required(None)
+def manualmodifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 ):
     
+    try:
+        instance=AfInstancia.objects.get(id=id_instancia)
+        entorno_file= instance.rep.ent.ent_config_file.path
+        replicas=int(replicas)        
+        namespace = instance.lca.pro.pro_nombre
+        kuber=Kuber(entorno_file)                
+        kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas)        
+        messages.success(request,  'Modificación de réplicas lanzadas con éxito', extra_tags='Estado de despliegue')
+       
+    except Exception as e:
+        messages.error(request,  'Ocurrió algún error al tratar de cambiar el estado del despliegue', extra_tags='Estado de despliegue')
+        print ('Exception modifyDeploymentReplicas')
+    
+    return HttpResponseRedirect('/despliegue/proyecto/%s' % (instance.lca.pro.id))
+    
+        
 
 @login_required
 @group_required(None)

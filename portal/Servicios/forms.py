@@ -16,6 +16,11 @@ class ServicioForm(forms.ModelForm):
         model = AfServicio
         fields=('ser_nombre','ser_descripcion','ser_tarifa', 'ser_activo','ser_yaml_file', 'ser_min_replicas', 'ser_max_replicas')
 
+    def is_valid(self):
+        
+        valid = super(ServicioForm, self).is_valid() 
+        
+        return valid and self.data['ser_min_replicas']<=self.data['ser_max_replicas']
 
     def setConfigfile(self,fichero):
         try:

@@ -42,10 +42,10 @@ def administrarEntornos(request, template_name='entornosIndex.html', extra_conte
         name = ''
 
     if name == '':
-        entornos = AfEntorno.objects.all().order_by('ent_nombre')
+        entornos = AfEntorno.objects.filter(ent_deleted=False).order_by('ent_nombre')
         e = 'no'
     else:
-        entornos = AfEntorno.objects.filter(ent_nombre__icontains=name)
+        entornos = AfEntorno.objects.filter(ent_nombre__icontains=name,ent_deleted=False)
         e = 'si'
 
     set_bulk_num_proyectos(entornos)
@@ -77,7 +77,7 @@ def administrarEntornosOrdered(request, orden, ascendente, template_name='entorn
     reverse = False
     campo={1:'ent_nombre', 2: 'ent_uri', 3: 'ent_username', 4: 'ent_activo' }
 
-    entornos=  AfEntorno.objects.all()
+    entornos=  AfEntorno.objects.filter(ent_deleted=False)
 
     if int(ascendente) == 0:
             ordenar = '-'
@@ -195,7 +195,9 @@ def borrarEntorno(request, id):
 
     try:
         entorno= AfEntorno.objects.get(id=id)
-        entorno.delete()
+        entorno.ent_deleted=True
+        entorno.save()
+        #entorno.delete()
     except ObjectDoesNotExist as dne:
         request.session['proyecto_seleccionado']    = False
         request.session['id_proyecto_seleccionado'] = False        
