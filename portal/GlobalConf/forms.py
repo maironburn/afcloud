@@ -1,5 +1,5 @@
 from django import forms
-from portal.models import AfGlobalconf
+from portal.models import AfGlobalconf,AfIncidencia 
 from django.utils.translation import ugettext as _
 
 #class EntornoForm(forms.Form):
@@ -9,7 +9,7 @@ class GlobalConfForm(forms.ModelForm):
     crt_file = forms.FileField(label='Fichero .crt ')
     key_file = forms.FileField(label='Fichero .key', required=False)
     fqdn     = forms.CharField(max_length=100,label='FQDN', help_text="Se creaa partir del .crt", initial="Autogenerado", disabled=True)
-   
+    #email
 
     error_messages = {
         'kubernates_conx_error': _("Por favor introduzca un usuario correcto %(username)s y su contraseña. "
@@ -48,3 +48,15 @@ class GlobalConfForm(forms.ModelForm):
                 return True
         '''
         return valid
+
+
+class IncidenciasForm(forms.ModelForm):
+    
+    asunto = forms.CharField(max_length=250,label='Asunto')
+    cuerpo = forms.CharField(max_length=1000,label='Cuerpo',widget=forms.Textarea (attrs={'rows':5, 'cols':20}))
+    
+    class Meta:
+        model=AfIncidencia
+        fields= ('asunto','cuerpo')
+    
+    

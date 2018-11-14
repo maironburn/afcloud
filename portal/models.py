@@ -215,6 +215,24 @@ class AfRelEntPro(models.Model):
         return rel_ent_pro
 
 
+class AfIncidencia(models.Model):
+
+    usu             = models.ForeignKey (AfUsuario, null=True, on_delete=models.SET_NULL)
+    asunto          = models.CharField  (max_length=250,verbose_name='Asunto', blank=True, null=True)
+    cuerpo          = models.CharField  (max_length=1000,verbose_name='Cuerpo', blank=True, null=True)
+    fecha_apertura  = models.DateTimeField(auto_now_add=True)
+    fecha_updated   = models.DateTimeField(auto_now=True)
+    fecha_cierre    = models.DateTimeField()
+
+    def __str__(self):
+        return '%s, abierta:  %s, asunto: %s' % (self.usu.user.first_name, self.fecha_apertura, self.asunto)
+
+    class Meta:
+        managed = True
+        db_table = 'af_incidencia'
+        db_tablespace = 'af_usuario'
+
+
 class AfLineaCatalogo(models.Model):
 
     pro                 = models.ForeignKey     (AfProyecto, on_delete=models.CASCADE)
@@ -318,7 +336,7 @@ class AfGlobalconf(models.Model):
     key_file  = models.FileField    (blank=True,verbose_name="Fichero key", upload_to=KEY_FILE)
     is_done   = models.BooleanField (default=0, verbose_name='Configuracion realizada')
     email     = models.EmailField(max_length=100,blank=True)
-    
+
     def __str__(self):
         return '%s' % (self.fqdn)
 

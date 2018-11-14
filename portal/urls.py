@@ -82,10 +82,10 @@ urlpatterns = [
     url(r'^refesh_replicas/proyecto/(?P<id_proyecto>\d+)/$', despliegues_views.refreshReplicas, name='refreshDeploymentReplicas'),
     url(r'^despliegue/manualmodifyDeploymentReplicas/(?P<id_instancia>\d+)/(?P<replicas>\d+)/$', despliegues_views.manualmodifyDeploymentReplicas, name='manualmodifyDeploymentReplicas'),
 
-
     ##################################################
     # Configuracion global
     url(r'^administrar/globalconf/$', globalconf_views.creaGlogalConf, name='globalconf'),
+    url(r'^administrar/incidencias/$', globalconf_views.crearIncidencia, name='incidencia'),
      #url(r'^administrar/proyectos/(?P<orden>\d+)/(?P<ascendente>\d+)/$', project_views.administrarProyectosOrdered, name='administrarProyectos'),
 
 ]

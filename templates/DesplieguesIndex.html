@@ -16,15 +16,18 @@ $(document).ready(function(){
      min= $('#'+id_instancia+ '.def_replicas').attr('min');
      max= $('#'+id_instancia+ '.def_replicas').attr('max');
 
-      $( "#spinner" ).spinner({
-        value: 0,
+     current_replicas_value= $('#' + id_instancia + ".instances_running_span").text();
+
+      $( "#" +id_instancia + "_spinner" ).spinner({
         min: 0,
         max: max,
         step:1
       });
+
+      $( "#" +id_instancia + "_spinner" ).val(current_replicas_value);
       $('.ui-spinner').css({'width': '5em'});
 
-      $( ".div_replicas" ).css({'display':'block'}).dialog({
+      $( '#'+ id_instancia +".div_replicas" ).css({'display':'block'}).dialog({
         resizable: false,
         height: "auto",
         width: 400,
@@ -34,8 +37,8 @@ $(document).ready(function(){
             $( this ).dialog( "close" );
           },
           "Establecer": function() {
-            if ($( "#spinner" ).val()!='')
-              setReplicas(id_instancia,$( "#spinner" ).val());
+            if ($( "#" + id_instancia + "_spinner" ).val()!='')
+              setReplicas(id_instancia, $( "#" +id_instancia + "_spinner" ).val());
             $( this ).dialog( "close" );
           }
         }
@@ -62,7 +65,8 @@ DESPLIEGUES_OPERATIONS={
 						$.each(data.response, function(k,v){
 
 							//$('.instancias_running#'+k).parent().next().find('span.status_running')
-							$('#'+ k + '.instancias_running').text(v);
+							//$('#'+ k + '.instancias_running').text(v).addClass('glyphicon glyphicon-wrench');
+              $('#'+ k + '.instances_running_span').text(v);
 
 							url="/despliegue/modifyDeploymentReplicas/";
 							if (v==0){
@@ -224,14 +228,10 @@ function setReplicas(id_instancia,num_replicas){
                       <a href="#" style="font-size: 0.9em;">{{ instancia.uri }}</a>
                     </th>
                       <td>
-                            <span class="instancias_running" id={{instancia.id}}><a id={{instancia.id}} href="#">{{instancia.running}}</a>
-                              <div style="display:none" class="div_replicas" id="{{instancia.id}}">
-                                <p>
+                            <span class="instancias_running" id={{instancia.id}}><a id={{instancia.id}} href="#"><span style="cursor: pointer;" id="{{instancia.id}}"s class="instances_running_span glyphicon glyphicon-wrench">{{instancia.running}}</span></a>
+                              <div style="display:none" title="Modificar número de réplicas" class="div_replicas" id="{{instancia.id}}">
                                 <label for="spinner">Número de réplicas:</label>
-                                <input id="spinner" name="value">
-                              </p>
-
-                                </p>
+                                <input id="{{instancia.id}}_spinner" name="value">
                               </div>
                             </span>
 
