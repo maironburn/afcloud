@@ -556,7 +556,7 @@ class Kuber(object):
             deployments=[]
 
             for d in api_response.items:
-                deployed={ 'name': d.metadata.name      ,   'creation_timestamp':d.metadata.creation_timestamp ,
+                deployed={  'name': d.metadata.name      ,   'creation_timestamp':d.metadata.creation_timestamp ,
                             'status': d.spec.replicas    ,   'imagen': d.spec.template.spec.containers[0].image}
                 deployments.append(deployed)
 

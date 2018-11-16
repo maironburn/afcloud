@@ -1,0 +1,112 @@
+{% extends "index.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+
+<script>
+
+IT_OPERATIONS={
+
+	'url_detalles_incidencia': '/detalles/incidencia/',
+
+	GodZilla_callback: function(data){
+
+		switch(data.action){
+
+			case 'detalles_incidencia':
+				console.log("detalles de la incidencia");
+				 $('.info_incidencia').html(data.html);
+				 //$('#tabla_incidencias').css({'display': 'none'});
+	            }
+	         }
+}; //END NS
+
+
+$(document).ready(function(){
+
+	id=$('.incidencia_editada').attr('id');
+	IT_OPERATIONS.url_detalles_incidencia+= id;
+	var datos  = AJAXSTUFF.getSpecificRequest('','detalles_incidencia',IT_OPERATIONS.url_detalles_incidencia );
+	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
+	datos.request = 'GET';
+	var content= AJAXSTUFF.RequestDefinition(datos);
+	AJAXSTUFF.makeRequest(content, IT_OPERATIONS.GodZilla_callback);
+	IT_OPERATIONS.url_detalles_incidencia='/detalles/incidencia/';
+
+});
+
+</script>
+
+<style>
+  .info_incidencia{
+    position: relative;
+    width: 80em;
+    height: 35em;
+    float: left;
+    top: 1em;
+    }
+</style>
+
+
+{% if mensaje %}
+    <div id="message" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-body">
+                    <h4>{{ mensaje }}</h4>
+                    <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+    {% if form %}
+        <div class="panel-body">
+{#        {% if form.errors %}#}
+{#            <p class="errornote">#}
+{#                {% if form.errors.items|length == 1 %}#}
+{#                    <p>Por favor corrija el error: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% else %}#}
+{#                    <p>Por favor corrija los errores: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% endif %}#}
+{#        {% endif %}#}
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="errors">
+                    {{ error }}
+                </p>
+            {% endfor %}
+        {% endif %}
+        <div class="panel-body">
+            <form class="well" method="POST">
+              {% csrf_token %}
+              <div class="row">
+              <div class="col-md-3">
+                <h2 class="text-danger">Actuación </h2>
+              
+                <div class="well">
+                  {% crispy form %}
+                </div>
+
+                <input type="submit" value="Guardar" class="btn btn-danger">
+                <button type="button" class="btn btn-danger" onclick="location.href='/administrar/incidencias'">Cancelar</button>
+            </form>
+        </div>
+               <div class="info_incidencia">
+
+                </div>
+    {% endif %}
+    </div>
+</div>
+
+{%if id %}
+
+    <input type="hidden" class="incidencia_editada" id="{{id}}"/>
+{%endif%}
+{% endblock %}

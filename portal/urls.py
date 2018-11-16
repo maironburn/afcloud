@@ -11,6 +11,8 @@ from portal.Integrantes import views as integrantes_views
 from portal.Catalogo import views as catalogo_views
 from portal.Despliegues import views as despliegues_views
 from portal.GlobalConf import views as globalconf_views
+from portal.Incidencias import views as incidencias_views
+
 
 urlpatterns = [
      # USUARIOS
@@ -83,9 +85,13 @@ urlpatterns = [
     url(r'^despliegue/manualmodifyDeploymentReplicas/(?P<id_instancia>\d+)/(?P<replicas>\d+)/$', despliegues_views.manualmodifyDeploymentReplicas, name='manualmodifyDeploymentReplicas'),
 
     ##################################################
-    # Configuracion global
+    # CONFIGURACION GLOBAL
     url(r'^administrar/globalconf/$', globalconf_views.creaGlogalConf, name='globalconf'),
-    url(r'^administrar/incidencias/$', globalconf_views.crearIncidencia, name='incidencia'),
+    url(r'^administrar/incidencias/$', incidencias_views.administrarIncidencias, name='admin_incidencias'),
+    # INCIDENCIAS
+    url(r'^incidencias/crear/$', incidencias_views.crearIncidencia, name='crear_incidencia'),
+    url(r'^detalles/incidencia/(?P<id>\d+)/$', incidencias_views.getItDetails, name='detalles_incidencia'),
+    url(r'^administrar/incidencias/editarIncidencia/(?P<id>\d+)/$', incidencias_views.addNotaIncidencia, name='editarIncidencia')
      #url(r'^administrar/proyectos/(?P<orden>\d+)/(?P<ascendente>\d+)/$', project_views.administrarProyectosOrdered, name='administrarProyectos'),
 
 ]

@@ -1,5 +1,5 @@
 from django import forms
-from portal.models import AfGlobalconf,AfIncidencia 
+from portal.models import AfGlobalconf 
 from django.utils.translation import ugettext as _
 
 #class EntornoForm(forms.Form):
@@ -9,7 +9,7 @@ class GlobalConfForm(forms.ModelForm):
     crt_file = forms.FileField(label='Fichero .crt ')
     key_file = forms.FileField(label='Fichero .key', required=False)
     fqdn     = forms.CharField(max_length=100,label='FQDN', help_text="Se creaa partir del .crt", initial="Autogenerado", disabled=True)
-    #email
+    email    = forms.EmailField()
 
     error_messages = {
         'kubernates_conx_error': _("Por favor introduzca un usuario correcto %(username)s y su contraseña. "
@@ -23,7 +23,7 @@ class GlobalConfForm(forms.ModelForm):
 
     class Meta:
         model=AfGlobalconf
-        fields= ('crt_file','key_file','fqdn')
+        fields= ('crt_file','key_file','fqdn', 'email')
     
     
     def __init__(self, *args, **kwargs):
@@ -31,11 +31,16 @@ class GlobalConfForm(forms.ModelForm):
         if len(kwargs)  and 'global_conf' in kwargs['initial']:
             #self.fields['fqdn'].initial = kwargs['initial']['global_conf'].fqdn
             self.set_fqdn(kwargs['initial']['global_conf'])
-            
+            self.set_mail(kwargs['initial']['global_conf'])
+            #self.
     def set_fqdn(self,instance):
         self.fields['fqdn'].initial= instance.fqdn
         
+    def set_mail(self,instance):
+        self.fields['email'].initial= instance.email
         
+        
+                
     def is_valid(self):
         valid = super(GlobalConfForm, self).is_valid()
         
@@ -50,13 +55,4 @@ class GlobalConfForm(forms.ModelForm):
         return valid
 
 
-class IncidenciasForm(forms.ModelForm):
-    
-    asunto = forms.CharField(max_length=250,label='Asunto')
-    cuerpo = forms.CharField(max_length=1000,label='Cuerpo',widget=forms.Textarea (attrs={'rows':5, 'cols':20}))
-    
-    class Meta:
-        model=AfIncidencia
-        fields= ('asunto','cuerpo')
-    
     

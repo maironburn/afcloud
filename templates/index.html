@@ -18,13 +18,13 @@
     <link rel="stylesheet" href="{% static 'css/comun.css' %}">
     <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
-	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-	<script src="{% static 'js/jquery.min.js' %}"></script>
-	<script src="{% static 'js/bootstrap.min.js' %}"></script>
+	  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	  <script src="{% static 'js/jquery.min.js' %}"></script>
+   	<script src="{% static 'js/bootstrap.min.js' %}"></script>
     <!-- for dialog  -->
   	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
- 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
- 	<script src="{% static 'js/common.js' %}"></script>
+ 	  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+ 	  <script src="{% static 'js/common.js' %}"></script>
 </head>
 <body>
 
@@ -110,11 +110,15 @@
   {%endif%}
  {% if  request.session.numeric_profile > 2 or request.session.afcloud_admin  %}
        <ul class="nav navbar-nav ">
+
        {%if request.session.id_proyecto_seleccionado and request.session.globalconf_isdone %}
           <!-- Opciones solo visibles si hay un proyecto seleccionado-->
           <li><a href="/catalogo/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/catalog.svg'  %}" width="32px" height="32px">Cat&aacute;logo</a></li>
           <li><a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/members.svg'  %}" width="32px" height="32px"> Integrantes</a></li>
         {% endif %}
+        {%if not request.session.afcloud_admin  %}
+        <li><a style="margin-left: 10em;" href="{% url 'admin_incidencias' %}">    <img src="{% static 'images/incidencia.svg' %}" width="32px" height="32px">Incidencias</a></li>
+        {%endif%}
       </ul>
  {% endif %}
 
@@ -149,7 +153,8 @@
                 <li><a href="{% url 'admin_services' %}"><img src="{% static 'images/adm_servicios.svg' %}" width="32px" height="32px">Servicios</a></li>
                 {%endif%}
                 <li><a href="{% url 'admin_env' %}">     <img src="{% static 'images/adm_entornos.svg' %}" width="32px" height="32px">Entornos</a></li>
-                <li><a href="{% url 'incidencia' %}">     <img src="{% static 'images/inicidencia.svg' %}" width="32px" height="32px">Incidencias</a></li>
+                <li><a href="{% url 'admin_incidencias' %}">     <img src="{% static 'images/incidencia.svg' %}" width="32px" height="32px">Incidencias</a></li>
+
             </ul>
         </li>
     </ul>

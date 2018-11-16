@@ -1,0 +1,103 @@
+
+{% load static %}
+
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;border-color:#999;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#999;color:#444;background-color:#F7FDFA;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#999;color:#fff;background-color:#26ADE4;}
+.tg .tg-k285{font-weight:bold;background-color:#fd6864;text-align:left;vertical-align:top}
+.tg .tg-hmp3{background-color:#D2E4FC;text-align:left;vertical-align:top}
+</style>
+
+{% block content %}
+
+<script>
+$( function() {
+  $( "#accordion" ).accordion({
+    heightStyle: "content",
+    collapsible: true
+  });
+} );
+</script>
+
+
+{% if mensaje %}
+    <div id="message" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-body">
+                    <h4>{{ mensaje }}</h4>
+                    <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+        <div class="panel-body">
+
+
+        {% if incidencias_info %}
+
+        		    <table id="tabla_incidencias" class="table table-hover panel">
+        		    <thead>
+	        		    <tr>
+	        		    	<th>Iniciador</th>
+	        		    	<th>Fecha apertura</th>
+	        		    	<th>Actualizada</th>
+	        		    	<th>Asunto</th>
+                    <th>Estado</th>
+
+	        		    </tr>
+        		    </thead>
+        		     <tbody>
+              {% for it in incidencias_info %}
+
+        					 <tr>
+        							<td>
+        								 {{ it.incidencias.usu.user.first_name }} ({{ it.incidencias.usu.user.username }})
+                      </td>
+                      <td>
+        								 {{ it.incidencias.fecha_apertura }}
+                      </td>
+                      <td>
+        								 {{ it.incidencias.fecha_updated }}
+                      </td>
+                      <td>
+                        {{ it.incidencias.asunto }}
+                      </td>
+                      <td>
+        							{{it.estado_name}}
+                      </td>
+
+        						</tr>
+          </tbody>
+        </table>
+        <p style="font-weight:bold">Motivo de apertura</p>
+        <p>{{ it.incidencias.cuerpo }}<p>
+        {%if it.notas_asociadas %}
+          <h3>Notas asociadas</h3>
+          <div id="accordion">
+            {%for na in it.notas_asociadas %}
+              <h3>{{ na.asunto}} ({{na.autor.user.username}}) - {{ na.fecha_creacion }} </h3>
+              <div>
+                <p>{{ na.notas}}</p>
+              </div>
+            {%endfor%}
+          </div>
+        {% endif %}
+          {% endfor %}
+
+		{% endif %}
+
+		<!--
+                <button type="button" class="btn btn-danger" onclick="location.href='/administrar/proyectos/'">Cancelar</button>
+         -->
+        </div>
+
+    </div>
+</div>
+{% endblock %}

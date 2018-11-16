@@ -18,7 +18,7 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-
+import datetime
 logger=getLogger()
 
 @login_required
@@ -203,7 +203,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
                 #host: ns.env.fqdn/unique_name_ins-svc
                 uri= ('https://%s.%s.%s/%s-svc' % (namespace, entorno.ent.ent_nombre, fqdn[0]['fqdn'], unique_instance_name))
                 instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name, ins_uri=uri)
-                ciclo= AfCiclo.objects.create(ins=instancia)
+                ciclo = AfCiclo.objects.create(ins=instancia, num_replicas=min)
                 messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
                 return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
         
@@ -247,6 +247,12 @@ def refreshReplicas(request,id_proyecto):
     data={'action': 'refresh_replicas', 'response':False}
     return JsonResponse({'data':data})
 
+def renewCicloDeployment(instance, replicas):
+    ciclo = AfCiclo.objects.filter(ins=instance).last()
+    ciclo.cic_fecha_fin=datetime.datetime.now()
+    ciclo.save()
+    ciclo = AfCiclo.objects.create(ins=instance, num_replicas=replicas)
+              
 @login_required
 @group_required(None)
 def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 ):
@@ -264,12 +270,14 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
         
         if replicas_spec:
             messages.success(request,  'Despliegue lanzado con éxito', extra_tags='Estado de despliegue')
+            renewCicloDeployment(instance,replicas_spec)
+  
         else:
             messages.success(request,  'Repliegue lanzado con éxito' , extra_tags='Estado de despliegue')
             
                 
     except Exception as e:
-        messages.error(request,  'Ocurrió algún error al tratar de cambiar el estado del despliegue', extra_tags='Estado de despliegue')
+        messages.error(request,  'Ocurrió algún error al tratar de cambiar el esatdo del despliegue', extra_tags='Estado de despligue')
         print ('Exception modifyDeploymentReplicas')
     
     return HttpResponseRedirect('/despliegue/proyecto/%s' % (instance.lca.pro.id))
@@ -284,11 +292,12 @@ def manualmodifyDeploymentReplicas(request, id_instancia, replicas, required_lev
         replicas=int(replicas)        
         namespace = instance.lca.pro.pro_nombre
         kuber=Kuber(entorno_file)                
-        kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas)        
+        kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas) 
+        renewCicloDeployment(instance,replicas)       
         messages.success(request,  'Modificación de réplicas lanzadas con éxito', extra_tags='Estado de despliegue')
        
     except Exception as e:
-        messages.error(request,  'Ocurrió algún error al tratar de cambiar el estado del despliegue', extra_tags='Estado de despliegue')
+        messages.error(request,  'Ocurrió algún error al tratar de cambiar el esatdo del despliegue', extra_tags='Estado de despligue')
         print ('Exception modifyDeploymentReplicas')
     
     return HttpResponseRedirect('/despliegue/proyecto/%s' % (instance.lca.pro.id))

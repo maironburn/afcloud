@@ -195,7 +195,7 @@ class editProyectoForm(forms.ModelForm):
                 afep=AfRelEntPro.objects.create(ent=entorno, pro=instancia)
                 afep.save()
             
-        instancia.save()
+            instancia.save()
 
 
     def saveRelations(self, instance):
