@@ -12,7 +12,7 @@ from portal.Catalogo import views as catalogo_views
 from portal.Despliegues import views as despliegues_views
 from portal.GlobalConf import views as globalconf_views
 from portal.Incidencias import views as incidencias_views
-
+from portal.MailServer import views as confmail_views
 
 urlpatterns = [
      # USUARIOS
@@ -88,6 +88,7 @@ urlpatterns = [
     # CONFIGURACION GLOBAL
     url(r'^administrar/globalconf/$', globalconf_views.creaGlogalConf, name='globalconf'),
     url(r'^administrar/incidencias/$', incidencias_views.administrarIncidencias, name='admin_incidencias'),
+    url(r'^administrar/conf_mail/$', confmail_views.config_Mail, name='conf_mail_server'),
     # INCIDENCIAS
     url(r'^incidencias/crear/$', incidencias_views.crearIncidencia, name='crear_incidencia'),
     url(r'^detalles/incidencia/(?P<id>\d+)/$', incidencias_views.getItDetails, name='detalles_incidencia'),

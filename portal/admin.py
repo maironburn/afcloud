@@ -4,7 +4,7 @@ from django.contrib import admin
 #from afcloud.models import User, UserManager
 #from afcloud.models import User, UserManager
 from .models import AfServicio, AfEntorno, AfProyecto, AfRelEntPro, \
-AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil, AfUsuario,AfAuditoria,AfGlobalconf ,AfIncidencia, AfEstadosIncidencia , AfRelIncidenciaEstado, AfNotasIncidencia
+AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil, AfUsuario,AfAuditoria,AfGlobalconf ,AfIncidencia, AfEstadosIncidencia , AfRelIncidenciaEstado, AfNotasIncidencia,AfMailServer,AfUserNotify,AfKindNotify
 #AfServicio, AfEntorno, AfProyecto, AfRelEntPro, AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil
 
 
@@ -26,3 +26,6 @@ admin.site.register(AfIncidencia)
 admin.site.register(AfEstadosIncidencia)
 admin.site.register(AfRelIncidenciaEstado)
 admin.site.register(AfNotasIncidencia)
+admin.site.register(AfMailServer)
+admin.site.register(AfKindNotify)
+admin.site.register(AfUserNotify)

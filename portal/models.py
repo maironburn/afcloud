@@ -389,3 +389,49 @@ class AfGlobalconf(models.Model):
     class Meta:
         managed = True
         db_table = 'af_globalconf'
+
+
+class AfMailServer(models.Model):
+
+    #id        = models.AutoField(primary_key=True)
+    email_server    = models.EmailField   (max_length=100,blank=True)
+    port            = models.IntegerField (blank=False, verbose_name="Puerto")
+    usuario         = models.CharField    (max_length=100,verbose_name="Usuario", blank=False)
+    passwd          = models.CharField    (max_length=100,verbose_name="Contraseña", blank=False)
+    tls             = models.BooleanField (default=1, verbose_name='Usa TLS')
+    is_done         = models.BooleanField (default=0, verbose_name='Configuracion realizada')
+
+    def __str__(self):
+        return '%s' % (self.email)
+
+    class Meta:
+        managed = True
+        db_table = 'af_mail_server'
+
+
+
+class AfKindNotify(models.Model):
+
+    id              =  models.AutoField(primary_key=True)
+    desc            =  models.CharField    (max_length=100,verbose_name="accion", blank=False)
+
+    def __str__(self):
+        return '%s' % (self.desc)
+
+    class Meta:
+        managed = True
+        db_table = 'af_kind_notify'
+
+class AfUserNotify(models.Model):
+
+    id              = models.AutoField(primary_key=True)
+    user            = models.ForeignKey     (AfUsuario, null=True, on_delete=models.CASCADE)
+    tipo            = models.ForeignKey     (AfKindNotify,on_delete=models.CASCADE)
+    readed          = models.BooleanField   (default=0, verbose_name='Leida')
+
+    def __str__(self):
+        return '%s, tipo: %s' % (self.user.user.username , self.tipo)
+
+    class Meta:
+        managed = True
+        db_table = 'af_user_notify'

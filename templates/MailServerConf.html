@@ -1,0 +1,59 @@
+{% extends "index.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+{% if mensaje %}
+    <div id="message" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-body">
+                    <h4>{{ mensaje }}</h4>
+                    <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+    {% if form %}
+
+        <div class="panel-body">
+{#        {% if form.errors %}#}
+{#            <p class="errornote">#}
+{#                {% if form.errors.items|length == 1 %}#}
+{#                    <p>Por favor corrija el error: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% else %}#}
+{#                    <p>Por favor corrija los errores: </p>#}
+{#                    {{ form.errors_messages }}#}
+{#                {% endif %}#}
+{#        {% endif %}#}
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="errors">
+                    {{ error }}
+                </p>
+            {% endfor %}
+        {% endif %}
+        <div class="panel-body">
+            <form class="well" enctype="multipart/form-data" method="POST">
+                {% csrf_token %}
+                <div class="row">
+                <div class="col-md-4">
+                    <h2 class="text-danger">Configuración del servidor de correo </h2>
+                  <hr/>
+                  <div class="well">
+                    {% crispy form %}
+                    <input type="submit" value="Guardar" class="btn btn-danger">
+                    <button type="button" class="btn btn-danger" onclick="location.href='/startpage/'">Volver</button>
+                </form>
+                  </div>
+
+        </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
