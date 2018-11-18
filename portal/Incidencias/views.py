@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
-from portal.models import AfGlobalconf,AfIncidencia,AfRelIncidenciaEstado, AfEstadosIncidencia, AfNotasIncidencia
+from portal.models import AfGlobalconf,AfIncidencia,AfRelIncidenciaEstado, AfEstadosIncidencia, AfNotasIncidencia,AfMailServer,AfUserNotify,AfKindNotify
 from django.http import JsonResponse
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
@@ -98,6 +98,9 @@ def send_notify_mail(kwargs):
     asunto      = kwargs.get   ('asunto',"default value")
     cuerpo      = kwargs.get   ('cuerpo',"default value")
     estado      = kwargs.get   ('estado',"Abierta")
+    
+    #mail_conf=AfMailServer.objects.first()
+
     from_email  = EMAIL_HOST_USER
     gconf       = AfGlobalconf.objects.first()
     to_email    = gconf.email
@@ -119,6 +122,19 @@ def send_notify_mail(kwargs):
     msg.send()
                     
     
+def notify_message(kwargs):
+    
+    gconf       = AfGlobalconf.objects.first()
+    #to_email    = gconf.email
+    to          = kwargs.get   ('destinatario',"default value")
+    m_from      = kwargs.get   ('af_user',"default value")
+    asunto      = kwargs.get   ('asunto',"default value")
+    cuerpo      = kwargs.get   ('cuerpo',"default value")
+    estado      = kwargs.get   ('estado',"Abierta")
+    
+    msg_kind= AfKindNotify.objects.get(desc=asunto)
+    user_to_notify =AfUserNotify.objects.create(user=to, tipo=msg_kind)   
+    
 @login_required
 @group_required('af_cloud_admin',)
 def crearIncidencia(request, template_name='incidencias.html', extra_context=None):
@@ -136,7 +152,13 @@ def crearIncidencia(request, template_name='incidencias.html', extra_context=Non
                 af_user = AfUsuario.objects.get (user=request.user)
 
                 dict_mail={'asunto': asunto, 'cuerpo': cuerpo, 'af_user': af_user}
-                send_notify_mail (dict_mail)
+                # configuracion de correo realizada ?
+                mail_conf=AfMailServer.objects.count()
+                
+                if mail_conf:
+                    send_notify_mail (dict_mail)
+                
+                notify_message(dict_mail)
                 
                 incidencia      = AfIncidencia.objects.create(usu=af_user, asunto=asunto, cuerpo=cuerpo)
                 estado          = AfEstadosIncidencia.objects.get(estado='Abierta')
@@ -183,7 +205,12 @@ def addNotaIncidencia(request, id,template_name='editarIncidencia.html'):
                 it_estado.save ()
             
                 dict_mail={'asunto': asunto, 'cuerpo': cuerpo, 'af_user': af_user, 'estado':estado, 'template': 'nota_incidencia'  }
-                send_notify_mail (dict_mail)
+                mail_conf=AfMailServer.objects.count()
+                
+                if mail_conf:
+                    send_notify_mail (dict_mail)
+                  
+                notify_message(dict_mail)
                 messages.success(request,  'Incidencia editada con éxito', extra_tags='Actuación en incidencia')
                 return HttpResponseRedirect('/administrar/incidencias')
 

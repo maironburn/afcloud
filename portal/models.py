@@ -394,12 +394,12 @@ class AfGlobalconf(models.Model):
 class AfMailServer(models.Model):
 
     #id        = models.AutoField(primary_key=True)
-    email_server    = models.EmailField   (max_length=100,blank=True)
+    email_server    = models.CharField    (max_length=100,verbose_name="Servidor de correo", blank=False)
     port            = models.IntegerField (blank=False, verbose_name="Puerto")
     usuario         = models.CharField    (max_length=100,verbose_name="Usuario", blank=False)
     passwd          = models.CharField    (max_length=100,verbose_name="Contraseña", blank=False)
     tls             = models.BooleanField (default=1, verbose_name='Usa TLS')
-    is_done         = models.BooleanField (default=0, verbose_name='Configuracion realizada')
+    #is_done         = models.BooleanField (default=0, verbose_name='Configuracion realizada')
 
     def __str__(self):
         return '%s' % (self.email)

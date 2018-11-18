@@ -5,6 +5,7 @@ encoding//portal/Despliegues/forms.py=utf-8
 encoding//portal/Despliegues/views.py=utf-8
 encoding//portal/Entornos/views.py=utf-8
 encoding//portal/GlobalConf/views.py=utf-8
+encoding//portal/Incidencias/views.py=utf-8
 encoding//portal/Integrantes/forms.py=utf-8
 encoding//portal/Integrantes/views.py=utf-8
 encoding//portal/MailServer/views.py=utf-8
