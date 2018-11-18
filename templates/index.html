@@ -133,6 +133,8 @@
 
    <ul class="dropdown-menu ">
        <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/editar_usuario.png'  %}" width="32px" height="32px">Modificar perfil</a></li>
+       <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/notificaciones.svg'  %}" width="32px" height="32px">Notificaciones</a></li>
+
      <li><a href="/logout/"><span class="glyphicon "></span> <img src="{% static 'images/logout.svg'  %}" width="32px" height="32px"> Cerrar Sesión</a></li>
   </ul>
 </li>

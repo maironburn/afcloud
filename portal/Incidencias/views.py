@@ -98,7 +98,8 @@ def send_notify_mail(kwargs):
     asunto      = kwargs.get   ('asunto',"default value")
     cuerpo      = kwargs.get   ('cuerpo',"default value")
     estado      = kwargs.get   ('estado',"Abierta")
-    
+    from_mail   = kwargs.get   ('from_mail')
+    to_email    = kwargs.get   ('to_email')
     #mail_conf=AfMailServer.objects.first()
 
     from_email  = EMAIL_HOST_USER
