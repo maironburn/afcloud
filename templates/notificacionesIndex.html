@@ -6,6 +6,8 @@
 
 NOTIFICACIONES_OPERATIONS={
 	'url_detalles_notificaciones': '/consultarNotificaciones/',
+	'tipo_instancia_asociada' : '',
+
 	GodZilla_callback: function(data){
 
 		switch(data.action){
@@ -20,7 +22,7 @@ NOTIFICACIONES_OPERATIONS={
              $('#jquery_dialog').html('<p>No hay notificaciones asociadas</p>');
            }
 	          	 $( "#jquery_dialog" ).dialog({
-					         title: 'Detalles notificación',
+					         title: 'Detalles notificación ( ' + NOTIFICACIONES_OPERATIONS.tipo_instancia_asociada + ')',
 	          	      resizable: true,
 	          	      width  : 800,
                     height : 400,
@@ -40,10 +42,10 @@ NOTIFICACIONES_OPERATIONS={
 
 $(document).on('click', '.consultar_notificaciones', function(){
 
-	tipo_instancia_asociada=$(this).attr('tipo_instancia_asociada');
+	NOTIFICACIONES_OPERATIONS.tipo_instancia_asociada=$(this).attr('tipo_instancia_asociada');
 	instancia_rel_id=$(this).attr('instancia_rel_id');
 	url_destino ='';
-	switch (tipo_instancia_asociada){
+	switch (NOTIFICACIONES_OPERATIONS.tipo_instancia_asociada){
 		case 'incidencia':
 		  url_destino="/detalles/incidencia/" + instancia_rel_id + '/' + 1
 
@@ -55,7 +57,7 @@ $(document).on('click', '.consultar_notificaciones', function(){
 	datos.request = 'GET';
 	var content= AJAXSTUFF.RequestDefinition(datos);
 	AJAXSTUFF.makeRequest(content, NOTIFICACIONES_OPERATIONS.GodZilla_callback);
-	NOTIFICACIONES_OPERATIONS.url_detalles_notificaciones='/consultarNotificaciones/';
+
  });
 
 </script>
@@ -76,6 +78,11 @@ $(document).on('click', '.consultar_notificaciones', function(){
                 <!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a> -->
                 <!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>-->
             </th>
+						<th>Categoría
+								<!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a> -->
+								<!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>-->
+						</th>
+
 						<th>Descripción
 								<!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a> -->
 								<!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>-->
@@ -103,6 +110,9 @@ $(document).on('click', '.consultar_notificaciones', function(){
                   <td>
                     {{ notificacion.notificacion.from_user.user.first_name}} {{ notificacion.notificacion.from_user.user.last_name}} ({{ notificacion.notificacion.from_user.user.username}})
                   </td>
+									<td>
+									 {{ notificacion.instancia_asociada }}
+									</td>
 									<td>
 									 {{ notificacion.tipo_desc }}
 									</td>

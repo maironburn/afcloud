@@ -414,12 +414,12 @@ class AfUserNotify(models.Model):
 class AfNotify_Tipo_instancia(models.Model):
 
     #id         = models.AutoField  (primary_key=True)
-    notify     = models.ForeignKey ( AfUserNotify,    on_delete=models.CASCADE, null=True, blank= True)
-    tipo       = models.ForeignKey ( AfTipoNotify,    on_delete=models.CASCADE, null=True, blank= True)
-    integrante = models.ForeignKey ( AfPerfil,        on_delete=models.CASCADE, null=True, blank= True)
-    despliegue = models.ForeignKey ( AfInstancia,     on_delete=models.CASCADE, null=True, blank= True)
-    catalogo   = models.ForeignKey ( AfLineaCatalogo, on_delete=models.CASCADE, null=True, blank= True)
-    incidencia = models.ForeignKey ( AfIncidencia,    on_delete=models.CASCADE, null=True, blank= True)
+    notify     = models.OneToOneField ( AfUserNotify,    on_delete=models.CASCADE, null=True, blank= True)
+    tipo       = models.OneToOneField ( AfTipoNotify,    on_delete=models.CASCADE, null=True, blank= True)
+    integrante = models.OneToOneField ( AfPerfil,        on_delete=models.CASCADE, null=True, blank= True)
+    despliegue = models.OneToOneField ( AfInstancia,     on_delete=models.CASCADE, null=True, blank= True)
+    catalogo   = models.OneToOneField ( AfLineaCatalogo, on_delete=models.CASCADE, null=True, blank= True)
+    incidencia = models.OneToOneField ( AfIncidencia,    on_delete=models.CASCADE, null=True, blank= True)
 
     def __str__(self):
         return '%s' % ("AfNotify_Tipo_instancia")

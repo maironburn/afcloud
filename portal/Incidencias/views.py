@@ -146,13 +146,23 @@ def notify_message(kwargs):
     estado      = kwargs.get   ('estado'            , None)
     tipo_notify = kwargs.get   ('tipo_notificacion' , None)
     incidencia  = kwargs.get   ('incidencia'        , None)
-    
+    user_notify = kwargs.get   ('user_notify'       , None)
     for u in to_users:
         
-        notify = AfUserNotify.objects.create(to_user=u, from_user=m_from, fecha_creacion=datetime.datetime.now())
-        n_tipo = AfTipoNotify.objects.get(short_desc=tipo_notify)
-        notify.save()
-        n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=n_tipo, incidencia=incidencia)
+        if user_notify:
+            tipo_notify=AfTipoNotify.objects.get(short_desc=tipo_notify)
+            user_notify.tipo =tipo_notify
+            user_notify.notify.to_user=u
+            user_notify.notify.from_user=m_from
+            user_notify.notify.readed=False
+            user_notify.notify.save()
+            user_notify.save()
+            
+        else:
+            notify = AfUserNotify.objects.create(to_user=u, from_user=m_from, fecha_creacion=datetime.datetime.now())
+            n_tipo = AfTipoNotify.objects.get(short_desc=tipo_notify)
+            notify.save()
+            n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=n_tipo, incidencia=incidencia)
         
         
     #msg_kind= AfKindNotify.objects.get(desc=asunto)
@@ -239,15 +249,16 @@ def addNotaIncidencia(request, id, template_name='editarIncidencia.html'):
                     lst_to_mail= [u.user.email for u in msg_to]
                     notify_to=msg_to
                     
-                instance.estado=estado
-                nota        = AfNotasIncidencia.objects.create (autor=from_user, incidencia=instance,notas=cuerpo, asunto=asunto)
+                instance.estado = estado
+                nota            = AfNotasIncidencia.objects.create (autor=from_user, incidencia=instance,notas=cuerpo, asunto=asunto)
                 instance.fecha_updated=nota.fecha_creacion
                 instance.save()
-                                
+                user_notify= AfNotify_Tipo_instancia.objects.get(incidencia=instance)                 
                 dict_mail={
                             'asunto' : asunto,   'cuerpo' : cuerpo, 'from_mail' : from_user,
                             'to_email' : lst_to_mail, 'estado' : estado.estado , 'template'  : 'nota_incidencia',
-                            'tipo_notificacion' :'ITM' ,  'incidencia' : instance, 'to_users': notify_to
+                            'tipo_notificacion' :'ITM' ,  'incidencia' : instance, 'to_users': notify_to,
+                            'user_notify' : user_notify
                             }
                 
     
