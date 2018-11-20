@@ -81,13 +81,15 @@ def  integrantesIndex(request, id_proyecto, template_name='integrantesIndex.html
 
     except ObjectDoesNotExist as dne:
         request.session['proyecto_seleccionado']    = False
-        request.session['id_proyecto_seleccionado'] = False        
+        request.session['id_proyecto_seleccionado'] = False    
+            
         messages.error(request, "No existen integrantes asociados al proyecto solicitado")
         return TemplateResponse(request, template_name, None)
 
     except Exception as e:
         pass
 
+    
     if extra_context is None:
         extra_context=get_extra_content(request)
 
@@ -98,8 +100,9 @@ def  integrantesIndex(request, id_proyecto, template_name='integrantesIndex.html
 
         integrantes=get_integrante_by_filtered_username(name,usu_integrantes,integrantes )
 
-
+    hasNotificationPending(request)
     paginator = Paginator(usu_integrantes, 10)
+    
     try:
         number = int(request.GET.get('page', '1'))
     except PageNotAnInteger:

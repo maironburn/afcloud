@@ -1,0 +1,72 @@
+
+{% load static %}
+
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;border-color:#999;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#999;color:#444;background-color:#F7FDFA;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#999;color:#fff;background-color:#26ADE4;}
+.tg .tg-k285{font-weight:bold;background-color:#fd6864;text-align:left;vertical-align:top}
+.tg .tg-hmp3{background-color:#D2E4FC;text-align:left;vertical-align:top}
+</style>
+
+{% block content %}
+
+{% if mensaje %}
+    <div id="message" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-body">
+                    <h4>{{ mensaje }}</h4>
+                    <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+        <div class="panel-body">
+
+        {% if consultar_notificaciones %}
+
+        		    <table id="tabla_notificaciones" class="table table-hover panel">
+        		    <thead>
+	        		    <tr>
+	        		    	<th>Notificador</th>
+	        		    	<th>Asunto</th>
+	        		    	<th>Fecha notificación</th>
+	        		    	<th>Mensaje</th>
+                    <th>Estado</th>
+	        		    </tr>
+        		    </thead>
+        		     <tbody>
+              {% for notificacion in consultar_notificaciones %}
+        					 <tr>
+        							<td>
+        								 {{ notificacion.from_user.user.first_name}} {{ notificacion.from_user.user.last_name}} ({{ notificacion.from_user.user.username}})
+                      </td>
+                      <td>
+        								 {{ notificacion.asunto }}
+                      </td>
+                      <td>
+        								 {{ notificacion.fecha_creacion }}
+                      </td>
+                      <td>
+                        {{ notificacion.mensaje }}
+                      </td>
+                      <td>
+        							  {{ notificacion.estado }}
+                      </td>
+        						</tr>
+            </tbody>
+        </table>
+        {% endfor %}
+		{% endif %}
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

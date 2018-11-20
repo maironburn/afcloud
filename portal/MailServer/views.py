@@ -41,7 +41,7 @@ def config_Mail(request, template_name='MailServerConf.html', extra_context=None
             instance.passwd         = form.cleaned_data['passwd']
             instance.tls            = form.cleaned_data['tls']
             instance.save()
-            messages.success(request,  'Configuración de correo guardada con éxito','')
+            messages.success(request, 'Configuración de correo guardada con éxito', extra_tags='Configuración de correo')
             return HttpResponseRedirect('/startpage')
         
         else:

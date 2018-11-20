@@ -75,7 +75,7 @@
    <a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true"
      aria-expanded="false"><span class="glyphicon "></span>
     {%  if request.session.proyectos  %}
-    	 {%if request.session.proyecto_seleccionado %}
+    	 {% if request.session.proyecto_seleccionado %}
     	 	<strong> {{request.session.proyecto_seleccionado}} <span class="caret"></span></strong>
          {%else %}
             <strong> Seleccione proyecto </strong>
@@ -108,6 +108,8 @@
     </ul>
     {% endif %}
   {%endif%}
+
+
  {% if  request.session.numeric_profile > 2 or request.session.afcloud_admin  %}
        <ul class="nav navbar-nav ">
 
@@ -117,23 +119,32 @@
           <li><a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/members.svg'  %}" width="32px" height="32px"> Integrantes</a></li>
         {% endif %}
         {%if not request.session.afcloud_admin  %}
-        <li><a style="margin-left: 10em;" href="{% url 'admin_incidencias' %}">    <img src="{% static 'images/incidencia.svg' %}" width="32px" height="32px">Incidencias</a></li>
+        <li><a style="" href="{% url 'admin_incidencias' %}">    <img src="{% static 'images/incidencia.svg' %}" width="32px" height="32px">Incidencias</a></li>
         {%endif%}
       </ul>
  {% endif %}
+ {%if request.session.notificaciones_no_leidas%}
+   <ul class="nav navbar-nav " >
+     <li><a href="/consultarNotificaciones" > <img src="{% static 'images/mensajes_pendientes.svg' %}" width="32px" height="32px">Notificaciones no leídas</a></li>
+   </ul>
+ {%endif%}
 
  <ul class="nav navbar-nav navbar-right">
  <li class="dropdown">
    <a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true"
       aria-expanded="false"><span class="glyphicon "></span>
+      {%if request.session.notificaciones_no_leidas %}
+      <strong> <img src="{% static 'images/user_logged_with_notifications.png'  %}" width="32px" height="32px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
+      {%else%}
        <strong> <img src="{% static 'images/user_logged.svg'  %}" width="32px" height="32px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
+       {%endif%}
        <span class="caret">
      </span>
    </a>
 
    <ul class="dropdown-menu ">
        <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/editar_usuario.png'  %}" width="32px" height="32px">Modificar perfil</a></li>
-       <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/notificaciones.svg'  %}" width="32px" height="32px">Notificaciones</a></li>
+       <li><a href="{% url 'consultar_notificaciones'  %}"><span class="glyphicon "></span> <img src="{% static 'images/notificaciones.svg'  %}" width="45px" height="45px">Notificaciones</a></li>
 
      <li><a href="/logout/"><span class="glyphicon "></span> <img src="{% static 'images/logout.svg'  %}" width="32px" height="32px"> Cerrar Sesión</a></li>
   </ul>
@@ -148,7 +159,6 @@
                 class="caret"></span></a>
             <ul class="dropdown-menu ">
                 <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="32px" height="32px">Usuarios</a></li>
-
                 <li><a href="{% url 'globalconf' %}">    <img src="{% static 'images/global_conf.png' %}" width="32px" height="32px">Configuración</a></li>
                 {% if request.session.globalconf_isdone %}
                 <li><a href="{% url 'admin_projects' %}"><img src="{% static 'images/adm_proyectos.svg' %}" width="32px" height="32px">Proyectos</a></li>

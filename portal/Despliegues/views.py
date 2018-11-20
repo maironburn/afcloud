@@ -115,7 +115,8 @@ def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html
         instancias=filtrado
         filtrado={}
         e = 'si'
-
+    
+    hasNotificationPending(request)
     paginator = Paginator(lst_despliegues, 10)
     extra_context=get_extra_content(request)
     try:
@@ -203,7 +204,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
                 #host: ns.env.fqdn/unique_name_ins-svc
                 uri= ('https://%s.%s.%s/%s-svc' % (namespace, entorno.ent.ent_nombre, fqdn[0]['fqdn'], unique_instance_name))
                 instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name, ins_uri=uri)
-                ciclo = AfCiclo.objects.create(ins=instancia, num_replicas=min)
+                ciclo = AfCiclo.objects.create(ins=instancia, num_replicas=min, tarifa=lca.lca_tarifa)
                 messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
                 return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
         
@@ -247,11 +248,12 @@ def refreshReplicas(request,id_proyecto):
     data={'action': 'refresh_replicas', 'response':False}
     return JsonResponse({'data':data})
 
-def renewCicloDeployment(instance, replicas):
+def renewCicloDeployment(instance, replicas, tarifa):
+    
     ciclo = AfCiclo.objects.filter(ins=instance).last()
     ciclo.cic_fecha_fin=datetime.datetime.now()
     ciclo.save()
-    ciclo = AfCiclo.objects.create(ins=instance, num_replicas=replicas)
+    ciclo = AfCiclo.objects.create(ins=instance, num_replicas=replicas, tarifa=tarifa)
               
 @login_required
 @group_required(None)
@@ -270,7 +272,8 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
         
         if replicas_spec:
             messages.success(request,  'Despliegue lanzado con éxito', extra_tags='Estado de despliegue')
-            renewCicloDeployment(instance,replicas_spec)
+            tarifa = instance.lca.lca_tarifa
+            renewCicloDeployment(instance,replicas_spec, tarifa)
   
         else:
             messages.success(request,  'Repliegue lanzado con éxito' , extra_tags='Estado de despliegue')
@@ -293,11 +296,11 @@ def manualmodifyDeploymentReplicas(request, id_instancia, replicas, required_lev
         namespace = instance.lca.pro.pro_nombre
         kuber=Kuber(entorno_file)                
         kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas) 
-        renewCicloDeployment(instance,replicas)       
+        renewCicloDeployment(instance,replicas, instance.lca.lca_tarifa)       
         messages.success(request,  'Modificación de réplicas lanzadas con éxito', extra_tags='Estado de despliegue')
        
     except Exception as e:
-        messages.error(request,  'Ocurrió algún error al tratar de cambiar el esatdo del despliegue', extra_tags='Estado de despligue')
+        messages.error(request,  'Ocurrió algún error al tratar de cambiar el estado del despliegue', extra_tags='Estado de despligue')
         print ('Exception modifyDeploymentReplicas')
     
     return HttpResponseRedirect('/despliegue/proyecto/%s' % (instance.lca.pro.id))
@@ -337,8 +340,12 @@ def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
             kuber.delete_namespaced_ingress(kwargs)
             
         kuber.delete_Instacia(**kwargs)
+        
+        ciclo = AfCiclo.objects.filter(ins=instance).last()
+        ciclo.cic_fecha_fin=datetime.datetime.now()
+        ciclo.save()
         instance.delete()
-
+        
     except IntegrityError as ie:
         e = 'no'
         

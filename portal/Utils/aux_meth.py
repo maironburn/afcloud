@@ -1,4 +1,4 @@
-from portal.models import AfProyecto, AfUsuario, AfPerfil, AfTipoPerfil,AfRelEntPro,AfInstancia,AfGlobalconf
+from portal.models import AfProyecto, AfUsuario, AfPerfil, AfTipoPerfil,AfRelEntPro,AfInstancia,AfGlobalconf,AfUserNotify
 from afcloud.settings import MEDIA_ROOT,KUBER_TEMPLATES
 from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.logger import *
@@ -140,7 +140,13 @@ def getFileEncodedB64(fichero):
 
     return base64.b64encode(content)
 
-
+def hasNotificationPending(request):
+    
+    af_user= AfUsuario.objects.get(user=request.user)
+    notificaciones_no_leidas= AfUserNotify.objects.filter(to_user=af_user, readed=False)
+    request.session['notificaciones_no_leidas'] = True if notificaciones_no_leidas.count() else False
+      
+          
 def createNameSpaceStack(**kwargs):
 
     env_file_path = kwargs.get ('env_file_path')

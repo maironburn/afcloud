@@ -5,7 +5,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
-from portal.models import AfProyecto,AfUsuario, AfPerfil,AfTipoPerfil, AfGlobalconf
+from portal.models import AfProyecto,AfUsuario, AfPerfil,AfTipoPerfil, AfGlobalconf, AfUserNotify
 from django.contrib.auth.models import User
 from portal.Usuarios.forms import *
 #####
@@ -74,7 +74,8 @@ def index(request, template_name='index.html', extra_context=None):
     current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
     conf_global= AfGlobalconf.objects.first()
     afuser=AfUsuario.objects.get(user=usuario)
-
+    hasNotificationPending(request)
+    
     if afuser.usu_administrador and (not conf_global or not conf_global.is_done):
         messages.success(request, "La configuración global del portal aun no ha sido realizada, " \
                                   "las opciones de administación de proyectos y servicios no estarán disponibles ")
@@ -82,9 +83,14 @@ def index(request, template_name='index.html', extra_context=None):
         globalconf_isdone=conf_global.is_done
     else:
         globalconf_isdone=False
-    context =   { 'proyectos'           : col['proyectos'],
-                  'afcloud_admin'       : col['afcloud_admin'],
-                  'globalconf_isdone'   : globalconf_isdone
+    
+      
+    #notificaciones_no_leidas= AfUserNotify.objects.filter(to_user=afuser, readed=False)
+
+    context =   { 'proyectos'                : col['proyectos'],
+                  'afcloud_admin'            : col['afcloud_admin'],
+                  'globalconf_isdone'        : globalconf_isdone
+                  #'notificaciones_no_leidas' : notificaciones_no_leidas
                   }
 
     request.session['globalconf_isdone']= globalconf_isdone
@@ -94,6 +100,7 @@ def index(request, template_name='index.html', extra_context=None):
     if p_seleccionado and int(p_seleccionado) not in current_projects:
         request.session['proyecto_seleccionado'] = False
 
+    #request.session['notificaciones_no_leidas'] = True if notificaciones_no_leidas.count() else False
     request.session['afcloud_admin'] = col['afcloud_admin']
 
     return TemplateResponse(request, template_name, context)

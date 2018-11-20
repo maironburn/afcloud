@@ -41,6 +41,8 @@ def administrarProyectos(request, template_name='proyectosIndex.html', extra_con
     usuario=request.user
     col=getProyectos(usuario,True)
     request.session['proyectos']     = col['proyectos']
+    hasNotificationPending(request)
+       
     try:
         number = int(request.GET.get('page', '1'))
     except PageNotAnInteger:

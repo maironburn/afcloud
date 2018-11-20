@@ -4,11 +4,10 @@ from django.contrib import admin
 #from afcloud.models import User, UserManager
 #from afcloud.models import User, UserManager
 from .models import AfServicio, AfEntorno, AfProyecto, AfRelEntPro, \
-AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil, AfUsuario,AfAuditoria,AfGlobalconf ,AfIncidencia, AfEstadosIncidencia , AfRelIncidenciaEstado, AfNotasIncidencia,AfMailServer,AfUserNotify,AfKindNotify
-#AfServicio, AfEntorno, AfProyecto, AfRelEntPro, AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil
+AfLineaCatalogo, AfInstancia, AfCiclo, AfTipoPerfil, AfPerfil, AfUsuario,AfAuditoria, \
+AfGlobalconf ,AfIncidencia, AfEstadosIncidencia, \
+AfNotasIncidencia,AfMailServer,AfUserNotify, AfTipoNotify, AfNotify_Tipo_instancia
 
-
-#admin.site.register(User, UserAdmin)
 
 admin.site.register(AfUsuario)
 admin.site.register(AfServicio)
@@ -24,8 +23,9 @@ admin.site.register(AfAuditoria)
 admin.site.register(AfGlobalconf)
 admin.site.register(AfIncidencia)
 admin.site.register(AfEstadosIncidencia)
-admin.site.register(AfRelIncidenciaEstado)
+#admin.site.register(AfRelIncidenciaEstado)
 admin.site.register(AfNotasIncidencia)
 admin.site.register(AfMailServer)
-admin.site.register(AfKindNotify)
 admin.site.register(AfUserNotify)
+admin.site.register(AfTipoNotify)
+admin.site.register(AfNotify_Tipo_instancia)

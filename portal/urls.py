@@ -13,7 +13,7 @@ from portal.Despliegues import views as despliegues_views
 from portal.GlobalConf import views as globalconf_views
 from portal.Incidencias import views as incidencias_views
 from portal.MailServer import views as confmail_views
-
+from portal.Notificaciones import views as notificaciones_views
 urlpatterns = [
      # USUARIOS
      url(r'^startpage/$', user_views.index, name='startpage'),
@@ -67,14 +67,13 @@ urlpatterns = [
     # CATALOGO
      url(r'^catalogo/$', catalogo_views.index, name='catalogo index'),
      url(r'^catalogo/proyecto/(?P<id_proyecto>\d+)/$', catalogo_views.catalogosIndex, name='Administrar catalogos'),
-     #url(r'^integrantes/proyecto/(?P<proyecto>\d+)/(?P<orden>\d+)/(?P<ascendente>\d+)/$', integrantes_views.integrantesIndexOrdered, name='Administrar entornos'),
      url(r'^catalogo/proyecto/(?P<id_proyecto>\d+)/nuevoEntrada/$', catalogo_views.nuevoCatalogo, name='nuevoCatalogo'),
      url(r'^catalogo/proyecto/(?P<id_proyecto>\d+)/editarEntrada/(?P<id_servicio>\d+)/$', catalogo_views.editarCatalogo, name='editarCatalogo'),
      url(r'^catalogo/proyecto/(?P<id_proyecto>\d+)/eliminarEntrada/(?P<id_servicio>\d+)/$', catalogo_views.eliminarCatalogo, name='borrarrCatalogo'),
 
     ##################################################
     # DESPLIEGUES
-    url(r'^despliegues/$', despliegues_views.index, name='catalogo index'),
+    url(r'^despliegues/$', despliegues_views.index, name='catalosgo index'),
     url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/$', despliegues_views.desplieguesIndex, name='Administrar instancias'),
     #url(r'^integrantes/proyecto/(?P<proyecto>\d+)/(?P<orden>\d+)/(?P<ascendente>\d+)/$', integrantes_views.integrantesIndexOrdered, name='Administrar entornos'),
     url(r'^despliegue/proyecto/(?P<id_proyecto>\d+)/crearInstancia/$', despliegues_views.nuevoDespliegue, name='nuevaInstancia'),
@@ -92,7 +91,10 @@ urlpatterns = [
     # INCIDENCIAS
     url(r'^incidencias/crear/$', incidencias_views.crearIncidencia, name='crear_incidencia'),
     url(r'^detalles/incidencia/(?P<id>\d+)/$', incidencias_views.getItDetails, name='detalles_incidencia'),
-    url(r'^administrar/incidencias/editarIncidencia/(?P<id>\d+)/$', incidencias_views.addNotaIncidencia, name='editarIncidencia')
-     #url(r'^administrar/proyectos/(?P<orden>\d+)/(?P<ascendente>\d+)/$', project_views.administrarProyectosOrdered, name='administrarProyectos'),
-
+    url(r'^detalles/incidencia/(?P<id>\d+)/(?P<notify>\d+)$', incidencias_views.getItDetails, name='detalles_incidencia'),
+    url(r'^administrar/incidencias/editarIncidencia/(?P<id>\d+)/$', incidencias_views.addNotaIncidencia, name='editarIncidencia'),
+    # Notificaciones
+    url(r'^consultarNotificaciones/$', notificaciones_views.notificacionesIndex, name='consultar_notificaciones'),
+    url(r'^consultarNotificaciones/(?P<id>\d+)/$', notificaciones_views.getNotifyDetails, name='getNotify_details'),
+    url(r'^eliminarNotificacion/(?P<id>\d+)/$', notificaciones_views.eliminarNotificacion, name='eliminar_notify'),
 ]

@@ -49,6 +49,7 @@ def administrarEntornos(request, template_name='entornosIndex.html', extra_conte
         e = 'si'
 
     set_bulk_num_proyectos(entornos)
+    hasNotificationPending(request)
     paginator = Paginator(entornos, 10)
     try:
         number = int(request.GET.get('page', '1'))

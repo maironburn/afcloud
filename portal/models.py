@@ -39,9 +39,6 @@ class AfUsuario(models.Model):
         managed = True
         db_table = 'af_usuario'
 
-
-
-
 class AfAuditoria(models.Model):
     #aud_id = models.AutoField(primary_key=True)
     #id               = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
@@ -77,8 +74,6 @@ class AfServicio(models.Model):
     class Meta:
         managed = True
         db_table = 'af_servicio'
-
-
 
 class AfEntorno(models.Model):
 
@@ -133,26 +128,6 @@ class AfEntorno(models.Model):
         managed = True
         db_table = 'af_entorno'
 
-
-
-class AfIncidencia(models.Model):
-
-    usu             = models.ForeignKey     (AfUsuario, null=True, on_delete=models.CASCADE)
-    asunto          = models.CharField      (max_length=250,verbose_name='Asunto', blank=True, null=True)
-    cuerpo          = models.CharField      (max_length=1000,verbose_name='Cuerpo', blank=True, null=True)
-    fecha_apertura  = models.DateTimeField  (verbose_name='Fecha de apertura', auto_now_add=True)
-    fecha_updated   = models.DateTimeField  (verbose_name='Actualizada', auto_now=True)
-    fecha_cierre    = models.DateTimeField  (verbose_name='Fecha de cierre', blank=True, null=True)
-
-    def __str__(self):
-        return '%s, abierta:  %s, asunto: %s' % (self.asunto, self.cuerpo, self.fecha_apertura)
-
-    class Meta:
-        managed = True
-        db_table = 'af_incidencia'
-        db_tablespace = 'af_usuario'
-
-
 class AfEstadosIncidencia(models.Model):
 
     estado      = models.CharField (max_length=100, blank=True, null=True)
@@ -165,18 +140,23 @@ class AfEstadosIncidencia(models.Model):
         managed = True
         db_table = 'af_estado_incidencia'
 
-class AfRelIncidenciaEstado(models.Model):
+class AfIncidencia(models.Model):
 
-    incidencia      = models.ForeignKey (AfIncidencia,  default='' , null=True, on_delete=models.CASCADE)
-    estado          = models.ForeignKey (AfEstadosIncidencia, default='' ,  on_delete=models.CASCADE)
+    usu             = models.ForeignKey     ( AfUsuario, null=True, on_delete=models.CASCADE)
+    asunto          = models.CharField      ( max_length=250, verbose_name='Asunto', blank=True, null=True)
+    cuerpo          = models.CharField      ( max_length=1000, verbose_name='Cuerpo', blank=True, null=True)
+    estado          = models.ForeignKey     ( AfEstadosIncidencia, on_delete=models.CASCADE, null=True, blank=True)
+    fecha_apertura  = models.DateTimeField  ( verbose_name='Fecha de apertura', auto_now_add=True)
+    fecha_updated   = models.DateTimeField  ( verbose_name='Actualizada', auto_now=True)
+    fecha_cierre    = models.DateTimeField  ( verbose_name='Fecha de cierre', blank=True, null=True)
 
     def __str__(self):
-        return '%s, %s' % (self.incidencia.asunto, self.estado.estado)
+        return '%s, abierta:  %s, asunto: %s' % (self.asunto, self.cuerpo, self.fecha_apertura)
 
     class Meta:
         managed = True
-        db_table = 'af_rel_it_estado'
-        db_tablespace = 'af_incidencia', 'af_estado_incidencia'
+        db_table = 'af_incidencia'
+        db_tablespace = 'af_usuario'
 
 class AfNotasIncidencia(models.Model):
 
@@ -195,8 +175,6 @@ class AfNotasIncidencia(models.Model):
         managed = True
         db_table = 'af_notas_incidencias'
         db_tablespace = 'af_incidencia'
-
-
 
 class AfProyecto(models.Model):
 
@@ -257,7 +235,6 @@ class AfProyecto(models.Model):
 
         super().save(*args, **kwargs)
 
-
 class AfRelEntPro(models.Model):
 
     ent          = models.ForeignKey    (AfEntorno, on_delete=models.CASCADE)
@@ -276,8 +253,6 @@ class AfRelEntPro(models.Model):
     def create(cls, entorno, proyecto ):
         rel_ent_pro = cls(ent=entorno, pro=proyecto)
         return rel_ent_pro
-
-
 
 class AfLineaCatalogo(models.Model):
 
@@ -322,22 +297,25 @@ class AfInstancia(models.Model):
         db_table = 'af_instancia'
         db_tablespace = 'af_linea_catalogo'
 
-
 class AfCiclo(models.Model):
 
-    ins              = models.ForeignKey    (AfInstancia, default='', on_delete=models.CASCADE, related_name='afciclos')
+    ins              = models.ForeignKey    (AfInstancia, default='', null=True, on_delete=models.SET_NULL, related_name='afciclos')
     cic_fecha_inicio = models.DateTimeField (default=datetime.now, blank=True)
-    cic_fecha_fin    = models.DateTimeField (blank=True)
+    cic_fecha_fin    = models.DateTimeField (null= True, blank=True)
     num_replicas     = models.IntegerField  (default=1,verbose_name="Réplicas")
+    tarifa           = models.FloatField     (blank=True, null=True)
 
     def __str__(self):
-        return '%s %s %s' % (self.ins.id, self.cic_fecha_inicio, self.cic_fecha_fin)
+        instancia='Eliminada'
+        if self.ins:
+            instancia= self.ins.ins_unique_name
+
+        return 'ins: %s replicas: %s , fi: %s ff: %s' % (instancia, self.num_replicas, self.cic_fecha_inicio, self.cic_fecha_fin)
 
     class Meta:
         managed = True
         db_table = 'af_ciclo'
         db_tablespace = 'af_instancia'
-
 
 class AfTipoPerfil(models.Model):
 
@@ -350,7 +328,6 @@ class AfTipoPerfil(models.Model):
     class Meta:
         managed = True
         db_table = 'af_tipo_perfil'
-
 
 class AfPerfil(models.Model):
 
@@ -374,7 +351,6 @@ class AfPerfil(models.Model):
         db_table = 'af_perfil'
         db_tablespace = 'af_usuario', 'af_proyecto', 'af_tipo_perfil'
 
-
 class AfGlobalconf(models.Model):
 
     fqdn      = models.CharField    (max_length=100,verbose_name="FQDN", blank=False)
@@ -390,7 +366,6 @@ class AfGlobalconf(models.Model):
         managed = True
         db_table = 'af_globalconf'
 
-
 class AfMailServer(models.Model):
 
     #id        = models.AutoField(primary_key=True)
@@ -402,36 +377,53 @@ class AfMailServer(models.Model):
     #is_done         = models.BooleanField (default=0, verbose_name='Configuracion realizada')
 
     def __str__(self):
-        return '%s' % (self.email)
+        return '%s' % (self.email_server)
 
     class Meta:
         managed = True
         db_table = 'af_mail_server'
 
+class AfTipoNotify(models.Model):
 
-
-class AfKindNotify(models.Model):
-
-    id              =  models.AutoField(primary_key=True)
-    desc            =  models.CharField    (max_length=100,verbose_name="accion", blank=False)
+    #id = models.AutoField(primary_key=True)
+    desc        = models.CharField          ( max_length=100, verbose_name="Tipo de notificación")
+    short_desc  = models.CharField          ( max_length=50,  null=True, blank= True )
 
     def __str__(self):
-        return '%s' % (self.desc)
+        return 'descripcion: %s' % (self.desc)
 
     class Meta:
         managed = True
-        db_table = 'af_kind_notify'
+        db_table = 'af_tipo_notificacion'
 
 class AfUserNotify(models.Model):
 
-    id              = models.AutoField(primary_key=True)
-    user            = models.ForeignKey     (AfUsuario, null=True, on_delete=models.CASCADE)
-    tipo            = models.ForeignKey     (AfKindNotify,on_delete=models.CASCADE)
-    readed          = models.BooleanField   (default=0, verbose_name='Leida')
+    #id              = models.AutoField(primary_key=True)
+    to_user         = models.ForeignKey     ( AfUsuario, null=True, on_delete=models.CASCADE)
+    from_user       = models.ForeignKey     ( AfUsuario, related_name="+", null=True, on_delete=models.CASCADE)
+    fecha_creacion  = models.DateTimeField  ( verbose_name='Fecha de creación',auto_now_add=True, null=True, blank=True)
+    readed          = models.BooleanField   ( default=0, verbose_name='Leida')
 
     def __str__(self):
-        return '%s, tipo: %s' % (self.user.user.username , self.tipo)
+        return '%s, date : %s, readed: %s' % (self.to_user.user.username , self.fecha_creacion, self.readed)
 
     class Meta:
         managed = True
         db_table = 'af_user_notify'
+
+class AfNotify_Tipo_instancia(models.Model):
+
+    #id         = models.AutoField  (primary_key=True)
+    notify     = models.ForeignKey ( AfUserNotify,    on_delete=models.CASCADE, null=True, blank= True)
+    tipo       = models.ForeignKey ( AfTipoNotify,    on_delete=models.CASCADE, null=True, blank= True)
+    integrante = models.ForeignKey ( AfPerfil,        on_delete=models.CASCADE, null=True, blank= True)
+    despliegue = models.ForeignKey ( AfInstancia,     on_delete=models.CASCADE, null=True, blank= True)
+    catalogo   = models.ForeignKey ( AfLineaCatalogo, on_delete=models.CASCADE, null=True, blank= True)
+    incidencia = models.ForeignKey ( AfIncidencia,    on_delete=models.CASCADE, null=True, blank= True)
+
+    def __str__(self):
+        return '%s' % ("AfNotify_Tipo_instancia")
+
+    class Meta:
+        managed = True
+        db_table = 'af_notify_tipo_instancia'

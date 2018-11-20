@@ -35,6 +35,8 @@ def administrarServicios(request, template_name='serviciosIndex.html', extra_con
     else:
         servicios = AfServicio.objects.filter(ser_nombre__icontains=name, ser_deleted=False)
         e = 'si'
+    
+    hasNotificationPending(request)
     paginator = Paginator(servicios, 10)
     try:
         number = int(request.GET.get('page', '1'))

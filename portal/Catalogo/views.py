@@ -93,7 +93,8 @@ def  catalogosIndex(request, id_proyecto, template_name='CatalogoIndex.html', ex
                     filtrado.update({k:v})
         integrantes=filtrado
         e = 'si'
-
+    
+    hasNotificationPending(request)
     paginator = Paginator(servicios, 10)
     try:
         number = int(request.GET.get('page', '1'))

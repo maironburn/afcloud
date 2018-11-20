@@ -1,0 +1,210 @@
+{% extends "index.html"%}
+{% load static %}
+
+{% block content %}
+<script>
+
+NOTIFICACIONES_OPERATIONS={
+	'url_detalles_notificaciones': '/consultarNotificaciones/',
+	GodZilla_callback: function(data){
+
+		switch(data.action){
+
+			case 'consultar_notificaciones' :
+			case 'detalles_incidencia':
+				console.log(data.action);
+
+				 $('#jquery_dialog').html(data.html);
+
+         if (!data.available_info){
+             $('#jquery_dialog').html('<p>No hay notificaciones asociadas</p>');
+           }
+	          	 $( "#jquery_dialog" ).dialog({
+					         title: 'Detalles notificación',
+	          	      resizable: true,
+	          	      width  : 800,
+                    height : 400,
+	          	      modal: true,
+	          	      buttons: {
+	          	    	 "Aceptar": function() {
+											//refreshAfterReading();
+	          	    		$(this).dialog("close");
+											location.href = NOTIFICACIONES_OPERATIONS.url_detalles_notificaciones;
+	          	    	 }
+	          	      }
+	          	  });
+
+	         }
+         }
+}; //END NS
+
+$(document).on('click', '.consultar_notificaciones', function(){
+
+	tipo_instancia_asociada=$(this).attr('tipo_instancia_asociada');
+	instancia_rel_id=$(this).attr('instancia_rel_id');
+	url_destino ='';
+	switch (tipo_instancia_asociada){
+		case 'incidencia':
+		  url_destino="/detalles/incidencia/" + instancia_rel_id + '/' + 1
+
+	}
+	//NOTIFICACIONES_OPERATIONS.url_detalles_notificaciones+= $(this).attr('id_notify');
+
+	var datos  = AJAXSTUFF.getSpecificRequest('','consultar_notificaciones',url_destino );
+	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
+	datos.request = 'GET';
+	var content= AJAXSTUFF.RequestDefinition(datos);
+	AJAXSTUFF.makeRequest(content, NOTIFICACIONES_OPERATIONS.GodZilla_callback);
+	NOTIFICACIONES_OPERATIONS.url_detalles_notificaciones='/consultarNotificaciones/';
+ });
+
+</script>
+
+
+<div class="container">
+<div class="row"></div>
+<br>
+    <h2 class="text-danger text-warning" style="margin-top:1em">Notificaciones</h2>
+
+</br></br></br>
+    <table id="centros" class="table table-hover panel">
+        <thead>
+        <tr>
+        <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
+
+            <th>Notificador
+                <!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a> -->
+                <!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>-->
+            </th>
+						<th>Descripción
+								<!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a> -->
+								<!-- <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>-->
+						</th>
+
+            <th>Fecha notificación
+                <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
+						<th>Leída
+
+						</th>
+            <th>
+              Ver
+            </th>
+						<th>
+							Borrar
+						</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if p %}
+            {% for notificacion in p %}
+                <tr>
+                  <td>
+                    {{ notificacion.notificacion.from_user.user.first_name}} {{ notificacion.notificacion.from_user.user.last_name}} ({{ notificacion.notificacion.from_user.user.username}})
+                  </td>
+									<td>
+									 {{ notificacion.tipo_desc }}
+									</td>
+                  <td>
+                    {{ notificacion.notificacion.fecha_creacion }}
+                  </td>
+									<td>
+										{% if notificacion.notificacion.readed %}
+										<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">
+
+										{% else %}
+										<img src="{% static 'images/inactive_user.png' %}" width="16px" height="16px">
+										{% endif %}
+
+									</td>
+									<td>
+										<a href="#" style="position:relative;left: 0.4em;" class="consultar_notificaciones" id_notify="{{  notificacion.notificacion.id }}"
+										tipo_instancia_asociada={{notificacion.instancia_asociada}} instancia_rel_id="{{notificacion.instancia_rel_id}}">
+												<span class="text-danger glyphicon glyphicon-eye-open"></span>
+										</a>
+									</td>
+									<td>
+										<a href="#delete{{ notificacion.notificacion.id }}" data-toggle="modal">
+												<span class="text-danger glyphicon glyphicon-trash"></span>
+										</a>
+										<div id="delete{{ notificacion.notificacion.id }}" class="modal fade">
+												<div class="modal-dialog">
+														<div class="modal-content">
+																<button type="button" class="close" data-dismiss="modal"
+																				aria-hidden="true">&times;</button>
+																<div class="modal-body">
+																		<h4 class="">¿Esta seguro de querer borrar la notificación?</h4>
+																		<a href="/eliminarNotificacion/{{ notificacion.notificacion.id }}"
+																			 class="btn btn-danger "> Sí </a>
+																		<button class="btn btn-danger" data-dismiss="modal" type="button"> No
+																		</button>
+																</div>
+														</div>
+												</div>
+										</div>
+									</td>
+
+                </tr>
+            {% endfor %}
+        {% else %}
+            <p><span class="glyphicon glyphicon-exclamation-sign"></span> No hay notificaciones.</p>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <!--  message framework-->
+    {% if messages %}
+
+        {% for message in messages %}
+        <div id="messageModal" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{message.extra_tags}}</h4>
+              </div>
+              <div class="modal-body">
+                <p class="text-warning">{{ message }}</p>
+              </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+
+    {#     page {{ page }} of {{ page.num_pages }}#}
+    {% if p %}
+        <div class="pagination">
+                  <span class="step-links">
+                      {% if p.has_previous %}
+                          <a href="?page={{ p.previous_page_number }}"
+                             class="text-danger paginate_button previous"><span
+                                  class="text-danger glyphicon glyphicon-backward"></span> Anterior</a>
+                      {% endif %}
+                      <span class="current">
+                          Página {{ p.number }} de {{ p.paginator.num_pages }}
+                      </span>
+
+                      {% if p.has_next %}
+                          <a href="?page={{ p.next_page_number }}" class="text-danger paginate_button next">Siguiente
+                              <span class="text-danger glyphicon glyphicon-forward"></span></a>
+                      {% endif %}
+                  </span>
+        </div>
+    {% endif %}
+</div>
+
+<div id="jquery_dialog" title="Basic dialog">
+</div>
+
+{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}
