@@ -17,6 +17,7 @@ IT_OPERATIONS={
 			case 'detalles_incidencia':
 				console.log("detalles de la incidencia");
 				 $('.info_incidencia').html(data.html);
+				 	console.log(data.html);
 				 //$('#tabla_incidencias').css({'display': 'none'});
 	            }
 	         }
@@ -89,7 +90,7 @@ $(document).ready(function(){
               <div class="row">
               <div class="col-md-3">
                 <h2 class="text-danger">Actuación </h2>
-              
+
                 <div class="well">
                   {% crispy form %}
                 </div>

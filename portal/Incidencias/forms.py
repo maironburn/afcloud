@@ -18,7 +18,7 @@ class AfNotasIncidenciaForm(forms.ModelForm):
     
     asunto = forms.CharField(max_length=250,label='Asunto')
     notas = forms.CharField(max_length=1000,label='Nota',widget=forms.Textarea (attrs={'rows':10, 'cols':20}))
-    estado = forms.ModelChoiceField(queryset=AfEstadosIncidencia.objects.all())
+    estado = forms.ModelChoiceField(queryset=AfEstadosIncidencia.objects.all(), required=False)
     
     class Meta:
         model=AfNotasIncidencia
@@ -32,4 +32,10 @@ class AfNotasIncidenciaForm(forms.ModelForm):
                 self.fields['estado'].initial= kwargs['initial']['instance'].estado
                 if kwargs['initial']['status_ro']:
                     self.fields['estado'].widget.attrs['disabled'] = 'disabled'
+ 
+    def is_valid(self):
+        
+        valid = super(AfNotasIncidenciaForm, self).is_valid() 
+        
+        return valid 
         

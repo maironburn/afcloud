@@ -91,7 +91,7 @@ urlpatterns = [
     # INCIDENCIAS
     url(r'^incidencias/crear/$', incidencias_views.crearIncidencia, name='crear_incidencia'),
     url(r'^detalles/incidencia/(?P<id>\d+)/$', incidencias_views.getItDetails, name='detalles_incidencia'),
-    url(r'^detalles/incidencia/(?P<id>\d+)/(?P<notify>\d+)$', incidencias_views.getItDetails, name='detalles_incidencia'),
+    url(r'^detalles/incidencia/(?P<id>\d+)/(?P<notify_id>\d+)$', incidencias_views.getItDetails, name='detalles_incidencia'),
     url(r'^administrar/incidencias/editarIncidencia/(?P<id>\d+)/$', incidencias_views.addNotaIncidencia, name='editarIncidencia'),
     # Notificaciones
     url(r'^consultarNotificaciones/$', notificaciones_views.notificacionesIndex, name='consultar_notificaciones'),

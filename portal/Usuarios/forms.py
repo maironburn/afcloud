@@ -90,10 +90,11 @@ class SetPasswordForm(forms.Form):
 
 class editUserRawForm(forms.ModelForm):
 
-    username   = forms.CharField(max_length=100,label='Usuario',required=True)
-    password = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=False)
-    password2 = forms.CharField(label=_("Repetir contraseña"), widget=forms.PasswordInput,required=False)
-    usu_administrador= forms.BooleanField(label=_("Admin AFCloud"), initial=False,required=False)
+    username            = forms.CharField(max_length=100,label='Usuario',required=True)
+    password            = forms.CharField(label=_("Contraseña"), widget=forms.PasswordInput, required=False)
+    password2           = forms.CharField(label=_("Repetir contraseña"), widget=forms.PasswordInput,required=False)
+    usu_administrador   = forms.BooleanField(label="Admin AFCloud", initial=False,required=False)
+    
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),
     }
@@ -105,12 +106,16 @@ class editUserRawForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(editUserRawForm, self).__init__(*args, **kwargs)
-        self.fields['usu_administrador'].widget = forms.HiddenInput()
+        
         instance = getattr(self, 'instance', None)
         if instance and instance.pk:
             afusuario=AfUsuario.objects.get(user=instance)
             if afusuario.usu_administrador==True:
                 self.fields['usu_administrador'].widget.attrs['checked'] = True
+            else:
+                pass
+                #self.fields['usu_administrador'].widget = forms.HiddenInput()
+                
             self.fields['username'].widget.attrs['readonly'] = True
 
     def clean_password2(self):

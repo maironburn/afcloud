@@ -96,7 +96,13 @@ $(document).on('click', '.detalles_incidencia', function(){
             <th>
               Ver
             </th>
-            <th>Añadir nota / Borrar</th>
+            <th>
+							{% if request.session.afcloud_admin %}
+								Añadir nota / Borrar
+								{%else%}
+								Añadir nota
+								{%endif%}
+						</th>
 
         </tr>
         </thead>
@@ -129,9 +135,11 @@ $(document).on('click', '.detalles_incidencia', function(){
                         <a href="/administrar/incidencias/editarIncidencia/{{ it.incidencias.id }}/">
                             <span class="text-danger glyphicon glyphicon-edit"></span>
                         </a>
+													{% if request.session.afcloud_admin %}
                         <a href="#delete{{  it.incidencias.id   }}" data-toggle="modal">
                             <span class="text-danger glyphicon glyphicon-trash"></span>
                         </a>
+												  {%endif%}
                         <div id="delete{{ incidencias.id }}" class="modal fade">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -147,6 +155,7 @@ $(document).on('click', '.detalles_incidencia', function(){
                                 </div>
                             </div>
                         </div>
+
                       </div>
                     </td>
 

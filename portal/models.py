@@ -399,6 +399,7 @@ class AfTipoNotify(models.Model):
 class AfUserNotify(models.Model):
 
     #id              = models.AutoField(primary_key=True)
+    owner           = models.ForeignKey     ( AfUsuario, related_name="+", null=True, on_delete=models.CASCADE)
     to_user         = models.ForeignKey     ( AfUsuario, null=True, on_delete=models.CASCADE)
     from_user       = models.ForeignKey     ( AfUsuario, related_name="+", null=True, on_delete=models.CASCADE)
     fecha_creacion  = models.DateTimeField  ( verbose_name='Fecha de creación',auto_now_add=True, null=True, blank=True)

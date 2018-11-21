@@ -32,8 +32,9 @@ def getIncidenciasInfo(incidencias):
         #estado      = AfRelIncidenciaEstado.objects.get(incidencia=it)
         #estado_name = estado.estado
         notas_asociadas= AfNotasIncidencia.objects.filter(incidencia=it).order_by('fecha_creacion')
-        
-        list_it_estados.append({'incidencias'        : it, 'estado_name' :  it.estado.estado,
+        estado=  it.estado.estado if it.estado else 'No definido'
+           
+        list_it_estados.append({'incidencias'        : it, 'estado_name' : estado,
                                 'notas_asociadas'    : notas_asociadas})
         notas_asociadas=[]
 
@@ -41,7 +42,7 @@ def getIncidenciasInfo(incidencias):
 
 
 @login_required
-def getItDetails(request, id, template_name='detalles_incidencia.html', notify=False):
+def getItDetails(request, id, template_name='detalles_incidencia.html', notify_id=False):
 
     try:
         it= AfIncidencia.objects.get(id=id)
@@ -52,12 +53,11 @@ def getItDetails(request, id, template_name='detalles_incidencia.html', notify=F
         data={'action': 'detalles_incidencia', 'html':response, 'available_info': len(instancias_info)}
 
         # flag que indica que la consulta viene hecha de la vista de notificaciones
-        if notify:
-            af_tipo_instancia= AfNotify_Tipo_instancia.objects.get(incidencia=it)
-            notify =af_tipo_instancia.notify
-            if not notify.readed:
-                notify.readed= True
-                notify.save()
+        if notify_id:
+            user_notify=AfUserNotify.objects.get(id=notify_id)
+            if not user_notify.readed:
+                user_notify.readed= True
+                user_notify.save()
             
     except ObjectDoesNotExist as dne:
 
@@ -67,7 +67,7 @@ def getItDetails(request, id, template_name='detalles_incidencia.html', notify=F
     except Exception as e:
         #messages.success(request,  'Proyecto editado con éxito', extra_tags='Edición de proyecto')
         pass
-
+    
     return JsonResponse({'data':data})
 
 
@@ -134,12 +134,12 @@ def send_notify_mail(kwargs):
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
-
+'''
 def notify_message(kwargs):
 
     # gconf       = AfGlobalconf.objects.first()
     #to_email    = gconf.email
-    to_users    = kwargs.get   ('to_users'          , None)
+    to_user    = kwargs.get    ('to_user'          , None)
     m_from      = kwargs.get   ('from_mail'         , None)
     asunto      = kwargs.get   ('asunto'            , None)
     cuerpo      = kwargs.get   ('cuerpo'            , None)
@@ -149,25 +149,40 @@ def notify_message(kwargs):
     user_notify = kwargs.get   ('user_notify'       , None)
     for u in to_users:
         
-        if user_notify:
-            tipo_notify=AfTipoNotify.objects.get(short_desc=tipo_notify)
-            user_notify.tipo =tipo_notify
-            user_notify.notify.to_user=u
-            user_notify.notify.from_user=m_from
-            user_notify.notify.readed=False
-            user_notify.notify.save()
-            user_notify.save()
+        if user_notify: #ya existe la notificacion de forma q se debe solo actualizar
+            tipo_notificacion=AfTipoNotify.objects.get(short_desc=tipo_notify)
+            for un in user_notify:
+                
+                un.tipo =tipo_notificacion
+                un.notify.to_user=u
+                un.notify.from_user=m_from
+                un.notify.readed=False
+                un.notify.save()
+                un.save()
             
         else:
+            #se crean 2 notifies, 1 para cada admin
             notify = AfUserNotify.objects.create(to_user=u, from_user=m_from, fecha_creacion=datetime.datetime.now())
             n_tipo = AfTipoNotify.objects.get(short_desc=tipo_notify)
-            notify.save()
+            #notify.save()
+            n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=n_tipo, incidencia=incidencia)
+        
+'''
+def create_UserNotify(kwargs):
+
+    to_user     = kwargs.get   ('to_user'          , None)
+    m_from      = kwargs.get   ('from_mail'         , None)
+    tipo_notify = kwargs.get   ('tipo_notificacion' , None)
+    incidencia  = kwargs.get   ('incidencia'        , None)
+    user_notify = kwargs.get   ('user_notify'       , None)
+
+    if isinstance(to_user,list):
+        for user in to_user:
+            notify = AfUserNotify.objects.create(owner= user, to_user=user, from_user=m_from, fecha_creacion=datetime.datetime.now())
+            n_tipo = AfTipoNotify.objects.get(short_desc=tipo_notify)
             n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=n_tipo, incidencia=incidencia)
         
         
-    #msg_kind= AfKindNotify.objects.get(desc=asunto)
-    #user_to_notify =AfUserNotify.objects.create(user=to, tipo=msg_kind)
-
 @login_required
 @group_required('af_cloud_admin',)
 def crearIncidencia(request, template_name='incidencias.html', extra_context=None):
@@ -190,20 +205,20 @@ def crearIncidencia(request, template_name='incidencias.html', extra_context=Non
                            'estado': 'Abierta', 'to_email' : [to_email], 'tipo_notificacion' : "ITC" }
                 # configuracion de correo realizada ?
                 mail_conf=AfMailServer.objects.count()
-
                 if mail_conf:
                     send_notify_mail (dict_mail)
-                
-                to_users=AfUsuario.objects.filter(usu_administrador=True)
-                
+
+
                 incidencia      = AfIncidencia.objects.create(usu=af_user, asunto=asunto, cuerpo=cuerpo)
                 estado          = AfEstadosIncidencia.objects.get(estado='Abierta')
                 incidencia.estado = estado
                 incidencia.save()
-                #asoc_it_estado  = AfRelIncidenciaEstado.objects.create(incidencia=incidencia, estado=estado)
-                dict_mail.update({'to_users': to_users, 'incidencia': incidencia})
-                notify_message(dict_mail)
-  
+                
+                to_users=AfUsuario.objects.filter(usu_administrador=True)
+                dict_mail.update({'to_user': list(to_users), 'incidencia': incidencia})
+                
+                create_UserNotify(dict_mail)
+        
             except BadHeaderError:
                 return HttpResponse('Invalid header found.')
 
@@ -219,14 +234,30 @@ def crearIncidencia(request, template_name='incidencias.html', extra_context=Non
         form = IncidenciasForm()
         return render(request, template_name, {'form': form})
 
+
+def getToMail_NotifyTo (from_user,instance):
+    
+    lst_to_mail=[]
+    notify_to= None
+    
+    if from_user.usu_administrador:
+        notify_to= [instance.usu]
+        lst_to_mail.append(instance.usu.user.email)
+    else:
+        msg_to= AfUsuario.objects.filter(usu_administrador=True)
+        lst_to_mail= [u.user.email for u in msg_to]
+        notify_to=list(msg_to)
+    
+    return notify_to, lst_to_mail
+                   
 @login_required
 @group_required(None)
 def addNotaIncidencia(request, id, template_name='editarIncidencia.html'):
     
     try:
-        instance = AfIncidencia.objects.get(id=id)
-        from_user   = AfUsuario.objects.get(user=request.user)
-        estado_read_only= not from_user.usu_administrador
+        instance         = AfIncidencia.objects.get(id=id)
+        from_user        = AfUsuario.objects.get(user=request.user)
+        estado_read_only = not from_user.usu_administrador
         
         if request.method == 'POST':
 
@@ -236,37 +267,35 @@ def addNotaIncidencia(request, id, template_name='editarIncidencia.html'):
 
                 asunto      = form.cleaned_data['asunto']
                 cuerpo      = form.cleaned_data['notas']
-                estado      = form.cleaned_data['estado']
-
-                # si el usuario q add la nota es el administrador, el receptor es el "iniciador" de la incidencia
-                lst_to_mail=[]
-                notify_to= None
-                if from_user.usu_administrador:
-                    notify_to= [instance.usu]
-                    lst_to_mail.append(instance.usu.user.email)
-                else:
-                    msg_to= AfUsuario.objects.filter(usu_administrador=True)
-                    lst_to_mail= [u.user.email for u in msg_to]
-                    notify_to=msg_to
-                    
-                instance.estado = estado
-                nota            = AfNotasIncidencia.objects.create (autor=from_user, incidencia=instance,notas=cuerpo, asunto=asunto)
+                estado      = form.cleaned_data['estado'] if form.cleaned_data['estado'] else instance.estado
+                instance.estado         = estado
+                nota                    = AfNotasIncidencia.objects.create (autor=from_user, incidencia=instance,notas=cuerpo, asunto=asunto)
                 instance.fecha_updated=nota.fecha_creacion
                 instance.save()
-                user_notify= AfNotify_Tipo_instancia.objects.get(incidencia=instance)                 
+                # si el usuario q add la nota es el administrador, el receptor es el "iniciador" de la incidencia
+                # notify_to , lista de afusuarios, lst_mail; lista de correos
+                notify_to, lst_to_mail  = getToMail_NotifyTo(from_user, instance) 
+   
+                tipo_notificacion=AfTipoNotify.objects.get(short_desc='ITM')
+                
+                dict_notify={
+                    'instance' : instance, 
+                    'from_user': from_user,
+                    'notify_to': notify_to,
+                    'tipo_notificacion':  tipo_notificacion         
+                             }
+                deliverNotify(dict_notify)
+
                 dict_mail={
                             'asunto' : asunto,   'cuerpo' : cuerpo, 'from_mail' : from_user,
                             'to_email' : lst_to_mail, 'estado' : estado.estado , 'template'  : 'nota_incidencia',
-                            'tipo_notificacion' :'ITM' ,  'incidencia' : instance, 'to_users': notify_to,
-                            'user_notify' : user_notify
+                            'tipo_notificacion' :'ITM' ,  'incidencia' : instance, 'to_users': notify_to
                             }
-                
-    
+                    
                 mail_conf=AfMailServer.objects.count()
                 if mail_conf:
                     send_notify_mail (dict_mail)
-                
-                notify_message(dict_mail)
+
                 messages.success(request,  'Nota añadida con éxito', extra_tags='Actuación en incidencia')
                 return HttpResponseRedirect('/administrar/incidencias')
 
@@ -282,3 +311,35 @@ def addNotaIncidencia(request, id, template_name='editarIncidencia.html'):
         pass
 
     return HttpResponseRedirect('/administrar/incidencias')
+
+def deliverNotify(kwargs):
+    
+    tipo_notify = kwargs.get     ('tipo_notificacion' , None)
+    instance    = kwargs.get     ('instance'          , None)
+    notify_to   = kwargs.get     ('notify_to'         , None)
+    from_user   = kwargs.get     ('from_user'         , None)
+    
+    
+    ids_notify_incidencia= list(AfNotify_Tipo_instancia.objects.filter(incidencia= instance).values_list('notify', flat=True))
+    tipo_notificacion=AfTipoNotify.objects.get(short_desc='ITM')
+    for u in notify_to:
+        has_notify_asociada=AfUserNotify.objects.filter(owner=u, id__in=ids_notify_incidencia).count()
+        if has_notify_asociada:
+            
+            notify = AfUserNotify.objects.get(owner=u, id__in=ids_notify_incidencia)
+            notify.to_user   = u
+            notify.from_user = from_user
+            notify.readed    = False
+            notify.fecha_creacion = instance.fecha_updated
+            notify.save()
+            
+            noti_tipo_instancia = AfNotify_Tipo_instancia.objects.get(notify=notify, incidencia=instance)
+            noti_tipo_instancia.tipo=tipo_notificacion
+            noti_tipo_instancia.save()
+        else:
+            notify = AfUserNotify.objects.create(owner= u, to_user=u, from_user=from_user, fecha_creacion=datetime.datetime.now())
+            n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=tipo_notificacion, incidencia=instance)
+                
+    
+    
+    

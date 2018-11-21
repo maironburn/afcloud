@@ -44,10 +44,12 @@ $(document).on('click', '.consultar_notificaciones', function(){
 
 	NOTIFICACIONES_OPERATIONS.tipo_instancia_asociada=$(this).attr('tipo_instancia_asociada');
 	instancia_rel_id=$(this).attr('instancia_rel_id');
+	notify_id=$(this).attr('id_notify');
 	url_destino ='';
+
 	switch (NOTIFICACIONES_OPERATIONS.tipo_instancia_asociada){
 		case 'incidencia':
-		  url_destino="/detalles/incidencia/" + instancia_rel_id + '/' + 1
+		  url_destino="/detalles/incidencia/" + instancia_rel_id + '/' + notify_id
 
 	}
 	//NOTIFICACIONES_OPERATIONS.url_detalles_notificaciones+= $(this).attr('id_notify');
