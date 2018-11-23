@@ -74,24 +74,34 @@ $(document).on('click', '.detalles_incidencia', function(){
         <!-- Centro/(?P<orden>\d+)/(?P<ascendente>\d+)/$ -->
 
             <th>Iniciador
+              <!--
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+                -->
             </th>
             <th>Fecha de apertura
+              <!--
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+                -->
             </th>
             <th>Actualización
+              <!--
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+                -->
             </th>
             <th>Asunto
+              <!--
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+                -->
             </th>
             <th>Estado
+              <!--
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="#"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+              -->
             </th>
             <th>
               Ver
@@ -140,14 +150,14 @@ $(document).on('click', '.detalles_incidencia', function(){
                             <span class="text-danger glyphicon glyphicon-trash"></span>
                         </a>
 												  {%endif%}
-                        <div id="delete{{ incidencias.id }}" class="modal fade">
+                        <div id="delete{{ it.incidencias.id }}" class="modal fade">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <button type="button" class="close" data-dismiss="modal"
                                             aria-hidden="true">&times;</button>
                                     <div class="modal-body">
                                         <h4 class="">¿Esta seguro de querer borrar esta incidencia?</h4>
-                                        <a href="/administrar/eliminarIncidencia/{{ it.incidencias.id }}"
+                                        <a href="/eliminarIncidencia/{{ it.incidencias.id }}"
                                            class="btn btn-danger "> Sí </a>
                                         <button class="btn btn-danger" data-dismiss="modal" type="button"> No
                                         </button>

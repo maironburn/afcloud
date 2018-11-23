@@ -14,6 +14,8 @@ from portal.GlobalConf import views as globalconf_views
 from portal.Incidencias import views as incidencias_views
 from portal.MailServer import views as confmail_views
 from portal.Notificaciones import views as notificaciones_views
+from portal.Monitoring import views as monitoring_views
+
 urlpatterns = [
      # USUARIOS
      url(r'^startpage/$', user_views.index, name='startpage'),
@@ -86,15 +88,19 @@ urlpatterns = [
     ##################################################
     # CONFIGURACION GLOBAL
     url(r'^administrar/globalconf/$', globalconf_views.creaGlogalConf, name='globalconf'),
-    url(r'^administrar/incidencias/$', incidencias_views.administrarIncidencias, name='admin_incidencias'),
     url(r'^administrar/conf_mail/$', confmail_views.config_Mail, name='conf_mail_server'),
     # INCIDENCIAS
+    url(r'^administrar/incidencias/$', incidencias_views.administrarIncidencias, name='admin_incidencias'),
     url(r'^incidencias/crear/$', incidencias_views.crearIncidencia, name='crear_incidencia'),
     url(r'^detalles/incidencia/(?P<id>\d+)/$', incidencias_views.getItDetails, name='detalles_incidencia'),
     url(r'^detalles/incidencia/(?P<id>\d+)/(?P<notify_id>\d+)$', incidencias_views.getItDetails, name='detalles_incidencia'),
     url(r'^administrar/incidencias/editarIncidencia/(?P<id>\d+)/$', incidencias_views.addNotaIncidencia, name='editarIncidencia'),
+    url(r'^eliminarIncidencia/(?P<id>\d+)/$', incidencias_views.eliminarIncidencia, name='eliminar_incidencia'),
     # Notificaciones
     url(r'^consultarNotificaciones/$', notificaciones_views.notificacionesIndex, name='consultar_notificaciones'),
     url(r'^consultarNotificaciones/(?P<id>\d+)/$', notificaciones_views.getNotifyDetails, name='getNotify_details'),
     url(r'^eliminarNotificacion/(?P<id>\d+)/$', notificaciones_views.eliminarNotificacion, name='eliminar_notify'),
+    # MONITORIZACION
+    url(r'^monitoring/$', monitoring_views.monitoringIndex, name='monitoring'),
+    url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$', monitoring_views.monitoringRequest, name='monitoring_request'),
 ]

@@ -34,6 +34,11 @@
                 <a href="/administrar/entornos/2/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="/administrar/entornos/2/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
             </th>
+
+            <th>IP Cluster
+                <a href="/administrar/entornos/2/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
+                <a href="/administrar/entornos/2/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
+            </th>
             <th>Proyectos
                 <a href="/administrar/entornos/3/1/"><span class="text-muted glyphicon glyphicon-chevron-down"></span></a>
                 <a href="/administrar/entornos/3/0/"><span class="text-muted glyphicon glyphicon-chevron-up"></span></a>
@@ -55,6 +60,7 @@
                       <a href="#"  data-html="true" data-toggle="tooltip" title="{{ entorno.ent_descripcion }} ">{{ entorno.ent_nombre }}</a>
                     </td>
                     <td>{{ entorno.ent_uri }}</td><!-- aqui los integrantes -->
+                    <td>{{ entorno.cluster_ip }}</td><!-- aqui los integrantes -->
                     <td><a href="#" data-html="true" data-toggle="tooltip" title="{{ entorno.proyectos_list_str }} ">{{ entorno.num_proyectos }}</a></td><!-- aqui el num de entornos -->
                     <td>
                     {% if entorno.ent_activo %}<img src="{% static 'images/active_user.png' %}" width="16px" height="16px">

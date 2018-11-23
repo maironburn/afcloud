@@ -135,13 +135,19 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
             client=kuber.getClient()
             rook_ip= kuber.get_rook_nfs_ip()
             form.setConOkStatus()
-
+            
+            
         except Exception as e:
             logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,fichero_config))
 
         if form.is_valid():
 
+                
             entorno = form.save(commit=False)
+            cluster_ip= kuber.getClusterIP()
+            if cluster_ip:
+                entorno.cluster_ip =cluster_ip
+                
             entorno.setConfigfile  ((MEDIA_ROOT+ '%s') %(fichero_config))
             entorno.setRegistryfile((MEDIA_ROOT+ '%s') %(fichero_json_registry))
 

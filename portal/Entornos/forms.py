@@ -12,7 +12,7 @@ class EntornoForm(forms.ModelForm):
     registry_hash   = forms.CharField(max_length=1000,label='Registry Hash',disabled=True,required=False)
     nfs_server      = forms.GenericIPAddressField(max_length=1000,label='Nfs server',disabled=True,required=False)
     connection=False
-
+    
     error_messages = {
         'kubernates_conx_error': _("Por favor introduzca un usuario correcto %(username)s y su contraseña. "
                            "Tenga en cuenta que ambos campos son sensibles a las mayusculas."),
@@ -28,6 +28,9 @@ class EntornoForm(forms.ModelForm):
         super(EntornoForm, self).__init__(*args, **kwargs)
 
 
+    def setClusterIP (self,ip):
+        self.cluster_ip=ip
+        
     def setConOkStatus(self):
         self.connection=True
 
@@ -36,7 +39,7 @@ class EntornoForm(forms.ModelForm):
         valid = super(EntornoForm, self).is_valid()
         if not 'ent_config_file' in self.data:
             return valid
-        return valid and self.connection
+        return valid and self.connection 
 
     def setConfigfile(self,fichero):
 

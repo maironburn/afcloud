@@ -1,0 +1,323 @@
+{% extends "index.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<script>
+
+MONITORING_OPERATIONS={
+	'url_monitoring': '/monitoringRequest/',
+  'from_date': 0,
+  'to_date'  : 0,
+	GodZilla_callback: function(data){
+
+		//console.log("GodZilla_callback");
+		switch(data.action){
+
+			case 'monitoringRequest':
+				console.log("monitoringRequest");
+
+				 //$('#jquery_dialog').html(data.html);
+
+         if (!data.available_info){
+             $('#jquery_dialog').html('<p>No hay información disponible</p>');
+           }
+
+	         }
+         }
+}; //END NS
+
+
+
+
+$(document).on('click', '.request_monitoring', function(){
+ // url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$
+  entorno= $('[name="entornos"] option:selected').val();
+  widget_lst=[];
+
+  $('.controls input:checked').each(function(){
+		widget_lst.push($(this).val());
+	});
+	widgets= widget_lst.join('_');
+
+  from= MONITORING_OPERATIONS.from_date;
+	to  = MONITORING_OPERATIONS.to_date;
+
+	MONITORING_OPERATIONS.url_monitoring+= entorno + '/' + widgets + '/' + from + '/' + to;
+	var datos  = AJAXSTUFF.getSpecificRequest('','monitoringRequest',MONITORING_OPERATIONS.url_monitoring );
+	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
+	datos.request = 'GET';
+	var content= AJAXSTUFF.RequestDefinition(datos);
+	AJAXSTUFF.makeRequest(content, MONITORING_OPERATIONS.GodZilla_callback);
+	MONITORING_OPERATIONS.url_monitoring='/monitoringRequest/';
+ });
+
+
+
+$( function() {
+
+    MONITORING_OPERATIONS.from_date=0;
+    MONITORING_OPERATIONS.to_date=0;
+
+    from = $( "#from" )
+      .datepicker({
+        dateFormat: 'dd-mm-yy',
+        dayNamesMin: [ "L", "M", "X", "J", "V", "S", "D" ],
+        monthNamesShort: [ "Enero", "Feb", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Sept", "Octubre", "Nov", "Dic" ],
+        defaultDate: "-7d",
+        //setDate: primero_de_mes,
+        changeMonth: true,
+        numberOfMonths: 1
+      })
+      .on( "change", function() {
+        from.datepicker( "option", "maxDate", getDate( this ) );
+        from_date=$("#from").datepicker( "getDate" );
+        if (from_date!=null)
+            MONITORING_OPERATIONS.from_date= from_date.getTime();
+
+        console.log("from_date: %s", MONITORING_OPERATIONS.from_date);
+      }),
+    to = $( "#to" ).datepicker({
+      dateFormat: 'dd-mm-yy',
+      dayNamesMin: [ "L", "M", "X", "J", "V", "S", "D" ],
+      monthNamesShort: [ "Enero", "Feb", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Sept", "Octubre", "Nov", "Dic" ],
+      defaultDate: "+1d",
+      changeMonth: true,
+      numberOfMonths: 1
+    })
+    .on( "change", function() {
+      to.datepicker( "option", "minDate", getDate( this ) );
+      to_date=  $("#to").datepicker( "getDate" );
+      if (to_date!=null)
+        MONITORING_OPERATIONS.to_date= to_date.getTime();
+      console.log("to_date: %s", MONITORING_OPERATIONS.to_date);
+    });
+
+  function getDate( element ) {
+    var date;
+    try {
+      date = $.datepicker.parseDate( dateFormat, element.value );
+    } catch( error ) {
+      date = null;
+    }
+
+    return date;
+  }
+} );
+{% load crispy_forms_tags %}
+
+
+</script>
+
+<style>
+.available_widgets{
+  position: relative;
+  left: 35em;
+  background-color: white;
+  width: 35em;
+  height: 10em;
+  bottom: 5em;
+}
+
+#from,#to{
+  width:8em;
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+  -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+  transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+
+#div_id_entornos{
+  padding-top: 1em;
+}
+
+.widgets_zone{
+  position: relative;
+  width: 62em;
+  height: 35em;
+  float: left;
+  top: 1em;
+  }
+</style>
+
+<div class="panel-body">
+    <form class="well" enctype="multipart/form-data" method="POST">
+      {% csrf_token %}
+      <div class="row">
+      <div class="col-sm-4 col-xs-1">
+        <h2 class="text-danger">Monitorización {{request.session.proyecto_seleccionado}}</h2>
+        <hr/>
+
+        <div class="well">
+          <div class="container-fluid">
+          <label for="from">Intervalo de </label>
+          <input type="text" id="from" name="from">
+          <label for="to">a</label>
+          <input type="text" id="to" name="to">
+          {% crispy form %}
+        </div>
+        <input type="button" value="Enviar" class="btn btn-danger request_monitoring">
+        <button type="button" class="btn btn-danger" onclick="location.href='/startpage'">Cancelar</button>
+    </form>
+    </div>
+  </div>
+
+
+<div class="col-sm-2 col-xs-4">
+  <div id="tile5" class="">
+
+       <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+              <iframe class="iframe1" src="https://isotrol.grafana.net/dashboard/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&fullscreen" width="450" height="200" frameborder="0"</iframe>
+
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div class="col-sm-2 col-xs-4">
+  <div id="tile5" class="">
+
+       <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+              <iframe   class="iframe2" class="img-responsive" src="https://isotrol.grafana.net/dashboard/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&fullscreen" width="450" height="200" frameborder="0"</iframe>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div class="col-sm-2 col-xs-5">
+  <div id="tile5" class="">
+
+       <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+
+          <iframe  class="iframe3" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div class="col-sm-2 col-xs-4">
+  <div id="tile5" class="">
+
+       <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active ">
+          <iframe  class="iframe4" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+          <iframe class="iframe5" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+            <iframe class="iframe6" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+          </div>
+
+        </div>
+      </div>
+
+  </div>
+</div>
+
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+          </div>
+
+        </div>
+      </div>
+
+  </div>
+</div>
+
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+          </div>
+
+        </div>
+      </div>
+
+  </div>
+</div>
+
+
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner">
+          <div class="item active">
+            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&theme=light" width="450" height="200" frameborder="0"></iframe>
+          </div>
+
+        </div>
+      </div>
+
+  </div>
+</div>
+
+</div>
+
+
+
+<!--row -->
+
+
+
+
+{% endblock %}
+{% block foot %}
+<footer class="footer text-right">
+    <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>
+</footer>
+{% endblock %}

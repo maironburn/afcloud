@@ -86,6 +86,18 @@ class Kuber(object):
 
         return False
 
+    def getClusterIP(self):
+         
+        try:         
+            self.v1 = client.CoreV1Api()
+            kube_conf= self.v1 .list_node().to_dict() 
+            return kube_conf['items'][0]['status']['addresses'][0]['address']
+        
+        except ApiException as e:
+            print("Exception when calling CoreV1Api->getClusterIP: %s\n" % format(e))
+        
+        return None
+ 
     '''
     https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#read_namespaced_service
     '''

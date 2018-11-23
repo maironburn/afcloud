@@ -85,7 +85,7 @@ class AfEntorno(models.Model):
     registry_hash   = models.CharField    (blank=True,max_length=1000)
     nfs_server      = models.GenericIPAddressField(blank=True,null=True)
     ent_deleted     = models.BooleanField  (default=0, verbose_name='Eliminado')
-
+    cluster_ip      = models.GenericIPAddressField(blank=True,null=True)
     num_proyectos   = 0
     proyectos_list =[]
     proyectos_list_str=''

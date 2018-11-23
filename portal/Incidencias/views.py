@@ -29,8 +29,7 @@ def getIncidenciasInfo(incidencias):
     list_it_estados=[]
     notas_asociadas = []
     for it in incidencias:
-        #estado      = AfRelIncidenciaEstado.objects.get(incidencia=it)
-        #estado_name = estado.estado
+
         notas_asociadas= AfNotasIncidencia.objects.filter(incidencia=it).order_by('fecha_creacion')
         estado=  it.estado.estado if it.estado else 'No definido'
            
@@ -86,7 +85,6 @@ def administrarIncidencias(request, template_name='incidenciasIndex.html', extra
     except Exception as e:
         logger.info("Exception en administrarIncidencias: %s" % format(e))
 
-
     list_it_estados = getIncidenciasInfo(incidencias)
     hasNotificationPending(request)
     paginator = Paginator(list_it_estados, 10)
@@ -134,40 +132,7 @@ def send_notify_mail(kwargs):
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
-'''
-def notify_message(kwargs):
 
-    # gconf       = AfGlobalconf.objects.first()
-    #to_email    = gconf.email
-    to_user    = kwargs.get    ('to_user'          , None)
-    m_from      = kwargs.get   ('from_mail'         , None)
-    asunto      = kwargs.get   ('asunto'            , None)
-    cuerpo      = kwargs.get   ('cuerpo'            , None)
-    estado      = kwargs.get   ('estado'            , None)
-    tipo_notify = kwargs.get   ('tipo_notificacion' , None)
-    incidencia  = kwargs.get   ('incidencia'        , None)
-    user_notify = kwargs.get   ('user_notify'       , None)
-    for u in to_users:
-        
-        if user_notify: #ya existe la notificacion de forma q se debe solo actualizar
-            tipo_notificacion=AfTipoNotify.objects.get(short_desc=tipo_notify)
-            for un in user_notify:
-                
-                un.tipo =tipo_notificacion
-                un.notify.to_user=u
-                un.notify.from_user=m_from
-                un.notify.readed=False
-                un.notify.save()
-                un.save()
-            
-        else:
-            #se crean 2 notifies, 1 para cada admin
-            notify = AfUserNotify.objects.create(to_user=u, from_user=m_from, fecha_creacion=datetime.datetime.now())
-            n_tipo = AfTipoNotify.objects.get(short_desc=tipo_notify)
-            #notify.save()
-            n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=n_tipo, incidencia=incidencia)
-        
-'''
 def create_UserNotify(kwargs):
 
     to_user     = kwargs.get   ('to_user'          , None)
@@ -314,14 +279,14 @@ def addNotaIncidencia(request, id, template_name='editarIncidencia.html'):
 
 def deliverNotify(kwargs):
     
-    tipo_notify = kwargs.get     ('tipo_notificacion' , None)
+    tipo_notificacion = kwargs.get     ('tipo_notificacion' , None)
     instance    = kwargs.get     ('instance'          , None)
     notify_to   = kwargs.get     ('notify_to'         , None)
     from_user   = kwargs.get     ('from_user'         , None)
     
     
     ids_notify_incidencia= list(AfNotify_Tipo_instancia.objects.filter(incidencia= instance).values_list('notify', flat=True))
-    tipo_notificacion=AfTipoNotify.objects.get(short_desc='ITM')
+    
     for u in notify_to:
         has_notify_asociada=AfUserNotify.objects.filter(owner=u, id__in=ids_notify_incidencia).count()
         if has_notify_asociada:
@@ -341,5 +306,25 @@ def deliverNotify(kwargs):
             n_t_i  = AfNotify_Tipo_instancia.objects.create(notify=notify, tipo=tipo_notificacion, incidencia=instance)
                 
     
+
+@login_required
+@group_required('af_cloud_admin',)
+def eliminarIncidencia(request, id):
     
+    try:
+        
+        incidencia= AfIncidencia.objects.filter(id=id)
+        incidencia.delete()
+        
+    except ObjectDoesNotExist as dne:
+
+        messages.error(request, "La incidencia que solicita eliminar no existe")
+        return HttpResponseRedirect('/administrar/incidencias')
+
+    except Exception as e:
+        pass
+    
+    messages.success(request,  'Incidencia eliminada con éxito', extra_tags='Eliminación de incidencias')
+    return HttpResponseRedirect('/administrar/incidencias')
+
     
