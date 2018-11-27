@@ -4,7 +4,7 @@
 {% block content %}
 <script>
 
-MONITORING_OPERATIONS={
+ADMIN_MONITORING_OPERATIONS={
 	'url_monitoring': '/monitoringRequest/',
   'from_date': 0,
   'to_date'  : 0,
@@ -22,8 +22,9 @@ MONITORING_OPERATIONS={
              $('#jquery_dialog').html('<p>No hay información disponible</p>');
            }
 
-	         }
-         }
+
+	        }
+      }
 }; //END NS
 
 
@@ -32,32 +33,53 @@ MONITORING_OPERATIONS={
 $(document).on('click', '.request_monitoring', function(){
  // url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$
   entorno= $('[name="entornos"] option:selected').val();
+
+  if ($('[name="proyecto"] :selected').val()){
+		proyecto= $('[name="proyecto"] :selected').text();
+		}
+		else {
+			return;
+		}
   widget_lst=[];
 
   $('.controls input:checked').each(function(){
 		widget_lst.push($(this).val());
 	});
-	widgets= widget_lst.join('_');
+	//widgets= widget_lst.join('_');
 
-  from= MONITORING_OPERATIONS.from_date;
-	to  = MONITORING_OPERATIONS.to_date;
+  from = ADMIN_MONITORING_OPERATIONS.from_date;
+	to   = ADMIN_MONITORING_OPERATIONS.to_date;
 
-	MONITORING_OPERATIONS.url_monitoring+= entorno + '/' + widgets + '/' + from + '/' + to;
-	var datos  = AJAXSTUFF.getSpecificRequest('','monitoringRequest',MONITORING_OPERATIONS.url_monitoring );
+  if (from==0)
+		from = new Date(year,mes,1).getTime();
+  if (to==0)
+	   to  = new Date().getTime();
+
+  console.log("");
+
+	for (i=0; i<widget_lst.length;i++){
+		var widget_id_class='widget_'+ i;
+		var iframe_url= $('.' + proyecto + '.'+ widget_lst[i]).attr('url');
+		$('.' + widget_id_class).attr('src',iframe_url + from + '&to='+ to + '&theme=light');
+	}
+	/*
+	ADMIN_MONITORING_OPERATIONS.url_monitoring+= entorno  + '/' + from + '/' + to;
+	var datos  = AJAXSTUFF.getSpecificRequest('','monitoringRequest',ADMIN_MONITORING_OPERATIONS.url_monitoring );
 	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
 	datos.request = 'GET';
 	var content= AJAXSTUFF.RequestDefinition(datos);
-	AJAXSTUFF.makeRequest(content, MONITORING_OPERATIONS.GodZilla_callback);
-	MONITORING_OPERATIONS.url_monitoring='/monitoringRequest/';
+	AJAXSTUFF.makeRequest(content, ADMIN_MONITORING_OPERATIONS.GodZilla_callback);
+	ADMIN_MONITORING_OPERATIONS.url_monitoring='/monitoringRequest/';
 	console.log("");
+	*/
  });
 
 
 
 $( function() {
 
-    MONITORING_OPERATIONS.from_date=0;
-    MONITORING_OPERATIONS.to_date=0;
+    ADMIN_MONITORING_OPERATIONS.from_date=0;
+    ADMIN_MONITORING_OPERATIONS.to_date=0;
 
     from = $( "#from" )
       .datepicker({
@@ -73,9 +95,9 @@ $( function() {
         from.datepicker( "option", "maxDate", getDate( this ) );
         from_date=$("#from").datepicker( "getDate" );
         if (from_date!=null)
-            MONITORING_OPERATIONS.from_date= from_date.getTime();
+            ADMIN_MONITORING_OPERATIONS.from_date= from_date.getTime();
 
-        console.log("from_date: %s", MONITORING_OPERATIONS.from_date);
+        console.log("from_date: %s", ADMIN_MONITORING_OPERATIONS.from_date);
       }),
     to = $( "#to" ).datepicker({
       dateFormat: 'dd-mm-yy',
@@ -89,8 +111,8 @@ $( function() {
       to.datepicker( "option", "minDate", getDate( this ) );
       to_date=  $("#to").datepicker( "getDate" );
       if (to_date!=null)
-        MONITORING_OPERATIONS.to_date= to_date.getTime();
-      console.log("to_date: %s", MONITORING_OPERATIONS.to_date);
+        ADMIN_MONITORING_OPERATIONS.to_date= to_date.getTime();
+      console.log("to_date: %s", ADMIN_MONITORING_OPERATIONS.to_date);
     });
 
   function getDate( element ) {
@@ -126,7 +148,16 @@ $('#from').datepicker('setDate', myDate);
   bottom: 5em;
 }
 
-#from,#to{
+.widgets_iframes{
+	background-color: olive;
+	position: absolute;
+	width: 72em;
+	left: 38em;
+	height: 30em;
+	top: 0em;
+}
+
+#from, #to{
   width:8em;
   height: 34px;
   padding: 6px 12px;
@@ -155,6 +186,10 @@ $('#from').datepicker('setDate', myDate);
   float: left;
   top: 1em;
   }
+
+	.panel-content{
+		backgrount-color: "#f3f3f3"
+	}
 </style>
 
 <div class="panel-body">
@@ -179,16 +214,22 @@ $('#from').datepicker('setDate', myDate);
     </div>
   </div>
 
+{% if data %}
+	{% for i in data %}
+		{%for w in i.widgets %}
+			<input type="hidden" class="{{i.proyecto}} {{w.id_widget}}" p_name="{{i.proyecto}}" url="{{w.widget_url}}" id_widget="{{w.id_widget}}" />
+		{% endfor %}
+	{% endfor %}
+{% endif %}
 
 <div class="col-sm-2 col-xs-4">
   <div id="tile5" class="">
 
        <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
+
         <div class="carousel-inner">
           <div class="item active">
-              <iframe class="iframe1" src="https://isotrol.grafana.net/dashboard/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&fullscreen" width="450" height="200" frameborder="0"</iframe>
-
+              <iframe class="widget_0" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -197,14 +238,10 @@ $('#from').datepicker('setDate', myDate);
 
 <div class="col-sm-2 col-xs-4">
   <div id="tile5" class="">
-
-       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
+     <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-						  <iframe   class="iframe2" class="img-responsive" src="https://www.filmaffinity.com/es/film112486.html" width="450" height="200" frameborder="0"</iframe>
-
-
+						  <iframe class="widget_1" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -213,28 +250,48 @@ $('#from').datepicker('setDate', myDate);
 
 <div class="col-sm-2 col-xs-5">
   <div id="tile5" class="">
-
        <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-
-          <iframe  class="iframe3" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
-
+          <iframe class="widget_2" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
 
-<div class="col-sm-2 col-xs-4">
+<div class="col-sm-2 col-xs-3">
   <div id="tile5" class="">
-
        <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active ">
-          <iframe  class="iframe4" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+          <iframe class="widget_3" src="" width="180" height="200" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div class="row">
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+          <div class="item active">
+          <iframe class="widget_4" src="" width="180" height="200" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+
+<div class="col-sm-2 col-xs-8">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+          <div class="item active">
+            <iframe class="widget_5" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -244,10 +301,9 @@ $('#from').datepicker('setDate', myDate);
 <div class="col-sm-2 col-xs-8">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-          <iframe class="iframe5" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+            <iframe class="widget_6" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -255,64 +311,40 @@ $('#from').datepicker('setDate', myDate);
 </div>
 
 
-<div class="col-sm-2 col-xs-8">
+<div class="col-sm-8 col-xs-5">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-            <iframe   class="iframe2" class="img-responsive" src="https://www.filmaffinity.com/es/film112486.html" width="450" height="200" frameborder="0"</iframe>
+						<iframe class="widget_7" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
-
         </div>
       </div>
-
   </div>
 </div>
 
 <div class="col-sm-2 col-xs-8">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+            <iframe class="widget_8" src="" width="180" height="200" frameborder="0"></iframe>
           </div>
-
         </div>
       </div>
-
-  </div>
-</div>
-
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-          <div class="item active">
-            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
-          </div>
-
-        </div>
-      </div>
-
   </div>
 </div>
 
 
-<div class="col-sm-2 col-xs-8">
+<div class="col-sm-8 col-xs-8">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&theme=light" width="450" height="200" frameborder="0"></iframe>
+						<iframe class="widget_9" src="" width="450" height="200" frameborder="0"></iframe>
           </div>
-
         </div>
       </div>
-
   </div>
 </div>
 
@@ -320,6 +352,7 @@ $('#from').datepicker('setDate', myDate);
 
 
 {% endblock %}
+
 {% block foot %}
 <footer class="footer text-right">
     <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>

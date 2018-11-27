@@ -14,14 +14,15 @@ class MonitoringForm(forms.Form):
     entornos             = forms.ModelChoiceField(queryset= AfEntorno.objects.all())
     #widget_list          = ['Uso de CPU','Uso de Memoria', 'Uso de Disco']
     widget_list = (
-    ('1', 'Uso de CPU_1'),
-    ('2', 'Uso de Memoria'),
-    ('3', 'Uso de Disco'),
-    ('4', 'Widget4'),
-    ('5', 'Widget5'),
-    ('6', 'Widget6'),
-    ('7', 'Widget7'),
-    ('8', 'Widget8'),
+    ('4', 'Cluster Pod Usage'),
+    ('5', 'Cluster CPU Usage'),
+    ('6', 'Cluster Memory Usage'),
+    ('7', 'Cluster Disk Usage'),
+    ('9', 'Cluster Pod Capacity'),
+    ('10', 'Cluster CPU Usage'),
+    ('11', 'Cluster Mem Usage'),
+    ('12', 'Cluster Disk Usage'),
+    ('16', 'Deployment Replicas'),
     
 )
     
@@ -49,40 +50,42 @@ class MonitoringForm(forms.Form):
                 self.perfil=kwargs['initial']['tperfil']
                 
 
-
-
-
-       
-     
+class adminMonitoringChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.pro_nombre
+    
+         
 class adminMonitoringForm(forms.Form):
     
-    proyecto             = forms.ModelChoiceField(queryset= AfProyecto.objects.all())
+    proyecto = adminMonitoringChoiceField(label="Servicio",queryset=(AfProyecto.objects.all()) ,empty_label="(Seleccione proyecto)")
+    #proyecto             = forms.ModelChoiceField(queryset= AfProyecto.objects.all())
     entornos             = forms.ModelChoiceField(queryset= AfEntorno.objects.all())
     #widget_list          = ['Uso de CPU','Uso de Memoria', 'Uso de Disco']
     widget_list = (
-    ('1', 'opt1'),
-    ('2', 'opt2'),
-    ('3', 'opt3'),
-    ('4', '4'),
-    ('5', '5'),
-    ('6', '6'),
-    ('7', '7'),
-    ('8', '8'),
+    ('4', 'Cluster Pod Usage'),
+    ('5', 'Cluster CPU Usage'),
+    ('6', 'Cluster Memory Usage'),
+    ('7', 'Cluster Disk Usage'),
+    ('9', 'Cluster Pod Capacity'),
+    ('10', 'Cluster CPU Usage'),
+    ('11', 'Cluster Mem Usage'),
+    ('12', 'Cluster Disk Usage'),
+    ('16', 'Deployment Replicas'),
     
 )
     
-    available_widgets    = forms.ChoiceField(choices=widget_list)
+    #available_widgets    = forms.ChoiceField(choices=widget_list)
     
     available_widgets = forms.MultipleChoiceField(
         required=False,
         widget=forms.CheckboxSelectMultiple,
         choices=widget_list,
     )
-    '''
+   
     error_messages = {
         'password_mismatch': _("Las contraseñas no son las mismas."),
     }
-    '''
+    
     
  
     def __init__(self, *args, **kwargs):

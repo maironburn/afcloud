@@ -103,5 +103,6 @@ urlpatterns = [
     # MONITORIZACION
     url(r'^monitoring/$', monitoring_views.monitoringIndex, name='monitoring'),
     url(r'^admin_monitoring/$', monitoring_views.adminMonitoring, name='adminMonitoring'),
-    url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>[\w\-]+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$', monitoring_views.monitoringRequest, name='monitoring_request'),
+    #url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>[\w\-]+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$', monitoring_views.monitoringRequest, name='monitoring_request'),
+    url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$', monitoring_views.monitoringRequest, name='monitoring_request'),
 ]

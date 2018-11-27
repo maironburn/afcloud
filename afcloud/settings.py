@@ -37,6 +37,11 @@ KEY_FILE = 'key/'
 ALLOWED_HOSTS = ['*']
 #AUTH_USER_MODEL = 'portal.AfUsuario'
 
+# GRAFANA SETTINGs
+GRAFANA_PORT = "31000"
+URL_PREFIX   = "d-solo/4XuMd2Iiz/kubernetes-cluster-prometheus?orgId=1&var-datasource=&var-node=All&var-namespace="
+URL_SUFIX    = "&var-app=All&panelId="
+URL_THEME    = '&theme=light" width="180" height="200" frameborder="0">'
 # Application definition
 
 INSTALLED_APPS = [
