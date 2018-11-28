@@ -59,8 +59,8 @@ class adminMonitoringForm(forms.Form):
     
     proyecto = adminMonitoringChoiceField(label="Servicio",queryset=(AfProyecto.objects.all()) ,empty_label="(Seleccione proyecto)")
     #proyecto             = forms.ModelChoiceField(queryset= AfProyecto.objects.all())
-    entornos             = forms.ModelChoiceField(queryset= AfEntorno.objects.all())
-    #widget_list          = ['Uso de CPU','Uso de Memoria', 'Uso de Disco']
+    entornos             = forms.ModelChoiceField(queryset= (AfEntorno.objects.all()))
+    '''
     widget_list = (
     ('4', 'Cluster Pod Usage'),
     ('5', 'Cluster CPU Usage'),
@@ -71,22 +71,28 @@ class adminMonitoringForm(forms.Form):
     ('11', 'Cluster Mem Usage'),
     ('12', 'Cluster Disk Usage'),
     ('16', 'Deployment Replicas'),
-    
-)
-    
+    )
+    '''
+    widget_list = (
+    ('4', 'Cluster Pod Usage'),
+    ('5', 'Uptime'),
+    ('6', 'Cluster Memory Usage'),
+    ('7', 'Cluster Disk Usage'),
+    ('9', 'Cluster Pod Capacity'),
+    #('10', 'Cluster CPU Usage'),
+    ('11', 'Cluster Mem Capacity'),
+    ('12', 'Cluster Disk Capacity'),
+    ('16', 'Deployment Replicas'),
+    )
     #available_widgets    = forms.ChoiceField(choices=widget_list)
     
-    available_widgets = forms.MultipleChoiceField(
+    available_widgets = forms.MultipleChoiceField(label='Widgets disponibles',
         required=False,
         widget=forms.CheckboxSelectMultiple,
         choices=widget_list,
     )
    
-    error_messages = {
-        'password_mismatch': _("Las contraseñas no son las mismas."),
-    }
-    
-    
+   
  
     def __init__(self, *args, **kwargs):
         super(adminMonitoringForm, self).__init__(*args, **kwargs)

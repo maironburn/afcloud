@@ -2,33 +2,39 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% block content %}
-<script>
 
+<script>
 ADMIN_MONITORING_OPERATIONS={
 	'url_monitoring': '/monitoringRequest/',
   'from_date': 0,
   'to_date'  : 0,
-	GodZilla_callback: function(data){
+	'pro_envs_list': [],
+	'is_admin': 1,
 
+	GodZilla_callback: function(data){
 		//console.log("GodZilla_callback");
 		switch(data.action){
 
 			case 'monitoringRequest':
 				console.log("monitoringRequest");
 
-				 //$('#jquery_dialog').html(data.html);
-
          if (!data.available_info){
              $('#jquery_dialog').html('<p>No hay información disponible</p>');
            }
 
-
-	        }
+	       }
       }
 }; //END NS
 
 
+function clean_iframes(){
 
+	for (j=0;j<10;j++){
+		var widget_id_class='widget_'+ j;
+		$('.' + widget_id_class).attr('src',"");;
+	}
+
+}
 
 $(document).on('click', '.request_monitoring', function(){
  // url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$
@@ -36,6 +42,8 @@ $(document).on('click', '.request_monitoring', function(){
 
   if ($('[name="proyecto"] :selected').val()){
 		proyecto= $('[name="proyecto"] :selected').text();
+		if (proyecto=='Estado del Cluster')
+				proyecto='entorno_all';
 		}
 		else {
 			return;
@@ -55,23 +63,14 @@ $(document).on('click', '.request_monitoring', function(){
   if (to==0)
 	   to  = new Date().getTime();
 
-  console.log("");
+ clean_iframes();
 
 	for (i=0; i<widget_lst.length;i++){
 		var widget_id_class='widget_'+ i;
 		var iframe_url= $('.' + proyecto + '.'+ widget_lst[i]).attr('url');
-		$('.' + widget_id_class).attr('src',iframe_url + from + '&to='+ to + '&theme=light');
+		$('.' + widget_id_class).attr('src',iframe_url + '&from=' + from + '&to='+ to + '&theme=light');
+		console.log("url: %s", iframe_url + '&from=' + from + '&to='+ to + '&theme=light"'+ '  width="180" height="200" frameborder="0"');
 	}
-	/*
-	ADMIN_MONITORING_OPERATIONS.url_monitoring+= entorno  + '/' + from + '/' + to;
-	var datos  = AJAXSTUFF.getSpecificRequest('','monitoringRequest',ADMIN_MONITORING_OPERATIONS.url_monitoring );
-	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
-	datos.request = 'GET';
-	var content= AJAXSTUFF.RequestDefinition(datos);
-	AJAXSTUFF.makeRequest(content, ADMIN_MONITORING_OPERATIONS.GodZilla_callback);
-	ADMIN_MONITORING_OPERATIONS.url_monitoring='/monitoringRequest/';
-	console.log("");
-	*/
  });
 
 
@@ -80,6 +79,8 @@ $( function() {
 
     ADMIN_MONITORING_OPERATIONS.from_date=0;
     ADMIN_MONITORING_OPERATIONS.to_date=0;
+
+		$('[name="proyecto"]').append($('<option>', {value:"All", text:'Estado del Cluster'}));
 
     from = $( "#from" )
       .datepicker({
@@ -92,7 +93,7 @@ $( function() {
         numberOfMonths: 1
       })
       .on( "change", function() {
-        from.datepicker( "option", "maxDate", getDate( this ) );
+        //from.datepicker( "option", "maxDate", getDate( this ) );
         from_date=$("#from").datepicker( "getDate" );
         if (from_date!=null)
             ADMIN_MONITORING_OPERATIONS.from_date= from_date.getTime();
@@ -108,7 +109,7 @@ $( function() {
       numberOfMonths: 1
     })
     .on( "change", function() {
-      to.datepicker( "option", "minDate", getDate( this ) );
+      //to.datepicker( "option", "minDate", getDate( this ) );
       to_date=  $("#to").datepicker( "getDate" );
       if (to_date!=null)
         ADMIN_MONITORING_OPERATIONS.to_date= to_date.getTime();
@@ -122,7 +123,6 @@ $( function() {
     } catch( error ) {
       date = null;
     }
-
     return date;
   }
 
@@ -131,6 +131,60 @@ mes=date.getMonth();
 year=date.getFullYear();
 var myDate = new Date(year,mes,1) ;
 $('#from').datepicker('setDate', myDate);
+
+
+$('#select_all').click(function() {
+    var c = this.checked;
+    $('[name="available_widgets"]').prop('checked',  c);
+});
+
+// <input type="hidden" class="rel_pro_env" proyecto_name="{{i.proyecto}}" entornos="{{i.entornos}}" />
+$('#id_proyecto').on('change', function(){
+
+		var proyecto_seleccionado=$('#id_proyecto :selected').text();
+		var options_entornos='';
+
+		$('[name="entornos"]')
+		.find('option')
+		.remove()
+		.end();
+
+		// input type="hidden" class="ent_all" ent_name="{{i.ent_nombre}}" entorno_id={{i.id}} />
+		if (proyecto_seleccionado=="Estado del Cluster")
+		{
+				$('.ent_all').each(function(){
+						var ent= $(this).attr('ent_name');
+						var ent_id=$(this).attr('entorno_id');
+						console.log('Cluster: %s, id: %s', ent, ent_id);
+
+						$('[name="entornos"]').append('<option value="' + ent_id + '"' + '>' + ent + '</option>').val(ent_id);
+				});
+			return;
+		}
+		else{
+
+			$('.rel_pro_env').each(function(){
+				var p=$(this).attr('proyecto_name');
+				var ent= $(this).attr('entornos').split(',');
+				var ent_id=$(this).attr('entornos_id').split(',');
+				if (p==proyecto_seleccionado){
+
+			   for (i=0;i<ent.length;i++)
+					 	$('[name="entornos"]').append('<option value="' + ent_id[i] + '"' + '>' + ent[i] + '</option>').val(ent_id[i]);
+
+				 return true;
+				}
+			});
+		}
+
+
+//rel_pro_env
+
+});
+
+
+
+
 
 } );
 {% load crispy_forms_tags %}
@@ -146,6 +200,10 @@ $('#from').datepicker('setDate', myDate);
   width: 35em;
   height: 10em;
   bottom: 5em;
+}
+
+.panel-container{
+	background-color: #EEEEEE !important;
 }
 
 .widgets_iframes{
@@ -199,7 +257,6 @@ $('#from').datepicker('setDate', myDate);
       <div class="col-sm-4 col-xs-1">
         <h2 class="text-danger">Monitorización del Cluster</h2>
         <hr/>
-
         <div class="well">
           <div class="container-fluid">
           <label for="from">Intervalo de </label>
@@ -207,29 +264,44 @@ $('#from').datepicker('setDate', myDate);
           <label for="to">a</label>
           <input type="text" id="to" name="to">
           {% crispy form %}
-        </div>
+					<input type="checkbox" id="select_all" style="position: relative;margin-bottom: 1em;" name="selet_all" value="selet_all"><span style="margin-left: 8px;font-weight: bold;">Seleccionar todos</span><br>
+				</div>
         <input type="button" value="Enviar" class="btn btn-danger request_monitoring">
         <button type="button" class="btn btn-danger" onclick="location.href='/startpage'">Cancelar</button>
+
     </form>
     </div>
   </div>
+<!--
+relacion proyecto con entornos
+-->
+{%if ent_all %}
+	{% for i in ent_all %}
+		<input type="hidden" class="ent_all" ent_name="{{i.ent_nombre}}" entorno_id={{i.id}} />
+	{%endfor%}
+{% endif %}
+
+{% if rel_pro_ents %}
+	{% for i in rel_pro_ents %}
+		<input type="hidden" class="rel_pro_env" proyecto_name="{{i.proyecto}}" entornos="{{i.entornos}}" entornos_id={{i.entornos_id}} />
+	{% endfor %}
+{% endif %}
 
 {% if data %}
 	{% for i in data %}
 		{%for w in i.widgets %}
-			<input type="hidden" class="{{i.proyecto}} {{w.id_widget}}" p_name="{{i.proyecto}}" url="{{w.widget_url}}" id_widget="{{w.id_widget}}" />
+			<input type="hidden" class="{{i.proyecto}} {{w.id_widget}}" ent_id="{{i.entornos.id}}" ent_name="{{i.entornos.ent_nombre}}" p_name="{{i.proyecto}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace={{i.proyecto}}&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
+			<input type="hidden" class="entorno_all {{w.id_widget}}" ent_id="{{i.entornos.id}}" ent_name="{{i.entornos.ent_nombre}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace=All&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
 		{% endfor %}
 	{% endfor %}
 {% endif %}
 
 <div class="col-sm-2 col-xs-4">
   <div id="tile5" class="">
-
        <div class="carousel slide" data-ride="carousel">
-
         <div class="carousel-inner">
           <div class="item active">
-              <iframe class="widget_0" src="" width="180" height="200" frameborder="0"></iframe>
+              <iframe class="widget_0" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -241,7 +313,7 @@ $('#from').datepicker('setDate', myDate);
      <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-						  <iframe class="widget_1" src="" width="180" height="200" frameborder="0"></iframe>
+						  <iframe class="widget_1" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -253,7 +325,7 @@ $('#from').datepicker('setDate', myDate);
        <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-          <iframe class="widget_2" src="" width="180" height="200" frameborder="0"></iframe>
+          <iframe class="widget_2" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -265,20 +337,7 @@ $('#from').datepicker('setDate', myDate);
        <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active ">
-          <iframe class="widget_3" src="" width="180" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
-
-<div class="row">
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="item active">
-          <iframe class="widget_4" src="" width="180" height="200" frameborder="0"></iframe>
+          <iframe class="widget_3" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -286,12 +345,25 @@ $('#from').datepicker('setDate', myDate);
 </div>
 
 
+<div class="col-sm-2 col-xs-3">
+  <div id="tile7" class="">
+      <div class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+          <div class="item active">
+          <iframe class="widget_4" src="" width="200" height="200" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+
 <div class="col-sm-2 col-xs-8">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-            <iframe class="widget_5" src="" width="180" height="200" frameborder="0"></iframe>
+            <iframe class="widget_5" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -303,7 +375,7 @@ $('#from').datepicker('setDate', myDate);
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-            <iframe class="widget_6" src="" width="180" height="200" frameborder="0"></iframe>
+            <iframe class="widget_6" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -316,7 +388,7 @@ $('#from').datepicker('setDate', myDate);
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-						<iframe class="widget_7" src="" width="180" height="200" frameborder="0"></iframe>
+						<iframe class="widget_7" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -328,7 +400,7 @@ $('#from').datepicker('setDate', myDate);
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-            <iframe class="widget_8" src="" width="180" height="200" frameborder="0"></iframe>
+            <iframe class="widget_8" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -341,7 +413,7 @@ $('#from').datepicker('setDate', myDate);
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-						<iframe class="widget_9" src="" width="450" height="200" frameborder="0"></iframe>
+						<iframe class="widget_9" src="" width="200" height="200" frameborder="0"></iframe>
           </div>
         </div>
       </div>

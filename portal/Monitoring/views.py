@@ -75,14 +75,25 @@ def adminMonitoring(request,  template_name='admin_monitoring_Index.html', extra
 
         lst_proj_env=[]
         proyectos= AfProyecto.objects.all()
-        
+        rel_pro_ents=[]
+        entornos_list=[]
+        entornos_id_list=[]
+        ent_all = AfEntorno.objects.all()
         for p in proyectos:
             dict_proj_env={}
+            
             entornos= AfRelEntPro.objects.filter(pro=p)
             for e in entornos:
                 lst_widgets = monitoringWidgets (request, e.ent.id, p.pro_nombre)
                 dict_proj_env = {'proyecto':  p.pro_nombre, 'entornos': e.ent , 'widgets' : lst_widgets}
-             
+                entornos_list.append(e.ent.ent_nombre)
+                entornos_id_list.append(str(e.ent.id))
+                
+            rel_pro_ents.append ({'proyecto':  p.pro_nombre, 'entornos': ','.join(entornos_list), 'entornos_id' : ','.join(entornos_id_list)})
+            entornos_list=[]
+            entornos_id_list=[]
+            
+            
             lst_proj_env.append(dict_proj_env)
             
         form= adminMonitoringForm()
@@ -97,7 +108,7 @@ def adminMonitoring(request,  template_name='admin_monitoring_Index.html', extra
     except Exception as e:
         pass
 
-    context = {'form': form, 'data' : lst_proj_env }
+    context = {'form': form, 'data' : lst_proj_env , 'rel_pro_ents': rel_pro_ents, 'ent_all': ent_all}
 
     return render(request, template_name, context)    
 
@@ -105,9 +116,9 @@ def adminMonitoring(request,  template_name='admin_monitoring_Index.html', extra
 
 def monitoringWidgets(request, id_env,ns=None):
 
+    #widget_url='http://%s:%s/%s%s&var-app=All&panelId=%s' #%s&to=%s&theme=light
     
-    #widget_url='http://%s:%s/%s%s&panelId=%s&from=%s&to=%s&theme=light'
-    widget_url='http://%s:%s/%s%s&panelId=%s&from=' #%s&to=%s&theme=light
+    widget_url='http://%s:%s/%s' 
     lst_iframe = []
     
     try:
@@ -130,7 +141,7 @@ def monitoringWidgets(request, id_env,ns=None):
         
         for w in widget_list:
             #entorno + '/' + widgets + '/' + from + '/' + to;
-            lst_iframe.append({'id_widget': w[0],'widget_url': widget_url % (entorno_ip, GRAFANA_PORT, URL_PREFIX, ns, w[0])})
+            lst_iframe.append({'id_widget': w[0],'widget_url': widget_url % (entorno_ip, GRAFANA_PORT, URL_PREFIX)})
         
                 
     except ObjectDoesNotExist as dne:
