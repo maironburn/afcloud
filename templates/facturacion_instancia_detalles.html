@@ -1,0 +1,136 @@
+
+{% load static %}
+
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;border-color:#999;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#999;color:#444;background-color:#F7FDFA;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#999;color:#fff;background-color:#26ADE4;}
+.tg .tg-k285{font-weight:bold;background-color:#fd6864;text-align:left;vertical-align:top}
+.tg .tg-hmp3{background-color:#D2E4FC;text-align:left;vertical-align:top}
+</style>
+
+{% block content %}
+
+
+{% if mensaje %}
+    <div id="message" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-body">
+                    <h4>{{ mensaje }}</h4>
+                    <button class="btn btn-danger" data-dismiss="modal" type="button"> Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+
+        <div class="panel-body">
+
+
+        {% if computo_global %}
+
+        		    <table id="tabla_incidencias" class="table table-hover panel">
+                  <thead>
+									<tr>
+											<th>
+												Servicio
+											</th>
+											<th>
+												Entorno
+											</th>
+                      <th>
+												Fecha inicio
+											</th>
+                      <th>
+											  Fecha fin
+											</th>
+											<th>
+												Horas
+											</th>
+											<th>
+												Tarifa
+											</th>
+											<th>
+												Disponibilidad
+											</th>
+                      <th>
+                        Réplicas
+                      </th>
+											<th>
+												Importe
+											</th>
+									</tr>
+									</thead>
+        		     <tbody>
+
+              {% for i in ciclos_lst %}
+        					 <tr>
+        							<td>
+        								 {{ i.servicio }}
+                      </td>
+                      <td>
+        								 {{ i.entorno }}
+                      </td>
+                      <td><!-- horas -->
+                          {{ i.f_ini }}
+                      </td>
+                      <td><!-- horas -->
+                          {{ i.f_fin }}
+                      </td>
+                      <td><!-- horas -->
+        								  {{ i.horas }}
+                      </td>
+                      <td><!-- tarifa -->
+                          {{ i.tarifa }}
+                      </td>
+                      <td><!-- disponibilidad -->
+        							    {{ i.uptime }}
+                      </td>
+                      <td><!-- disponibilidad -->
+                          {{ i.replicas }}
+                      </td>
+                      <td><!-- importe -->
+        						     {{ i.importe }}
+                      </td>
+        						</tr>
+              {% endfor %}
+          </tbody>
+        </table>
+      {%endif%}
+
+
+
+    </div>
+    </div>
+    {#     page {{ page }} of {{ page.num_pages }}#}
+    {% if p %}
+        <div class="pagination">
+                  <span class="step-links">
+                      {% if p.has_previous %}
+                          <a href="#"
+                             class="text-danger paginate_button previous request_facturacion"><span
+                                  class="text-danger glyphicon glyphicon-backward"></span> Anterior</a>
+                                  <input type="hidden" class="paginate_button_prev" next_page="{{ p.number }}">
+                      {% endif %}
+                      <span class="current">
+                          Página {{ p.number }} de {{ p.paginator.num_pages }}
+                          <input type="hidden" class="current_page" page="{{p.number}}">
+                      </span>
+
+                      {% if p.has_next %}
+                          <a href="#" class="text-danger paginate_button next paginate_button_next request_facturacion">Siguiente
+                            <input type="hidden" class="paginate_button_next request_facturacion" next_page="{{ p.number }}">
+                              <span class="text-danger glyphicon glyphicon-forward"></span></a>
+                      {% endif %}
+                  </span>
+        </div>
+    {% endif %}
+</div>
+
+<div id="jquery_dialog" title="Basic dialog">
+</div>
+{% endblock %}

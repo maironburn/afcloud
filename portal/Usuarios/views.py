@@ -11,7 +11,6 @@ from portal.Usuarios.forms import *
 #####
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse
-
 from django.http import HttpResponseRedirect, QueryDict, HttpResponse
 from django.shortcuts import render
 from keyring.core import set_password
@@ -96,7 +95,8 @@ def index(request, template_name='index.html', extra_context=None):
     request.session['globalconf_isdone']= globalconf_isdone
     request.session['proyectos']     = col['proyectos']
 
-    p_seleccionado= request.session.get('id_proyecto_seleccionado', False)
+    #p_seleccionado= request.session.get('id_proyecto_seleccionado', False)
+    p_seleccionado= False
     if p_seleccionado and int(p_seleccionado) not in current_projects:
         request.session['proyecto_seleccionado'] = False
 

@@ -28,35 +28,7 @@ class ProyectoForm(forms.ModelForm):
         model=AfProyecto
         fields=('pro_nombre','pro_descripcion', 'pro_activo')
 
-    '''
-    def __init__(self, *args,**kwargs):
-        ENV_CHOICES=((choice.pk, choice.ent_nombre) for choice in AfEntorno.objects.all())
-        super(ProyectoForm, self).__init__(*args, **kwargs)
-        
 
-    def __init__(self, *args,**kwargs):
-        self.entornos_associated=[]
-        
-        #self.fields['entornos'].initial=kwargs['entornos']
-        if len(args):
-
-            if args[0] :
-                self.pro_nombre=args[0].get('pro_nombre', None)
-                self.pro_descripcion=args[0].get('pro_descripcion', None)
-                self.pro_activo=True if args[0].get('pro_activo', None)=='on' else False
-
-            if 'entornos' in args[0]:
-                self.entornos=args[0].getlist('entornos')
-                for e in self.entornos:
-                    instance=AfEntorno.objects.get(id=e)
-                    self.entornos_associated.append(instance)
-        super(ProyectoForm, self).__init__(*args, **kwargs)
-        
-        if len(kwargs):
-            if 'initial' in kwargs:
-                self.fields['entornos'].queryset=AfEntorno.objects.all()
-                self.fields['entornos'].initial=kwargs['initial']['entornos']
-    '''
     
     def is_valid(self):
         
@@ -97,9 +69,9 @@ class ProyectoForm(forms.ModelForm):
                     'registry_hash' : ep.registry_hash
                     }
            
-        if createNameSpaceStack(**kwargs):
-            afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
-            afep.save()
+            if createNameSpaceStack(**kwargs):
+                afep=AfRelEntPro.objects.create(ent=ep, pro=proyecto)
+                afep.save()
         
 
     def saveRelations(self, instance):

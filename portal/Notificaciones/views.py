@@ -54,13 +54,19 @@ def getNotifyDescription(notificaciones):
     lst_notificaciones=[]
     
     for n in notificaciones:
-        tipo_rel_inst = AfNotify_Tipo_instancia.objects.get(notify=n)
-        tipo_desc  = tipo_rel_inst.tipo.desc
-        instancia_asociada= dict_rel_tipo_instancia[ tipo_rel_inst.tipo.short_desc]
-        instancia= getattr(tipo_rel_inst, instancia_asociada)
-        
-        notify_nfo ={'notificacion': n, 'tipo_desc': tipo_desc, 'instancia_asociada': instancia_asociada, 'instancia_rel_id': instancia.id}
-        lst_notificaciones.append(notify_nfo)
+        try:
+            tipo_rel_inst = AfNotify_Tipo_instancia.objects.filter(notify__owner=n.owner)
+            for tri in tipo_rel_inst:
+                tipo_desc  = tri.tipo.desc
+                instancia_asociada= dict_rel_tipo_instancia[ tri.tipo.short_desc]
+                instancia= getattr(tri, instancia_asociada)
+                
+                notify_nfo ={'notificacion': n, 'tipo_desc': tipo_desc, 'instancia_asociada': instancia_asociada, 'instancia_rel_id': instancia.id}
+                lst_notificaciones.append(notify_nfo)
+                
+        except Exception as e:
+            
+            pass
         
     return lst_notificaciones
 
@@ -69,7 +75,7 @@ def getNotifyDescription(notificaciones):
 def notificacionesIndex(request, template_name='notificacionesIndex.html', extra_context=None):
     try:
         # para las busquedas
-        name = request.GET.get('p') if request.GET.get('p') else ''
+        #name = request.GET.get('p') if request.GET.get('p') else ''
         af_user= AfUsuario.objects.get(user=request.user)
         notificaciones= AfUserNotify.objects.filter(to_user=af_user)
         lst_notify_info=getNotifyDescription(notificaciones)
@@ -83,10 +89,6 @@ def notificacionesIndex(request, template_name='notificacionesIndex.html', extra
     except Exception as e:
         pass
 
-    if name == '':
-        e = 'no'
-    else:
-        pass
 
     hasNotificationPending(request)
     paginator = Paginator(lst_notify_info, 10)

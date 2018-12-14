@@ -2,62 +2,128 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% block content %}
-<script>
 
-MONITORING_OPERATIONS={
+<script>
+ADMIN_MONITORING_OPERATIONS={
 	'url_monitoring': '/monitoringRequest/',
   'from_date': 0,
   'to_date'  : 0,
-	GodZilla_callback: function(data){
+	'pro_envs_list': [],
+	'is_admin': 1,
 
+	GodZilla_callback: function(data){
 		//console.log("GodZilla_callback");
 		switch(data.action){
 
 			case 'monitoringRequest':
 				console.log("monitoringRequest");
 
-				 //$('#jquery_dialog').html(data.html);
-
          if (!data.available_info){
              $('#jquery_dialog').html('<p>No hay información disponible</p>');
            }
 
-	         }
-         }
+	       }
+      }
 }; //END NS
 
+/**
+dp de una nueva consulta (solicitud) de widgets
+restablece el tamaño original de los div
+*/
+function restoreDimensionDivWidgets(){
 
+	$.each($('.div_widget'), function(){
+		if ($(this).hasClass('col-sm-4'))
+			$(this).removeClass('col-sm-4').addClass('col-sm-2');
+	});
+
+}
+
+function clean_iframes(){
+
+	for (j=0;j<10;j++){
+		var widget_id_class='widget_'+ j;
+		$('.' + widget_id_class).attr('src',"");;
+	}
+}
+
+function loadEnvironments(){
+
+		$('[name="entornos"]')
+		.find('option')
+		.remove()
+		.end();
+
+		$('.ent_all').each(function(){
+						var ent= $(this).attr('ent_name');
+						var ent_id=$(this).attr('entorno_id');
+						console.log('Cluster: %s, id: %s', ent, ent_id);
+
+						$('[name="entornos"]').append('<option value="' + ent_id + '"' + '>' + ent + '</option>').val(ent_id);
+			});
+
+}
 
 
 $(document).on('click', '.request_monitoring', function(){
  // url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$
   entorno= $('[name="entornos"] option:selected').val();
+  restoreDimensionDivWidgets();
   widget_lst=[];
 
   $('.controls input:checked').each(function(){
 		widget_lst.push($(this).val());
 	});
-	widgets= widget_lst.join('_');
+	widget_lst.sort();
 
-  from= MONITORING_OPERATIONS.from_date;
-	to  = MONITORING_OPERATIONS.to_date;
+  from = ADMIN_MONITORING_OPERATIONS.from_date;
+	to   = ADMIN_MONITORING_OPERATIONS.to_date;
 
-	MONITORING_OPERATIONS.url_monitoring+= entorno + '/' + widgets + '/' + from + '/' + to;
-	var datos  = AJAXSTUFF.getSpecificRequest('','monitoringRequest',MONITORING_OPERATIONS.url_monitoring );
-	datos.csrftoken = AJAXSTUFF.get_csrfmiddlewaretoken();
-	datos.request = 'GET';
-	var content= AJAXSTUFF.RequestDefinition(datos);
-	AJAXSTUFF.makeRequest(content, MONITORING_OPERATIONS.GodZilla_callback);
-	MONITORING_OPERATIONS.url_monitoring='/monitoringRequest/';
-	console.log("");
+  if (from==0)
+		from = new Date(year,mes,1).getTime();
+  if (to==0)
+	   to  = new Date().getTime();
+
+
+ clean_iframes();
+
+ //dimensiones del widget (width, height)
+ var small_one=[4,5,6,7];
+ var widgets_dimensions={
+	 '4'  :	['180', '200'],
+	 '5'  :	['180', '200'],
+	 '6'  :	['180', '200'],
+	 '7'  :	['180', '200'],
+	 '9'  :	['450', '200'],
+	 '11' :	['450', '200'],
+	 '12' :	['450', '200'],
+	 '16':	['450', '200']
+ };
+ 	var proyecto= $('.rel_pro_env').attr('proyecto_name');
+
+	for (i=0; i<widget_lst.length;i++){
+		var widget_id_class='widget_'+ i;
+		var iframe_url= $('.' + proyecto + '.'+ widget_lst[i]).attr('url');
+		$('.' + widget_id_class).attr('src',iframe_url + '&from=' + from + '&to='+ to + '&theme=light');
+		console.log("url: %s", iframe_url + '&from=' + from + '&to='+ to + '&theme=light"'+ '  width="'
+		+ widgets_dimensions[widget_lst[i]][0] + '"' + ' height="' + widgets_dimensions[widget_lst[i]][1] +  ' frameborder="0"');
+		if ($.inArray( parseInt(widget_lst[i]),small_one )==-1)
+				$('.' + 'div_widget_' + i).removeClass('col-sm-2').addClass('col-sm-4');
+
+		$('.' + widget_id_class).css({'width': widgets_dimensions[widget_lst[i]][0],'height': widgets_dimensions[widget_lst[i]][1]});
+		//div_widget_0
+	}
  });
 
 
 
 $( function() {
 
-    MONITORING_OPERATIONS.from_date=0;
-    MONITORING_OPERATIONS.to_date=0;
+    ADMIN_MONITORING_OPERATIONS.from_date=0;
+    ADMIN_MONITORING_OPERATIONS.to_date=0;
+
+		$('[name="proyecto"]').append($('<option>', {value:"All", text:'Estado del Cluster'}));
+    $('#div_id_proyecto label').css({'margin-top':'1em'});
 
     from = $( "#from" )
       .datepicker({
@@ -70,12 +136,12 @@ $( function() {
         numberOfMonths: 1
       })
       .on( "change", function() {
-        from.datepicker( "option", "maxDate", getDate( this ) );
+        //from.datepicker( "option", "maxDate", getDate( this ) );
         from_date=$("#from").datepicker( "getDate" );
         if (from_date!=null)
-            MONITORING_OPERATIONS.from_date= from_date.getTime();
+            ADMIN_MONITORING_OPERATIONS.from_date= from_date.getTime();
 
-        console.log("from_date: %s", MONITORING_OPERATIONS.from_date);
+        console.log("from_date: %s", ADMIN_MONITORING_OPERATIONS.from_date);
       }),
     to = $( "#to" ).datepicker({
       dateFormat: 'dd-mm-yy',
@@ -86,11 +152,11 @@ $( function() {
       numberOfMonths: 1
     })
     .on( "change", function() {
-      to.datepicker( "option", "minDate", getDate( this ) );
+      //to.datepicker( "option", "minDate", getDate( this ) );
       to_date=  $("#to").datepicker( "getDate" );
       if (to_date!=null)
-        MONITORING_OPERATIONS.to_date= to_date.getTime();
-      console.log("to_date: %s", MONITORING_OPERATIONS.to_date);
+        ADMIN_MONITORING_OPERATIONS.to_date= to_date.getTime();
+      console.log("to_date: %s", ADMIN_MONITORING_OPERATIONS.to_date);
     });
 
   function getDate( element ) {
@@ -100,19 +166,33 @@ $( function() {
     } catch( error ) {
       date = null;
     }
-
     return date;
   }
 
 var date=new Date();
+
+hoy= date.getDate();
 mes=date.getMonth();
 year=date.getFullYear();
-var myDate = new Date(year,mes,1) ;
-$('#from').datepicker('setDate', myDate);
+var fromDate = new Date(year,mes,1) ;
+var toDate = new Date(year,mes,hoy) ;
+$('#from').datepicker('setDate', fromDate);
+$('#to').datepicker('setDate', toDate);
 
-} );
+$('#select_all').click(function() {
+
+    var c = this.checked;
+		$('.span_select_all').text('Seleccionar todos');
+		c && $('.span_select_all').text('Deseleccionar todos');
+    $('[name="available_widgets"]').prop('checked', c);
+
+});
+
+loadEnvironments();
+
+});
+
 {% load crispy_forms_tags %}
-
 
 </script>
 
@@ -126,7 +206,21 @@ $('#from').datepicker('setDate', myDate);
   bottom: 5em;
 }
 
-#from,#to{
+.panel-container{
+	background-color: #EEEEEE !important;
+}
+
+.widgets_iframes{
+	background-color: olive;</div>
+
+	position: absolute;
+	width: 72em;
+	left: 38em;
+	height: 30em;
+	top: 0em;
+}
+
+#from, #to{
   width:8em;
   height: 34px;
   padding: 6px 12px;
@@ -155,16 +249,19 @@ $('#from').datepicker('setDate', myDate);
   float: left;
   top: 1em;
   }
+
+	.panel-content{
+		backgrount-color: "#f3f3f3"
+	}
 </style>
 
 <div class="panel-body">
     <form class="well" enctype="multipart/form-data" method="POST">
       {% csrf_token %}
       <div class="row">
-      <div class="col-sm-4 col-xs-1">
+      <div class="col-sm-4 ">
         <h2 class="text-danger">Monitorización {{request.session.proyecto_seleccionado}}</h2>
         <hr/>
-
         <div class="well">
           <div class="container-fluid">
           <label for="from">Intervalo de </label>
@@ -172,82 +269,148 @@ $('#from').datepicker('setDate', myDate);
           <label for="to">a</label>
           <input type="text" id="to" name="to">
           {% crispy form %}
-        </div>
+					<input type="checkbox" id="select_all" style="position: relative;margin-bottom:1em;cursor:pointer" name="selet_all" value="selet_all"><span class="span_select_all" style="margin-left: 8px;font-weight: bold;">Seleccionar todos</span><br>
+				</div>
         <input type="button" value="Enviar" class="btn btn-danger request_monitoring">
         <button type="button" class="btn btn-danger" onclick="location.href='/startpage'">Cancelar</button>
+
     </form>
     </div>
   </div>
 
+{%if ent_all %}
+	{% for i in ent_all %}
+		<input type="hidden" class="ent_all" ent_name="{{i.ent_nombre}}" entorno_id={{i.id}} />
+	{%endfor%}
+{% endif %}
 
-<div class="col-sm-2 col-xs-4">
+<!--
+relacion proyecto con entornos
+-->
+{% if rel_pro_ents %}
+	{% for i in rel_pro_ents %}
+		<input type="hidden" class="rel_pro_env" proyecto_name="{{i.proyecto}}" entornos="{{i.entornos}}" entornos_id={{i.entornos_id}} />
+	{% endfor %}
+{% endif %}
+
+{% if data %}
+	{% for i in data %}
+		{%for w in i.widgets %}
+			<input type="hidden" class="{{i.proyecto}} {{w.id_widget}}" ent_id="{{i.entornos.id}}" ent_name="{{i.entornos.ent_nombre}}" p_name="{{i.proyecto}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace={{i.proyecto}}&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
+			<input type="hidden" class="entorno_all {{w.id_widget}}" ent_id="{{i.entornos.id}}" ent_name="{{i.entornos.ent_nombre}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace=All&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
+		{% endfor %}
+	{% endfor %}
+{% endif %}
+
+<!--<div class="col-sm-2 col-xs-4"> -->
+<div class="div_widget div_widget_0 col-sm-2">
   <div id="tile5" class="">
-
        <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-              <iframe class="iframe1" src="https://isotrol.grafana.net/dashboard/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&fullscreen" width="450" height="200" frameborder="0"</iframe>
-
+              <iframe class="widget_0" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
 
-<div class="col-sm-2 col-xs-4">
+<!--<div class="col-sm-2 col-xs-4"> -->
+<div class="div_widget  div_widget_1 col-sm-2">
   <div id="tile5" class="">
-
-       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
+     <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-						  <iframe   class="iframe2" class="img-responsive" src="https://www.filmaffinity.com/es/film112486.html" width="450" height="200" frameborder="0"</iframe>
-
-
+						  <iframe class="widget_1" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
 
-<div class="col-sm-2 col-xs-5">
+<!--<div class="col-sm-2 col-xs-5"> -->
+<div class="div_widget  div_widget_2 col-sm-2">
   <div id="tile5" class="">
-
        <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-
-          <iframe  class="iframe3" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
-
+          <iframe class="widget_2" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
 
-<div class="col-sm-2 col-xs-4">
-  <div id="tile5" class="">
 
-       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-          <div class="item active ">
-          <iframe  class="iframe4" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
+	<div class="div_widget div_widget_3 col-sm-2">
+	  <div id="tile5" class="">
+	       <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active ">
+	          <iframe class="widget_3" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
 
-<div class="col-sm-2 col-xs-8">
+
+	<div class="div_widget div_widget_4 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+	          <iframe class="widget_4" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+
+	<div class="div_widget div_widget_5 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+	            <iframe class="widget_5" src="" frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+	<div class="div_widget div_widget_6 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+	            <iframe class="widget_6" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+
+	<div class="div_widget div_widget_7 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+							<iframe class="widget_7" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+<div class="div_widget div_widget_8 col-sm-2">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-          <iframe class="iframe5" src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
+            <iframe class="widget_8" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -255,71 +418,22 @@ $('#from').datepicker('setDate', myDate);
 </div>
 
 
-<div class="col-sm-2 col-xs-8">
+<div class="div_widget div_widget_9 col-sm-2">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
         <div class="carousel-inner">
           <div class="item active">
-            <iframe   class="iframe2" class="img-responsive" src="https://www.filmaffinity.com/es/film112486.html" width="450" height="200" frameborder="0"</iframe>
+						<iframe class="widget_9" src="" frameborder="0"></iframe>
           </div>
-
         </div>
       </div>
-
   </div>
 </div>
-
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-          <div class="item active">
-            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
-          </div>
-
-        </div>
-      </div>
-
-  </div>
-</div>
-
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-          <div class="item active">
-            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10" width="450" height="200" frameborder="0"></iframe>
-          </div>
-
-        </div>
-      </div>
-
-  </div>
-</div>
-
-
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-          <div class="item active">
-            <iframe src="https://isotrol.grafana.net/dashboard-solo/new?gettingstarted&orgId=1&from=1542893502760&to=1542894725907&panelId=10&theme=light" width="450" height="200" frameborder="0"></iframe>
-          </div>
-
-        </div>
-      </div>
-
-  </div>
-</div>
-
 </div>
 
 
 {% endblock %}
+
 {% block foot %}
 <footer class="footer text-right">
     <a href="http://www.isotrol.com" target="_blank"><img src="{% static 'images/logo-pie-transp.png' %}"></a>

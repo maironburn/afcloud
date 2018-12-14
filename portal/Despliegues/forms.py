@@ -12,7 +12,7 @@ from softwareproperties.ppa import CurlCallback
 
 class MyModelChoiceFieldService(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return obj.ent.ent_nombre
+        return obj.ser_nombre
     
 
 

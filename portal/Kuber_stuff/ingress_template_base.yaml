@@ -1,6 +1,10 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
+  annotations:
+    nginx.org/rewrites:
+      serviceName=instance2-svc rewrite=/
+      
   name: namespace-ingress
   namespace: namespace  
 spec:

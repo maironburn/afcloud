@@ -51,7 +51,6 @@
           jQuery.noConflict();
          $('#messageModal').modal('show');
        }
-
       });
 
 </script>
@@ -104,7 +103,7 @@
     {%if request.session.id_proyecto_seleccionado and request.session.globalconf_isdone  %}
 
     <ul class="nav navbar-nav " style="margin-left: 1em;">
-      <li><a href="/despliegue/proyecto/{{ request.session.id_proyecto_seleccionado }}"> <img src="{% static 'images/cube.png' %}" width="32px" height="32px">Despliegues</a></li>
+      <li><a href="/despliegue/proyecto/{{ request.session.id_proyecto_seleccionado }}"> <img src="{% static 'images/cube.png' %}" width="25px" height="25px">Despliegues</a></li>
     </ul>
     {% endif %}
   {%endif%}
@@ -115,19 +114,25 @@
 
        {%if request.session.id_proyecto_seleccionado and request.session.globalconf_isdone %}
           <!-- Opciones solo visibles si hay un proyecto seleccionado-->
-          <li><a href="/catalogo/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/catalog.svg'  %}" width="32px" height="32px"> Cat&aacute;logo</a></li>
-          <li><a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/members.svg'  %}" width="32px" height="32px"> Integrantes</a></li>
+          <li><a href="/catalogo/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/catalog.svg'  %}" width="25px" height="25px"> Cat&aacute;logo</a></li>
+          <li><a href="/integrantes/proyecto/{{ request.session.id_proyecto_seleccionado }}/"><img src="{% static 'images/members.svg'  %}" width="25px" height="25px"> Integrantes</a></li>
+          <li style=""><a href="{% url 'monitoring_request' %}"><img src="{% static 'images/monitoring.png' %}" width="25px" height="25px"> Monitorización</a></li>
         {% endif %}
         {%if not request.session.afcloud_admin  %}
-        <li><a style="" href="{% url 'admin_incidencias' %}">    <img src="{% static 'images/incidencia.svg' %}" width="32px" height="32px"> Incidencias</a></li>
-        <li style=""><a href="{% url 'monitoring' %}"><img src="{% static 'images/monitoring.png' %}" width="32px" height="32px"> Monitorización</a></li>
+        <li><a style="" href="{% url 'admin_incidencias' %}">    <img src="{% static 'images/incidencia.svg' %}" width="25px" height="25px"> Incidencias</a></li>
         {%endif%}
+
+
+        {%if request.session.id_proyecto_seleccionado %}
+        <li style=""><a href="{% url 'facturacion_index' %}"><img src="{% static 'images/facturacion.svg' %}" width="25px" height="25px"> Facturación</a></li>
+        <li style=""><a href="{% url 'ans_index' %}"><img src="{% static 'images/disponibilidad.png' %}" width="25px" height="25px"> ANS</a></li>
+        {% endif %}
       </ul>
  {% endif %}
 
  {%if request.session.notificaciones_no_leidas%}
    <ul class="nav navbar-nav " >
-     <li><a href="/consultarNotificaciones" > <img src="{% static 'images/mensajes_pendientes.svg' %}" width="32px" height="32px">Notificaciones no leídas</a></li>
+     <li><a href="/consultarNotificaciones" > <img src="{% static 'images/mensajes_pendientes.svg' %}" width="25px" height="25px">Notificaciones no leídas</a></li>
    </ul>
  {%endif%}
 
@@ -137,19 +142,19 @@
       aria-expanded="false"><span class="glyphicon "></span>
 
       {%if request.session.notificaciones_no_leidas %}
-      <strong> <img src="{% static 'images/user_logged_with_notifications.png'  %}" width="32px" height="32px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
+      <strong> <img src="{% static 'images/user_logged_with_notifications.png'  %}" width="25px" height="25px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
       {%else%}
-       <strong> <img src="{% static 'images/user_logged.svg'  %}" width="32px" height="32px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
+       <strong> <img src="{% static 'images/user_logged.svg'  %}" width="25px" height="25px">{{ request.user.first_name }} {{ request.user.last_name }} ({{request.user.username}})</strong>
        {%endif%}
        <span class="caret">
      </span>
    </a>
 
    <ul class="dropdown-menu ">
-       <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/editar_usuario.png'  %}" width="32px" height="32px">Modificar perfil</a></li>
+       <li><a href="{% url 'OwnUserEdit' id=request.user.id %}"><span class="glyphicon "></span> <img src="{% static 'images/editar_usuario.png'  %}" width="25px" height="25px">Modificar perfil</a></li>
        <li><a href="{% url 'consultar_notificaciones'  %}"><span class="glyphicon "></span> <img src="{% static 'images/notificaciones.svg'  %}" width="45px" height="45px">Notificaciones</a></li>
 
-     <li><a href="/logout/"><span class="glyphicon "></span> <img src="{% static 'images/logout.svg'  %}" width="32px" height="32px"> Cerrar Sesión</a></li>
+     <li><a href="/logout/"><span class="glyphicon "></span> <img src="{% static 'images/logout.svg'  %}" width="25px" height="25px"> Cerrar Sesión</a></li>
   </ul>
 </li>
 </ul>
@@ -158,19 +163,20 @@
 {% if request.session.afcloud_admin %}
     <ul class="nav navbar-nav  navbar-right">
     <li class="dropdown"><a class="dropdown-toggle" href="/gra/despliegues/" data-toggle="dropdown" role="button"
-                                aria-haspopup="true" aria-expanded="false"><img src="{% static 'images/administrar.png' %}" width="32px" height="32px">Administrar<span
+                                aria-haspopup="true" aria-expanded="false"><img src="{% static 'images/administrar.png' %}" width="25px" height="25px">Administrar<span
                 class="caret"></span></a>
             <ul class="dropdown-menu ">
-                <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="32px" height="32px">Usuarios</a></li>
-                <li><a href="{% url 'globalconf' %}">    <img src="{% static 'images/global_conf.png' %}" width="32px" height="32px">Configuración</a></li>
+                <li><a href="{% url 'admin_usuarios' %}"><img src="{% static 'images/adm_usuarios.svg' %}" width="25px" height="25px">Usuarios</a></li>
+                <li><a href="{% url 'admin_env' %}">     <img src="{% static 'images/adm_entornos.svg' %}" width="25px" height="25px">Entornos</a></li>
                 {% if request.session.globalconf_isdone %}
-                <li><a href="{% url 'admin_projects' %}"><img src="{% static 'images/adm_proyectos.svg' %}" width="32px" height="32px">Proyectos</a></li>
-                <li><a href="{% url 'admin_services' %}"><img src="{% static 'images/adm_servicios.svg' %}" width="32px" height="32px">Servicios</a></li>
+                  <li><a href="{% url 'admin_services' %}"><img src="{% static 'images/adm_servicios.svg' %}" width="25px" height="25px">Servicios</a></li>
+                  <li><a href="{% url 'admin_projects' %}"><img src="{% static 'images/adm_proyectos.svg' %}" width="25px" height="25px">Proyectos</a></li>
                 {%endif%}
-                <li><a href="{% url 'admin_env' %}">     <img src="{% static 'images/adm_entornos.svg' %}" width="32px" height="32px">Entornos</a></li>
-                <li><a href="{% url 'admin_incidencias' %}">     <img src="{% static 'images/incidencia.png' %}" width="32px" height="32px">Incidencias</a></li>
-                <li><a href="{% url 'conf_mail_server' %}">     <img src="{% static 'images/mail.png' %}" width="32px" height="32px">Configuración correo</a></li>
-              <li style=""><a href="{% url 'adminMonitoring' %}"><img src="{% static 'images/monitoring.png' %}" width="32px" height="32px"> Monitorización</a></li>
+                <li><a href="{% url 'admin_incidencias' %}">     <img src="{% static 'images/incidencia.png' %}" width="25px" height="25px">Incidencias</a></li>
+                <li style=""><a href="{% url 'adminMonitoring' %}"><img src="{% static 'images/monitoring.png' %}" width="25px" height="25px"> Monitorización de entornos</a></li>
+                <li><a href="{% url 'globalconf' %}">    <img src="{% static 'images/global_conf.png' %}" width="25px" height="25px">Configuración</a></li>
+                <li><a href="{% url 'conf_mail_server' %}">     <img src="{% static 'images/mail.png' %}" width="25px" height="25px">Configuración correo</a></li>
+
             </ul>
         </li>
     </ul>

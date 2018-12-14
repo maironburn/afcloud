@@ -7,73 +7,7 @@ from portal.models import AfEntorno, AfProyecto
 
 from django.contrib.admin import widgets
 
-        
-class MonitoringForm(forms.Form):
-    
-    #proyecto             = forms.CharField(label='Proyecto', max_length=100)
-    entornos             = forms.ModelChoiceField(queryset= AfEntorno.objects.all())
-    #widget_list          = ['Uso de CPU','Uso de Memoria', 'Uso de Disco']
-    widget_list = (
-    ('4', 'Cluster Pod Usage'),
-    ('5', 'Cluster CPU Usage'),
-    ('6', 'Cluster Memory Usage'),
-    ('7', 'Cluster Disk Usage'),
-    ('9', 'Cluster Pod Capacity'),
-    ('10', 'Cluster CPU Usage'),
-    ('11', 'Cluster Mem Usage'),
-    ('12', 'Cluster Disk Usage'),
-    ('16', 'Deployment Replicas'),
-    
-)
-    
-    available_widgets    = forms.ChoiceField(choices=widget_list)
-    
-    available_widgets = forms.MultipleChoiceField(
-        required=False,
-        widget=forms.CheckboxSelectMultiple,
-        choices=widget_list,
-    )
-    '''
-    error_messages = {
-        'password_mismatch': _("Las contraseñas no son las mismas."),
-    }
-    '''
-    
- 
-    def __init__(self, *args, **kwargs):
-        super(MonitoringForm, self).__init__(*args, **kwargs)
-        if len(kwargs):
-            if 'initial' in kwargs and 'user_queryset' in  kwargs['initial']:
-                self.fields['user'].queryset = kwargs['initial']['user_queryset']
-            if 'initial' in kwargs  and 'user' in kwargs['initial'] and 'tperfil' in kwargs['initial']:
-                self.user=kwargs['initial']['user']
-                self.perfil=kwargs['initial']['tperfil']
-                
-
-class adminMonitoringChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.pro_nombre
-    
-         
-class adminMonitoringForm(forms.Form):
-    
-    proyecto = adminMonitoringChoiceField(label="Servicio",queryset=(AfProyecto.objects.all()) ,empty_label="(Seleccione proyecto)")
-    #proyecto             = forms.ModelChoiceField(queryset= AfProyecto.objects.all())
-    entornos             = forms.ModelChoiceField(queryset= (AfEntorno.objects.all()))
-    '''
-    widget_list = (
-    ('4', 'Cluster Pod Usage'),
-    ('5', 'Cluster CPU Usage'),
-    ('6', 'Cluster Memory Usage'),
-    ('7', 'Cluster Disk Usage'),
-    ('9', 'Cluster Pod Capacity'),
-    ('10', 'Cluster CPU Usage'),
-    ('11', 'Cluster Mem Usage'),
-    ('12', 'Cluster Disk Usage'),
-    ('16', 'Deployment Replicas'),
-    )
-    '''
-    widget_list = (
+widget_list = (
     ('4', 'Cluster Pod Usage'),
     ('5', 'Uptime'),
     ('6', 'Cluster Memory Usage'),
@@ -83,7 +17,34 @@ class adminMonitoringForm(forms.Form):
     ('11', 'Cluster Mem Capacity'),
     ('12', 'Cluster Disk Capacity'),
     ('16', 'Deployment Replicas'),
+    )        
+class MonitoringForm(forms.Form):
+    
+    #proyecto             = forms.CharField(label='Proyecto', max_length=100)
+    entornos             = forms.ModelChoiceField(queryset= AfEntorno.objects.all())
+    available_widgets    = forms.ChoiceField(choices=widget_list)
+    
+    available_widgets = forms.MultipleChoiceField(
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        choices=widget_list,
     )
+
+
+                
+
+class adminMonitoringChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.pro_nombre
+    
+         
+class adminMonitoringForm(forms.Form):
+    
+    proyecto = adminMonitoringChoiceField(label="Proyecto / estado del cluster",queryset=(AfProyecto.objects.all()) ,empty_label="(Seleccione opción)")
+    #proyecto             = forms.ModelChoiceField(queryset= AfProyecto.objects.all())
+    entornos             = forms.ModelChoiceField(queryset= (AfEntorno.objects.all()))
+
+
     #available_widgets    = forms.ChoiceField(choices=widget_list)
     
     available_widgets = forms.MultipleChoiceField(label='Widgets disponibles',
@@ -93,17 +54,6 @@ class adminMonitoringForm(forms.Form):
     )
    
    
- 
-    def __init__(self, *args, **kwargs):
-        super(adminMonitoringForm, self).__init__(*args, **kwargs)
-        if len(kwargs):
-            if 'initial' in kwargs and 'user_queryset' in  kwargs['initial']:
-                self.fields['user'].queryset = kwargs['initial']['user_queryset']
-            if 'initial' in kwargs  and 'user' in kwargs['initial'] and 'tperfil' in kwargs['initial']:
-                self.user=kwargs['initial']['user']
-                self.perfil=kwargs['initial']['tperfil']
-                
-
 
 
 

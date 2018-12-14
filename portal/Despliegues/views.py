@@ -151,81 +151,102 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
     value = 'nuevo'
 
     try:
+        
         instancias,lst_despliegues = getInstancias (request,id_proyecto)
         proyecto=AfProyecto.objects.get(id=id_proyecto)
+
+        if request.method == "POST":
     
+            form = creaInstanciaForm(request.POST or None)
+            servicio=form.getServicio()
+            entorno= form.getEntorno()
+            lca= AfLineaCatalogo.objects.get(pro=proyecto,ser=servicio)
+    
+            yaml_file=servicio.ser_yaml_file.path
+            kube_conf= entorno.ent.ent_config_file.path
+            min= request.POST.get('ser_min_replicas', False)
+            max= request.POST.get('ser_max_replicas', False)
+            unique_instance_name = request.POST.get('ins_unique_name', False)
+            namespace= proyecto.pro_nombre_k8s
+            fqdn= AfGlobalconf.objects.values('fqdn')
+            
+            annotation=[]
+            lst_instancias=[]
+            
+            for i in lst_despliegues:
+                annotation.append( 'serviceName=%s-svc rewrite=/' % i.ins_unique_name)
+                lst_instancias.append(i.ins_unique_name)
+                
+            annotation.append( 'serviceName=%s-svc rewrite=/' % unique_instance_name)
+            lst_instancias.append(unique_instance_name)
+            
+            annotation_str=';'.join(annotation)
+             
+            '''
+             comprobar en is valid q no existe otro deployment con el mismo nombre
+            '''
+            if form.is_valid():
+                operation_result=False
+                try:
+                    kuber=Kuber(kube_conf)
+                    #fichero_yaml, target_namespace
+                    kwargs={
+                            'fichero_yaml'         : yaml_file , #'yaml_file',
+                            'namespace'            : namespace,
+                            'replicas_min'         : min,
+                            'replicas_max'         : max,
+                            'unique_instance_name' : unique_instance_name,
+                            'nfs_server'           : entorno.ent.nfs_server,
+                            'env_name'             : entorno.ent.ent_nombre,
+                            'fqdn'                 : fqdn[0]['fqdn'],
+                            'annotation_str'       : annotation_str,
+                            'lst_instancias'       : lst_instancias
+                            }
+                    
+                    operation_result=kuber.createServiceStack(**kwargs)
+                    #kuber.updateIngressPostDeploy(**kwargs)
+                    #form.setConOkStatus()
+                except Exception as e:
+                    logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))
+    
+                if operation_result:
+                    #host: ns.env.fqdn/unique_name_ins-svc
+                    uri= ('https://%s.%s.%s/%s' % (namespace, entorno.ent.ent_nombre, fqdn[0]['fqdn'], unique_instance_name))
+                    instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name, ins_uri=uri)
+                    ciclo = AfCiclo.objects.create(ins=instancia, ins_unique_name=instancia.ins_unique_name, pro=proyecto, num_replicas=min, tarifa=lca.lca_tarifa)
+                    messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
+                    return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
+            
+            return render(request, template_name, {'form': form, 'value': value})
+        
+        else:
+            data= {}
+            dict_serv_extra= []
+            nombre_proyecto= request.session.get('proyecto_seleccionado', False)
+            id_servicios=AfLineaCatalogo.objects.filter(pro=proyecto).select_related('ser').values_list('ser_id', flat=True)
+            svc=AfServicio.objects.filter(id__in=[id_servicios], ser_deleted=False)
+            if len(svc):
+                dict_serv_extra= getMaxMinReplic(svc)
+                data={
+                        'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
+                        'service_queryset': svc
+                      }
+            
+            form = InstanciaForm(data)
+
     except ObjectDoesNotExist as dne:
         request.session['proyecto_seleccionado']    = False
         request.session['id_proyecto_seleccionado'] = False
         messages.error(request, "Despliegue solicitado de un proyecto inexistente")
         return TemplateResponse(request, template_name, None)
     
-    if request.method == "POST":
-
-        form = creaInstanciaForm(request.POST or None)
-        servicio=form.getServicio()
-        entorno= form.getEntorno()
-        lca= AfLineaCatalogo.objects.get(pro=proyecto,ser=servicio)
-
-        yaml_file=servicio.ser_yaml_file.path
-        kube_conf= entorno.ent.ent_config_file.path
-        min= request.POST.get('ser_min_replicas', False)
-        max= request.POST.get('ser_max_replicas', False)
-        unique_instance_name = request.POST.get('ins_unique_name', False)
-        namespace= proyecto.pro_nombre_k8s
-        fqdn= AfGlobalconf.objects.values('fqdn')
-
-        '''
-         comprobar en is valid q no existe otro deployment con el mismo nombre
-        '''
-        if form.is_valid():
-            operation_result=False
-            try:
-                kuber=Kuber(kube_conf)
-                #fichero_yaml, target_namespace
-                kwargs={
-                        'fichero_yaml'         : yaml_file , #'yaml_file',
-                        'namespace'            : namespace,
-                        'replicas_min'         : min,
-                        'replicas_max'         : max,
-                        'unique_instance_name' : unique_instance_name,
-                        'nfs_server'           : entorno.ent.nfs_server,
-                        'env_name'             : entorno.ent.ent_nombre,
-                        'fqdn'                 : fqdn[0]['fqdn']
-                        }
-                
-                operation_result=kuber.createServiceStack(**kwargs)
-                #kuber.updateIngressPostDeploy(**kwargs)
-                #form.setConOkStatus()
-            except Exception as e:
-                logger.error(" %s , Fichero de entorno K8s no valido %s" % (__name__,kube_conf))
-
-            if operation_result:
-                #host: ns.env.fqdn/unique_name_ins-svc
-                uri= ('https://%s.%s.%s/%s-svc' % (namespace, entorno.ent.ent_nombre, fqdn[0]['fqdn'], unique_instance_name))
-                instancia=AfInstancia.objects.create(lca=lca,rep=entorno, ins_unique_name=unique_instance_name, ins_uri=uri)
-                ciclo = AfCiclo.objects.create(ins=instancia, num_replicas=min, tarifa=lca.lca_tarifa)
-                messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
-                return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
-        
-        return render(request, template_name, {'form': form, 'value': value})
-    
-    else:
-        data= {}
-        dict_serv_extra= []
-        nombre_proyecto= request.session.get('proyecto_seleccionado', False)
-        id_servicios=AfLineaCatalogo.objects.filter(pro=proyecto).select_related('ser').values_list('ser_id', flat=True)
-        svc=AfServicio.objects.filter(id__in=[id_servicios], ser_deleted=False)
-        if len(svc):
-            dict_serv_extra= getMaxMinReplic(svc)
-            data={
-                    'entorno_queryset':AfRelEntPro.objects.filter(pro__id=id_proyecto),
-                    'service_queryset': svc
-                  }
-        
-        form = InstanciaForm(data)
-
-        return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
+    except Exception as e:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False
+        messages.error(request, "Ocurrió un error durante el despliegue")
+        return TemplateResponse(request, template_name, None)   
+     
+    return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
 
 
 @login_required
@@ -248,12 +269,12 @@ def refreshReplicas(request,id_proyecto):
     data={'action': 'refresh_replicas', 'response':False}
     return JsonResponse({'data':data})
 
-def renewCicloDeployment(instance, replicas, tarifa):
+def renewCicloDeployment(instance, pro, replicas, tarifa):
     
     ciclo = AfCiclo.objects.filter(ins=instance).last()
     ciclo.cic_fecha_fin=datetime.datetime.now()
     ciclo.save()
-    ciclo = AfCiclo.objects.create(ins=instance, num_replicas=replicas, tarifa=tarifa)
+    ciclo = AfCiclo.objects.create(ins=instance, ins_unique_name=instance.ins_unique_name, pro=pro, num_replicas=replicas, tarifa=tarifa)
               
 @login_required
 @group_required(None)
@@ -273,7 +294,7 @@ def modifyDeploymentReplicas(request, id_instancia, replicas, required_level=2 )
         if replicas_spec:
             messages.success(request,  'Despliegue lanzado con éxito', extra_tags='Estado de despliegue')
             tarifa = instance.lca.lca_tarifa
-            renewCicloDeployment(instance,replicas_spec, tarifa)
+            renewCicloDeployment(instance,instance.lca.pro, replicas_spec, tarifa)
   
         else:
             messages.success(request,  'Repliegue lanzado con éxito' , extra_tags='Estado de despliegue')
@@ -296,7 +317,7 @@ def manualmodifyDeploymentReplicas(request, id_instancia, replicas, required_lev
         namespace = instance.lca.pro.pro_nombre
         kuber=Kuber(entorno_file)                
         kuber.modifyDeploymentReplicas(instance.ins_unique_name, namespace,  replicas) 
-        renewCicloDeployment(instance,replicas, instance.lca.lca_tarifa)       
+        renewCicloDeployment(instance,instance.lca.pro, replicas, instance.lca.lca_tarifa)       
         messages.success(request,  'Modificación de réplicas lanzadas con éxito', extra_tags='Estado de despliegue')
        
     except Exception as e:
@@ -334,12 +355,12 @@ def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
                 }
         
         kuber=Kuber(f_config_entorno)
-        if len(instancias_asociadas):
-            kuber.unpublishFromIngress(kwargs)
-        else:
-            kuber.delete_namespaced_ingress(kwargs)
+        kuber.unpublishFromIngress(kwargs)
+
+            #kuber.delete_namespaced_ingress(kwargs)
             
         kuber.delete_Instacia(**kwargs)
+        
         
         ciclo = AfCiclo.objects.filter(ins=instance).last()
         ciclo.cic_fecha_fin=datetime.datetime.now()
@@ -347,7 +368,10 @@ def eliminarDespliegue(request, id_proyecto, id_instancia, required_level=2):
         instance.delete()
         
     except IntegrityError as ie:
-        e = 'no'
-        
+        pass
+    
+    except Exception as e:
+        pass
+            
     messages.success(request,  'Despligue elminado con éxito', extra_tags='Eliminación de despliegues')
     return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))

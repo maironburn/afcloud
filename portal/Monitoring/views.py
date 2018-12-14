@@ -2,7 +2,6 @@
 # coding=utf-8
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from portal.models import AfProyecto, AfEntorno
@@ -11,22 +10,24 @@ from django.db import IntegrityError
 from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
-from afcloud.settings import GRAFANA_PORT, URL_PREFIX, URL_SUFIX, URL_THEME
+from afcloud.settings import GRAFANA_PORT, URL_PREFIX
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
 
 
-dict_widget= {
-                    'pod_usage'             : '',
-                    'cpu_usage'             : '',
-                    'memory_usage'          : '',
-                    'disk_usage'            : '',
-                    'pod_capacity'          : '',
-                    'cpu_capacity'          : '',
-                    'mem_capacity'          : '',
-                    'disk_capacity'         : '',
-                    'deployment_replicas'   : ''
-                }
+
+widget_list = (
+    ('4', 'Cluster Pod Usage'),
+    ('5', 'Cluster CPU Usage'),
+    ('6', 'Cluster Memory Usage'),
+    ('7', 'Cluster Disk Usage'),
+    ('9', 'Cluster Pod Capacity'),
+    ('10', 'Cluster CPU Usage'),
+    ('11', 'Cluster Mem Usage'),
+    ('12', 'Cluster Disk Usage'),
+    ('16', 'Deployment Replicas'),
+    )    
+
+
         
 @login_required
 @group_required('Gestor',)
@@ -69,7 +70,7 @@ def  monitoringIndex(request,  template_name='monitoring_Index.html', extra_cont
                                            })
 
 
-def adminMonitoring(request,  template_name='admin_monitoring_Index.html', extra_context=None):
+def adminMonitoring (request, template_name='admin_monitoring_Index.html', extra_context=None):
     
     try:
 
@@ -78,25 +79,33 @@ def adminMonitoring(request,  template_name='admin_monitoring_Index.html', extra
         rel_pro_ents=[]
         entornos_list=[]
         entornos_id_list=[]
+        env= []
+        lst_widgets =[]
+        
         ent_all = AfEntorno.objects.all()
-        for p in proyectos:
-            dict_proj_env={}
-            
-            entornos= AfRelEntPro.objects.filter(pro=p)
-            for e in entornos:
-                lst_widgets = monitoringWidgets (request, e.ent.id, p.pro_nombre)
-                dict_proj_env = {'proyecto':  p.pro_nombre, 'entornos': e.ent , 'widgets' : lst_widgets}
-                entornos_list.append(e.ent.ent_nombre)
-                entornos_id_list.append(str(e.ent.id))
+        if ent_all.count():
+            for p in proyectos:
+                dict_proj_env={}
+                entornos= AfRelEntPro.objects.filter(pro=p)
                 
-            rel_pro_ents.append ({'proyecto':  p.pro_nombre, 'entornos': ','.join(entornos_list), 'entornos_id' : ','.join(entornos_id_list)})
-            entornos_list=[]
-            entornos_id_list=[]
-            
-            
-            lst_proj_env.append(dict_proj_env)
-            
-        form= adminMonitoringForm()
+                for e in entornos:
+                    env.append(e.ent)
+                    lst_widgets.extend(monitoringWidgets (request, e.ent.id, p.pro_nombre))
+                    entornos_list.append(e.ent.ent_nombre)
+                    entornos_id_list.append(str(e.ent.id))
+                    
+                dict_proj_env = {'proyecto':  p.pro_nombre, 'entornos': env , 'widgets' : lst_widgets}    
+                env=[]
+                rel_pro_ents.append ({'proyecto':  p.pro_nombre, 'entornos': ','.join(entornos_list), 'entornos_id' : ','.join(entornos_id_list)})
+                entornos_list=[]
+                lst_widgets = []
+                entornos_id_list=[]
+                
+                lst_proj_env.append(dict_proj_env)
+                
+            form= adminMonitoringForm()
+        else:
+            messages.error(request, "No hay ningún entorno definido")
         
     except ObjectDoesNotExist as dne:
         request.session['proyecto_seleccionado']    = False
@@ -124,24 +133,11 @@ def monitoringWidgets(request, id_env,ns=None):
     try:
         entorno    = AfEntorno.objects.get(id=id_env)
         entorno_ip = entorno.cluster_ip
-        widget_list = (
-            ('4', 'Cluster Pod Usage'),
-            ('5', 'Cluster CPU Usage'),
-            ('6', 'Cluster Memory Usage'),
-            ('7', 'Cluster Disk Usage'),
-            ('9', 'Cluster Pod Capacity'),
-            ('10', 'Cluster CPU Usage'),
-            ('11', 'Cluster Mem Usage'),
-            ('12', 'Cluster Disk Usage'),
-            ('16', 'Deployment Replicas'),
-            )    
-
         ns= 'All' if ns is None else ns
         lst_iframe = []
         
         for w in widget_list:
-            #entorno + '/' + widgets + '/' + from + '/' + to;
-            lst_iframe.append({'id_widget': w[0],'widget_url': widget_url % (entorno_ip, GRAFANA_PORT, URL_PREFIX)})
+            lst_iframe.append({'ent_nombre': entorno.ent_nombre, 'entorno_id': entorno.id, 'id_widget': w[0],'widget_url': widget_url % (entorno_ip, GRAFANA_PORT, URL_PREFIX)})
         
                 
     except ObjectDoesNotExist as dne:
@@ -157,26 +153,48 @@ def monitoringWidgets(request, id_env,ns=None):
 
 
 
-def  monitoringRequest(request,  id_env, id_widgets, r_from, r_to):
+def  monitoringRequest (request, template_name='monitoring_Index.html', extra_context=None):
     
-    widget_url='http://%s:%s/%s%s&panelId=%s&from=%s&to=%s&theme=light'
-    #entorno + '/' + widgets + '/' + from + '/' + to;
     try:
-        entorno    = AfEntorno.objects.get(id=id_env)
-        entorno_ip = entorno.cluster_ip
-        widgets    = id_widgets.split('_')
-        r_from     = r_from
-        r_to       = r_to
-        ns= 'All'
-        lst_iframe = []
-
-        for w in widgets:
-            lst_iframe.append(widget_url % (entorno_ip, GRAFANA_PORT, URL_PREFIX, ns, w, r_from, r_to))
         
+        af_user  = AfUsuario.objects.get(user=request.user)
+        id_proyecto = request.session['id_proyecto_seleccionado']
+        pro= AfProyecto.objects.get(id=id_proyecto)
+
+        entornos_list    = []
+        entornos_id_list = []
+        dict_proj_env    = {}
+        rel_pro_ents     = []
+        lst_proj_env     = []
+        ent_all          = []
+        pro_env=AfRelEntPro.objects.filter(pro=pro)
+            
+        for pe in pro_env:
+            lst_widgets = monitoringWidgets (request, pe.ent.id, pro.pro_nombre)
+            ent_all.append(pe.ent)
+            dict_proj_env = {'proyecto':  pro.pro_nombre, 'entornos': pe.ent , 'widgets' : lst_widgets}                
+            entornos_list.append(pe.ent.ent_nombre)
+            entornos_id_list.append(str(pe.ent.id))
+     
+        rel_pro_ents.append ({'proyecto':  pro.pro_nombre, 'entornos': ','.join(entornos_list), 'entornos_id' : ','.join(entornos_id_list)})
+        entornos_list=[]
+        entornos_id_list=[]
+            
+        lst_proj_env.append(dict_proj_env)
+            
+        form= MonitoringForm()
+        
+    except ObjectDoesNotExist as dne:
+        request.session['proyecto_seleccionado']    = False
+        request.session['id_proyecto_seleccionado'] = False    
+            
+        messages.error(request, "")
+        return TemplateResponse(request, template_name, None)
+
     except Exception as e:
         pass
 
-    data={'action': 'monitoringRequest', 'available_info': len(lst_iframe), 'lst_iframe': lst_iframe}
+    context = {'form': form, 'data' : lst_proj_env , 'rel_pro_ents': rel_pro_ents, 'ent_all': ent_all }
 
-    return JsonResponse({'data':data})
+    return render(request, template_name, context)    
 

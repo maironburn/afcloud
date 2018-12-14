@@ -43,6 +43,7 @@ class IntegrantesRawForm(forms.ModelForm):
             if 'initial' in kwargs  and 'user' in kwargs['initial'] and 'tperfil' in kwargs['initial']:
                 self.user=kwargs['initial']['user']
                 self.perfil=kwargs['initial']['tperfil']
+                self.fields['perfil'].initial=kwargs['initial']['tperfil']
                 
     def is_valid(self):
         return  isinstance(self.user, AfUsuario) and  isinstance(self.perfil, AfTipoPerfil)

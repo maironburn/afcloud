@@ -300,6 +300,8 @@ class AfInstancia(models.Model):
 class AfCiclo(models.Model):
 
     ins              = models.ForeignKey    (AfInstancia, default='', null=True, on_delete=models.SET_NULL, related_name='afciclos')
+    ins_unique_name  = models.CharField     (max_length=100, verbose_name='Nombre instancia', blank=True)
+    pro              = models.ForeignKey    (AfProyecto, default='', null=True,   on_delete=models.CASCADE)
     cic_fecha_inicio = models.DateTimeField (default=datetime.now, blank=True)
     cic_fecha_fin    = models.DateTimeField (null= True, blank=True)
     num_replicas     = models.IntegerField  (default=1,verbose_name="Réplicas")
@@ -307,10 +309,18 @@ class AfCiclo(models.Model):
 
     def __str__(self):
         instancia='Eliminada'
+        start = self.cic_fecha_inicio
+        fin   = self.cic_fecha_fin
         if self.ins:
             instancia= self.ins.ins_unique_name
 
-        return 'ins: %s replicas: %s , fi: %s ff: %s' % (instancia, self.num_replicas, self.cic_fecha_inicio, self.cic_fecha_fin)
+        if start:
+            start = start.replace(tzinfo=None).strftime('%d-%m-%y %H:%M')
+
+        if fin:
+            fin   = fin.replace(tzinfo=None).strftime('%d-%m-%y %H:%M')
+
+        return 'id: %s -> instancia: %s | replicas: %s | S: %s ---> E: %s' % (self.id, instancia, self.num_replicas, start, fin)
 
     class Meta:
         managed = True

@@ -132,11 +132,13 @@ function setReplicas(id_instancia,num_replicas){
       {%if request.session.proyecto_seleccionado %}
         {#            <div class="form-group">#}
            <!--  -->
-        <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}/crearInstancia/" class="btn btn-danger btn-sm">
-        <span class="glyphicon glyphicon-plus"></span>Crear instancia</a>
+        {% if  request.session.numeric_profile > 1 %}
+          <a href="/despliegue/proyecto/{{request.session.id_proyecto_seleccionado}}/crearInstancia/" class="btn btn-danger btn-sm">
+          <span class="glyphicon glyphicon-plus"></span>Crear instancia</a>
 
-        <input type="text" name="p" placeholder="Nombre de la instancia">
-        <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+          <input type="text" name="p" placeholder="Nombre de la instancia">
+          <button type="submit" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-search"></span> Buscar</button>
+         {% endif %}
         {#            </div>#}
         {%endif%}
     </form>
@@ -225,15 +227,19 @@ function setReplicas(id_instancia,num_replicas){
 
                     <td>{{ instancia.nombre_entorno }}</td>
                     <th>
-                      <a href="#" style="font-size: 0.9em;">{{ instancia.uri }}</a>
+                      <a href="{{ instancia.uri }}" target="_blank" style="font-size: 0.9em;">{{ instancia.uri }}</a>
                     </th>
                       <td>
+                           {% if request.session.numeric_profile > 1 or afcloud_admin %}
                             <span class="instancias_running" id={{instancia.id}}><a id={{instancia.id}} href="#"><span style="cursor: pointer;" id="{{instancia.id}}"s class="instances_running_span glyphicon glyphicon-wrench">{{instancia.running}}</span></a>
                               <div style="display:none" title="Modificar número de réplicas" class="div_replicas" id="{{instancia.id}}">
                                 <label for="spinner">Número de réplicas:</label>
                                 <input id="{{instancia.id}}_spinner" name="value">
                               </div>
                             </span>
+                            {%else%}
+                              <span  id="{{instancia.id}}"s class="instances_running_span glyphicon glyphicon-wrench">{{instancia.running}}</span>
+                            {%endif%}
 
                       </td><!-- aqui el num de entornos -->
 

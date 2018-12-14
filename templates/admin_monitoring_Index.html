@@ -26,6 +26,18 @@ ADMIN_MONITORING_OPERATIONS={
       }
 }; //END NS
 
+/**
+dp de una nueva consulta (solicitud) de widgets
+restablece el tamaño original de los div
+*/
+function restoreDimensionDivWidgets(){
+
+	$.each($('.div_widget'), function(){
+		if ($(this).hasClass('col-sm-4'))
+			$(this).removeClass('col-sm-4').addClass('col-sm-2');
+	});
+
+}
 
 function clean_iframes(){
 
@@ -39,7 +51,8 @@ function clean_iframes(){
 $(document).on('click', '.request_monitoring', function(){
  // url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$
   entorno= $('[name="entornos"] option:selected').val();
-
+  restoreDimensionDivWidgets();
+	
   if ($('[name="proyecto"] :selected').val()){
 		proyecto= $('[name="proyecto"] :selected').text();
 		if (proyecto=='Estado del Cluster')
@@ -53,7 +66,7 @@ $(document).on('click', '.request_monitoring', function(){
   $('.controls input:checked').each(function(){
 		widget_lst.push($(this).val());
 	});
-	//widgets= widget_lst.join('_');
+	widget_lst.sort();
 
   from = ADMIN_MONITORING_OPERATIONS.from_date;
 	to   = ADMIN_MONITORING_OPERATIONS.to_date;
@@ -63,13 +76,33 @@ $(document).on('click', '.request_monitoring', function(){
   if (to==0)
 	   to  = new Date().getTime();
 
+
  clean_iframes();
+
+ //dimensiones del widget (width, height)
+ var small_one=[4,5,6,7];
+ var widgets_dimensions={
+	 '4'  :	['180', '200'],
+	 '5'  :	['180', '200'],
+	 '6'  :	['180', '200'],
+	 '7'  :	['180', '200'],
+	 '9'  :	['450', '200'],
+	 '11' :	['450', '200'],
+	 '12' :	['450', '200'],
+	 '16':	['450', '200']
+ };
 
 	for (i=0; i<widget_lst.length;i++){
 		var widget_id_class='widget_'+ i;
-		var iframe_url= $('.' + proyecto + '.'+ widget_lst[i]).attr('url');
+		var iframe_url= $('.' + proyecto + '.'+ widget_lst[i] + '.' + entorno).attr('url');
 		$('.' + widget_id_class).attr('src',iframe_url + '&from=' + from + '&to='+ to + '&theme=light');
-		console.log("url: %s", iframe_url + '&from=' + from + '&to='+ to + '&theme=light"'+ '  width="180" height="200" frameborder="0"');
+		console.log("url: %s", iframe_url + '&from=' + from + '&to='+ to + '&theme=light"'+ '  width="'
+		+ widgets_dimensions[widget_lst[i]][0] + '"' + ' height="' + widgets_dimensions[widget_lst[i]][1] +  ' frameborder="0"');
+		if ($.inArray( parseInt(widget_lst[i]),small_one )==-1)
+				$('.' + 'div_widget_' + i).removeClass('col-sm-2').addClass('col-sm-4');
+
+		$('.' + widget_id_class).css({'width': widgets_dimensions[widget_lst[i]][0],'height': widgets_dimensions[widget_lst[i]][1]});
+		//div_widget_0
 	}
  });
 
@@ -81,6 +114,9 @@ $( function() {
     ADMIN_MONITORING_OPERATIONS.to_date=0;
 
 		$('[name="proyecto"]').append($('<option>', {value:"All", text:'Estado del Cluster'}));
+    $('#div_id_proyecto label').css({'margin-top':'1em'});
+
+
 
     from = $( "#from" )
       .datepicker({
@@ -127,15 +163,22 @@ $( function() {
   }
 
 var date=new Date();
+
+hoy= date.getDate();
 mes=date.getMonth();
 year=date.getFullYear();
-var myDate = new Date(year,mes,1) ;
-$('#from').datepicker('setDate', myDate);
-
+var fromDate = new Date(year,mes,1) ;
+var toDate = new Date(year,mes,hoy) ;
+$('#from').datepicker('setDate', fromDate);
+$('#to').datepicker('setDate', toDate);
 
 $('#select_all').click(function() {
+
     var c = this.checked;
-    $('[name="available_widgets"]').prop('checked',  c);
+		$('.span_select_all').text('Seleccionar todos');
+		c && $('.span_select_all').text('Deseleccionar todos');
+    $('[name="available_widgets"]').prop('checked', c);
+
 });
 
 // <input type="hidden" class="rel_pro_env" proyecto_name="{{i.proyecto}}" entornos="{{i.entornos}}" />
@@ -176,17 +219,8 @@ $('#id_proyecto').on('change', function(){
 				}
 			});
 		}
-
-
-//rel_pro_env
-
+   });
 });
-
-
-
-
-
-} );
 {% load crispy_forms_tags %}
 
 
@@ -207,7 +241,8 @@ $('#id_proyecto').on('change', function(){
 }
 
 .widgets_iframes{
-	background-color: olive;
+	background-color: olive;</div>
+
 	position: absolute;
 	width: 72em;
 	left: 38em;
@@ -254,8 +289,8 @@ $('#id_proyecto').on('change', function(){
     <form class="well" enctype="multipart/form-data" method="POST">
       {% csrf_token %}
       <div class="row">
-      <div class="col-sm-4 col-xs-1">
-        <h2 class="text-danger">Monitorización del Cluster</h2>
+      <div class="col-sm-4 ">
+        <h2 class="text-danger">Monitorización</h2>
         <hr/>
         <div class="well">
           <div class="container-fluid">
@@ -264,7 +299,7 @@ $('#id_proyecto').on('change', function(){
           <label for="to">a</label>
           <input type="text" id="to" name="to">
           {% crispy form %}
-					<input type="checkbox" id="select_all" style="position: relative;margin-bottom: 1em;" name="selet_all" value="selet_all"><span style="margin-left: 8px;font-weight: bold;">Seleccionar todos</span><br>
+					<input type="checkbox" id="select_all" style="position: relative;margin-bottom:1em;cursor:pointer" name="selet_all" value="selet_all"><span class="span_select_all" style="margin-left: 8px;font-weight: bold;">Seleccionar todos</span><br>
 				</div>
         <input type="button" value="Enviar" class="btn btn-danger request_monitoring">
         <button type="button" class="btn btn-danger" onclick="location.href='/startpage'">Cancelar</button>
@@ -272,72 +307,65 @@ $('#id_proyecto').on('change', function(){
     </form>
     </div>
   </div>
-<!--
-relacion proyecto con entornos
--->
+
 {%if ent_all %}
 	{% for i in ent_all %}
 		<input type="hidden" class="ent_all" ent_name="{{i.ent_nombre}}" entorno_id={{i.id}} />
 	{%endfor%}
 {% endif %}
 
+<!--
+relacion proyecto con entornos
+-->
 {% if rel_pro_ents %}
 	{% for i in rel_pro_ents %}
 		<input type="hidden" class="rel_pro_env" proyecto_name="{{i.proyecto}}" entornos="{{i.entornos}}" entornos_id={{i.entornos_id}} />
 	{% endfor %}
 {% endif %}
 
+
 {% if data %}
 	{% for i in data %}
-		{%for w in i.widgets %}
-			<input type="hidden" class="{{i.proyecto}} {{w.id_widget}}" ent_id="{{i.entornos.id}}" ent_name="{{i.entornos.ent_nombre}}" p_name="{{i.proyecto}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace={{i.proyecto}}&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
-			<input type="hidden" class="entorno_all {{w.id_widget}}" ent_id="{{i.entornos.id}}" ent_name="{{i.entornos.ent_nombre}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace=All&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
-		{% endfor %}
+						{%for w in i.widgets %}
+							<input type="hidden" class="{{i.proyecto}} {{w.id_widget}} {{w.entorno_id}}" ent_id="{{w.entorno_id}}" ent_name="{{w.ent_nombre}}" p_name="{{i.proyecto}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace={{i.proyecto}}&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
+							<input type="hidden" class="entorno_all {{w.id_widget}} {{w.entorno_id}}" ent_id="{{w.entorno_id}}" ent_name="{{w.ent_nombre}}" url="{{w.widget_url}}&var-datasource=&var-node=All&var-namespace=All&var-app=All&panelId={{w.id_widget}}" id_widget="{{w.id_widget}}" />
+						{% endfor %}
 	{% endfor %}
 {% endif %}
 
-<div class="col-sm-2 col-xs-4">
+<!--<div class="col-sm-2 col-xs-4"> -->
+<div class="div_widget div_widget_0 col-sm-2">
   <div id="tile5" class="">
        <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-              <iframe class="widget_0" src="" width="200" height="200" frameborder="0"></iframe>
+              <iframe class="widget_0" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
 
-<div class="col-sm-2 col-xs-4">
+<!--<div class="col-sm-2 col-xs-4"> -->
+<div class="div_widget  div_widget_1 col-sm-2">
   <div id="tile5" class="">
      <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-						  <iframe class="widget_1" src="" width="200" height="200" frameborder="0"></iframe>
+						  <iframe class="widget_1" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
 
-<div class="col-sm-2 col-xs-5">
+<!--<div class="col-sm-2 col-xs-5"> -->
+<div class="div_widget  div_widget_2 col-sm-2">
   <div id="tile5" class="">
        <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-          <iframe class="widget_2" src="" width="200" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
-
-<div class="col-sm-2 col-xs-3">
-  <div id="tile5" class="">
-       <div class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="item active ">
-          <iframe class="widget_3" src="" width="200" height="200" frameborder="0"></iframe>
+          <iframe class="widget_2" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -345,12 +373,75 @@ relacion proyecto con entornos
 </div>
 
 
-<div class="col-sm-2 col-xs-3">
+	<div class="div_widget div_widget_3 col-sm-2">
+	  <div id="tile5" class="">
+	       <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active ">
+	          <iframe class="widget_3" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+
+	<div class="div_widget div_widget_4 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+	          <iframe class="widget_4" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+
+	<div class="div_widget div_widget_5 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+	            <iframe class="widget_5" src="" frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+	<div class="div_widget div_widget_6 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+	            <iframe class="widget_6" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+
+	<div class="div_widget div_widget_7 col-sm-2">
+	  <div id="tile7" class="">
+	      <div class="carousel slide" data-ride="carousel">
+	        <div class="carousel-inner">
+	          <div class="item active">
+							<iframe class="widget_7" src=""  frameborder="0"></iframe>
+	          </div>
+	        </div>
+	      </div>
+	  </div>
+	</div>
+
+<div class="div_widget div_widget_8 col-sm-2">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-          <iframe class="widget_4" src="" width="200" height="200" frameborder="0"></iframe>
+            <iframe class="widget_8" src=""  frameborder="0"></iframe>
           </div>
         </div>
       </div>
@@ -358,68 +449,17 @@ relacion proyecto con entornos
 </div>
 
 
-<div class="col-sm-2 col-xs-8">
+<div class="div_widget div_widget_9 col-sm-2">
   <div id="tile7" class="">
       <div class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
           <div class="item active">
-            <iframe class="widget_5" src="" width="200" height="200" frameborder="0"></iframe>
+						<iframe class="widget_9" src="" frameborder="0"></iframe>
           </div>
         </div>
       </div>
   </div>
 </div>
-
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="item active">
-            <iframe class="widget_6" src="" width="200" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
-
-
-<div class="col-sm-8 col-xs-5">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="item active">
-						<iframe class="widget_7" src="" width="200" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
-
-<div class="col-sm-2 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="item active">
-            <iframe class="widget_8" src="" width="200" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
-
-
-<div class="col-sm-8 col-xs-8">
-  <div id="tile7" class="">
-      <div class="carousel slide" data-ride="carousel">
-        <div class="carousel-inner">
-          <div class="item active">
-						<iframe class="widget_9" src="" width="200" height="200" frameborder="0"></iframe>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
-
 </div>
 
 

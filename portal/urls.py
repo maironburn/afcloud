@@ -15,6 +15,8 @@ from portal.Incidencias import views as incidencias_views
 from portal.MailServer import views as confmail_views
 from portal.Notificaciones import views as notificaciones_views
 from portal.Monitoring import views as monitoring_views
+from portal.Facturacion import views as facturacion_views
+from portal.Disponibilidad import views as ans_views
 
 urlpatterns = [
      # USUARIOS
@@ -103,6 +105,15 @@ urlpatterns = [
     # MONITORIZACION
     url(r'^monitoring/$', monitoring_views.monitoringIndex, name='monitoring'),
     url(r'^admin_monitoring/$', monitoring_views.adminMonitoring, name='adminMonitoring'),
-    #url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<id_widgets>[\w\-]+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$', monitoring_views.monitoringRequest, name='monitoring_request'),
-    url(r'^monitoringRequest/(?P<id_env>\d+)/(?P<r_from>\d+)/(?P<r_to>\d+)/$', monitoring_views.monitoringRequest, name='monitoring_request'),
+    url(r'^monitoringRequest/$', monitoring_views.monitoringRequest, name='monitoring_request'),
+    # FACTURACION
+    url(r'^facturacion/$', facturacion_views.facturacionIndex, name='facturacion_index'),
+    url(r'^detalles_facturacion/$', facturacion_views.detalles_facturacion, name='detalles_factuacion'),
+    url(r'^detalles_facturacion/(?P<id>\d+)/$', facturacion_views.detalles_instancia_facturacion, name='detalles_instance_facturacion'),
+
+    # DISPONIBILIDAD (ANS)
+    url(r'^ans/$', ans_views.ansIndex, name='ans_index'),
+    url(r'^detalles_ans/$', ans_views.detalles_ans, name='detalles_ans'),
+    url(r'^detalles_ans/(?P<id>\d+)/$', ans_views.detalles_instancia_ans, name='detalles_instance_ans'),
+
 ]

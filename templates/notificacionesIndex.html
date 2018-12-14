@@ -21,12 +21,18 @@ NOTIFICACIONES_OPERATIONS={
          if (!data.available_info){
              $('#jquery_dialog').html('<p>No hay notificaciones asociadas</p>');
            }
+
+					 var wWidth = $(window).width();
+					 var dWidth = wWidth * 0.8;
+					 var wHeight = $(window).height();
+					 var dHeight = wHeight * 0.8;
+
 	          	 $( "#jquery_dialog" ).dialog({
 					         title: 'Detalles notificación ( ' + NOTIFICACIONES_OPERATIONS.tipo_instancia_asociada + ')',
-	          	      resizable: true,
-	          	      width  : 800,
-                    height : 400,
-	          	      modal: true,
+									 resizable: true,
+									 width : dWidth,
+									 height: dHeight,
+									 overlay: { opacity: 0.1, background: "black" },
 	          	      buttons: {
 	          	    	 "Aceptar": function() {
 											//refreshAfterReading();

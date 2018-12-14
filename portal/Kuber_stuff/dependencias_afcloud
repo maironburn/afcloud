@@ -4,5 +4,6 @@ pip3 install pyopenssl
 pip3 install Django
 pip3 install --upgrade django-crispy-forms
 pip3 install kubernetes
+pip install prometheus_client
 
 mkdir -p /var/www/afcloud && chown -R dmb: /var/www/afcloud

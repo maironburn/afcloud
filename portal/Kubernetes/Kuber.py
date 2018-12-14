@@ -326,6 +326,7 @@ class Kuber(object):
 
         kwargs['metadata']['name'] = ('%s%s' % (self.unique_instance_name, '-pvc') )
         kwargs['metadata']['namespace'] = self.namespace
+        #TODO:  storageClassName: rook-ceph-block
         self.operation_result=True
         try:
             api_instance = kubernetes.client.CoreV1Api()
@@ -373,8 +374,13 @@ class Kuber(object):
         kwargs['spec']['template']['metadata']['namespace']       = self.namespace
         kwargs['spec']['template']['metadata']['labels']['app']   = self.unique_instance_name
         kwargs['spec']['template']['spec']['containers'][0]['name']  = self.unique_instance_name
-        kwargs['spec']['template']['spec']['containers'][0]['image'] = 'registry.%s:32337/nginx-cica:latest' % (self.fqdn,) #'registry.FQDN:32337/nginx-cica:latest'
+        kwargs['spec']['template']['spec']['containers'][0]['image'] = 'nginx:latest' #'registry.FQDN:32337/nginx-cica:latest'
+        
+        kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['name'] =  'image-store'
+        kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['mountPath'] =  '/mnt'
         kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['subPath'] =  self.unique_instance_name
+        
+        #kwargs['spec']['template']['spec']['containers'][0]['volumeMounts'][0]['subPath'] =  self.unique_instance_name
         kwargs['spec']['template']['spec']['volumes'][0]['persistentVolumeClaim']['claimName'] = ('%s%s' % (self.unique_instance_name , '-pvc'))
         kwargs['spec']['template']['spec']['imagePullSecrets'][0]['name'] = ('%s%s' % ('registry-', self.env_name))
 
@@ -520,8 +526,8 @@ class Kuber(object):
     def delete_Instacia(self,**kwargs):
 
         self.rollback_stack_methods=[
-                                     'PersistentVolumeClaim',
                                      'Deployment',
+                                     'PersistentVolumeClaim',
                                      'HorizontalPodAutoscaler',
                                      'Service',
                                      'PersistentVolume'
@@ -592,7 +598,8 @@ class Kuber(object):
         self.unique_instance_name = kwargs.get('unique_instance_name')
         self.fqdn                 = kwargs.get('fqdn')
         self.env_name             = kwargs.get('env_name')
-
+        self.annotation_str       = kwargs.get('annotation_str')
+        self.lst_instancias       = kwargs.get('lst_instancias')
         self.logger.info("updateIngressPostDeploy:-> ns: %s\nnombre instancia:%s\nfqdn: %s\nentorno: %s\n" % (self.namespace,
                                                                            self.unique_instance_name,
                                                                            self.fqdn,
@@ -604,15 +611,20 @@ class Kuber(object):
                                                     self.namespace,
                                                     self.unique_instance_name,
                                                     self.env_name,
-                                                    self.fqdn
+                                                    self.fqdn,
+                                                    self.annotation_str,
+                                                    self.lst_instancias
                                                   )
         pprint(ingress)
 
-        print()
+        
 
 
     def getIngressPath(self, service):
-
+        
+        if not service:
+            service='none'
+            
         i_backend= kubernetes.client.V1beta1IngressBackend(
                     service_name = '%s-svc' % (service,) ,
                     service_port = 80
@@ -628,19 +640,22 @@ class Kuber(object):
 
 
 
-    def getIngressRule(self, instancia, host, i_path= None):
+    def getIngressRule(self, instancia, host, i_path= None, lst_instancias=None):
 
-        if i_path is None:
-            i_path= [self.getIngressPath(instancia)]
-
+        i_path=[]
+        
+        for i in lst_instancias:
+            
+            i_path.append(self.getIngressPath(i))
+            
         i_rule_value= kubernetes.client.V1beta1HTTPIngressRuleValue(
-                    paths=i_path
-                )
-
+                        paths=i_path
+                    )
+    
         i_irule=kubernetes.client.V1beta1IngressRule(
-                    host=host,
-                    http=i_rule_value
-                )
+                        host=host,
+                        http=i_rule_value
+                    )
 
 
         return i_irule
@@ -648,7 +663,7 @@ class Kuber(object):
     '''
     https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/ExtensionsV1beta1Api.md#read_namespaced_ingress
     '''
-    def actualiza_namespaced_ingress(self,ns=None, instancia=None, env= None,fqdn=None ):
+    def actualiza_namespaced_ingress(self,ns=None, instancia=None, env= None,fqdn=None , annotation_str=None, lst_instancias=None):
 
         try:
 
@@ -657,16 +672,24 @@ class Kuber(object):
             target_ingress  = '%s-ingress' % (ns,)
             fqdn            = self.fqdn if fqdn is None else fqdn
             env             = self.env_name if env is None else env
-
+            annotation_str  = self.annotation_str if annotation_str is None else annotation_str
+            #lst_instancias  = self.lst_instancias if lst_instancias is None else lst_instancias
             host = '%s.%s.%s' % (ns, env, fqdn)
-
-            api_response=None
+ 
+            api_response=None 
             api_instance = kubernetes.client.ExtensionsV1beta1Api()
             api_response = api_instance.read_namespaced_ingress(target_ingress, ns)
-
-            i_irule= self.getIngressRule(instancia,host)
-
+            api_response.metadata.annotations={'nginx.org/rewrites' :    annotation_str}
+            
+            i_irule= self.getIngressRule(instancia,host,None,lst_instancias)
+            pprint(api_response)
+            api_response.spec.rules=[]
             api_response.spec.rules.append(i_irule)
+            '''
+            pprint(api_response)
+            api_response.spec.http=i_irule.http
+            pprint(api_response)
+            '''
             api_instance.patch_namespaced_ingress(target_ingress,ns,api_response)
             self.logger.info("actualiza_namespaced_ingress:->  %s" % (api_response,))
 
@@ -698,10 +721,11 @@ class Kuber(object):
             self.logger.info("target_ingress: %s , target_svc: % s " % (target_ingress,target_svc))
 
             for s in services:
-                lst_svc.append(self.getIngressPath(s.ins_unique_name))
-            i_r= self.getIngressRule(None, host, lst_svc)
+                lst_svc.append(s.ins_unique_name)
+            i_r= self.getIngressRule(None, host,None, lst_svc)
 
-            api_response.spec.rules=[i_r]
+            api_response.spec.rules=[]
+            api_response.spec.rules.append(i_r)
             self.logger.info("api_response parcheada: %s  " % (api_response))
             api_instance.patch_namespaced_ingress(target_ingress,self.namespace ,api_response)
 
@@ -726,7 +750,7 @@ class Kuber(object):
             parsed['metadata']['name']      = '%s%s' % (self.namespace,'-ingress')
             parsed['metadata']['namespace'] = '%s'   % (self.namespace,)
             parsed['spec']['tls'][0]['hosts'][0]   = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
-            parsed['spec']['tls'][0]['secretName'] = '%s%s' % (self.namespace, '-secret')
+            parsed['spec']['tls'][0]['secretName'] = '%s' % ('ingress-secret')
             parsed['spec']['rules'][0]['host']     = '%s.%s.%s' % (self.namespace, self.env_name, self.fqdn)
             api_instance = kubernetes.client.ExtensionsV1beta1Api()
             api_response = api_instance.create_namespaced_ingress(self.namespace, parsed)
@@ -832,7 +856,7 @@ class Kuber(object):
         self.namespace                  = kwargs.get('namespace')
         self.unique_instance_name       = kwargs.get('unique_instance_name')
         self.fqdn                       = kwargs.get('fqdn')
-        self.nfs_server                 = '192.168.129.22' #kwargs.get('nfs_server')
+        self.nfs_server                 = kwargs.get('nfs_server')
         self.env_name                   = kwargs.get('env_name')
         replicas_min                    = kwargs.get('replicas_min')
         replicas_max                    = kwargs.get('replicas_max')

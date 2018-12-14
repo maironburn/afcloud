@@ -4,6 +4,51 @@ from portal.Kubernetes.Kuber import Kuber
 from portal.Utils.logger import *
 import datetime,os
 import yaml , base64
+import requests
+import json
+import urllib.request
+from urllib.parse import unquote
+import requests
+
+
+def getPrometheusAvailability(**kwargs):
+
+    try:
+        ip_env        = kwargs.get ('ip_env')
+        app_name      = kwargs.get ('app_name')
+        r_from        = kwargs.get ('r_from')
+        r_to          = kwargs.get ('r_to')
+        namespace     = kwargs.get ('namespace')
+        # prometheus tiene un limite de 11000 puntos arrojados en una consulta
+        timedelta_interval= r_to- r_from
+        timedelta_interval_d=timedelta_interval/86400
+        step=20
+        
+        if timedelta_interval_d>2:
+            timedelta_interval=int(timedelta_interval/10500)
+        
+
+        url= ('http://' + ip_env + ':30090/api/v1/query_range?query=avg(kube_pod_container_status_running%7Bnamespace%3D~%22' + 
+              namespace + '%22%2C%20%7D)&start=' + str(int(r_from)) + '&end=' + str(int(r_to)) + 
+              '&step=' + str(timedelta_interval))
+        
+        dict_availavility={}
+        print(url)
+        response = requests.get(url)
+        if response.ok:
+            jData = json.loads(response.content.decode('utf-8'))
+            if len(jData['data']['result']):
+                for key in jData['data']['result'][0]['values']:
+                    #print (key + " : " + jData[key])
+                    dict_availavility.update({ key[0] : key[1]})
+            
+        print(response)
+        
+    except Exception as e:
+        pass
+    
+    return dict_availavility
+ 
 
 def get_extra_content(request):
 
@@ -169,7 +214,7 @@ def createNameSpaceStack(**kwargs):
                         'registry_hash': registry_hash,
                         'crt'          : crt.decode("utf-8"),
                         'key'          : key.decode("utf-8")
-                              }
+                    }
 
         # creacion del tipo Ingress (kind: Ingress)
         kuber.createIngressFromTemplate(dict_ingress)

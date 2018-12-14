@@ -3,6 +3,14 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
+<script>
+$( function() {
+  $('#div_id_user').css({'width': '40%'});
+  $('#div_id_perfil').css({'width': '40%'});
+});
+
+</script>
+
 {% if mensaje %}
     <div id="message" class="modal fade">
         <div class="modal-dialog">
@@ -42,7 +50,7 @@
             <form class="well" method="POST">
               {% csrf_token %}
               <div class="row">
-              <div class="col-md-3">
+              <div class="col-md-4">
                   <h2 class="text-danger"> Añadir integrante a {{nombre_proyecto}}</h2>
                 <div class="well">
                   {% crispy form %}
