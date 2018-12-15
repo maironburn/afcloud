@@ -17,6 +17,7 @@ class AfUsuario(models.Model):
     #id                  = models.IntegerField(primary_key=True, editable=False, auto_created=True, db_column='id')
     user                = models.OneToOneField (User,unique=True, on_delete=models.CASCADE)
     usu_administrador   = models.BooleanField  (default=False,verbose_name='Usuario administrador afcloud')
+    last_login          = models.DateTimeField  ( verbose_name='last_login',default=datetime.now, blank=True)
 
     def setUser(self,usuario):
         self.user= usuario

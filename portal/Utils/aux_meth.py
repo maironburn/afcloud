@@ -190,7 +190,8 @@ def hasNotificationPending(request):
     af_user= AfUsuario.objects.get(user=request.user)
     notificaciones_no_leidas= AfUserNotify.objects.filter(to_user=af_user, readed=False)
     request.session['notificaciones_no_leidas'] = True if notificaciones_no_leidas.count() else False
-      
+    
+    return notificaciones_no_leidas
           
 def createNameSpaceStack(**kwargs):
 

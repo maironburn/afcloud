@@ -5,7 +5,8 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
 from django.utils.translation import ugettext as _
-from portal.models import AfProyecto,AfUsuario, AfPerfil,AfTipoPerfil, AfGlobalconf, AfUserNotify
+from portal.models import AfProyecto,AfUsuario, AfPerfil,AfTipoPerfil, AfGlobalconf, AfUserNotify,\
+    AfEntorno
 from django.contrib.auth.models import User
 from portal.Usuarios.forms import *
 #####
@@ -23,6 +24,8 @@ from portal.Utils.decorators import *
 from portal.Utils.aux_meth import *
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.signals import user_logged_in, user_logged_out 
+from django.dispatch import receiver 
 
 
 @login_required
@@ -60,6 +63,22 @@ def userChangePass(request, id, template_name='cambiar_passwd.html', extra_conte
     return TemplateResponse(request, template_name, {'form': form, 'id': id, 'usuario': afuser.user.username})
 
 
+@receiver(user_logged_out) 
+def _user_logged_out(sender, user, request, **kwargs):
+    
+    afuser=AfUsuario.objects.get(user=user)
+    afuser.last_login=datetime.datetime.now()
+    afuser.save()
+    
+    request.session['proyecto_seleccionado'] = False
+    request.session['perfil'] = False
+    request.session['numeric_profile'] = False
+    request.session['proyectos'] = False
+    request.session['afcloud_admin'] = False
+    request.session['proyecto_seleccionado'] = False
+    request.session['id_proyecto_seleccionado']=False
+    
+
 @login_required
 def index(request, template_name='index.html', extra_context=None):
 
@@ -69,11 +88,13 @@ def index(request, template_name='index.html', extra_context=None):
     if not len(col['proyectos']):
         request.session['proyecto_seleccionado']    = False
         request.session['id_proyecto_seleccionado'] = False
-        
+    
+    
     current_projects= AfProyecto.objects.filter(pro_activo=True).values_list('id', flat=True)
     conf_global= AfGlobalconf.objects.first()
     afuser=AfUsuario.objects.get(user=usuario)
-    hasNotificationPending(request)
+
+    notificaciones_pendientes=hasNotificationPending(request)
     
     if afuser.usu_administrador and (not conf_global or not conf_global.is_done):
         messages.success(request, "La configuración global del portal aun no ha sido realizada, " \
@@ -83,13 +104,15 @@ def index(request, template_name='index.html', extra_context=None):
     else:
         globalconf_isdone=False
     
-      
+    
+    kwargs_startpage={'afuser': afuser , 'proyectos': current_projects, 'notificaciones': notificaciones_pendientes}
     #notificaciones_no_leidas= AfUserNotify.objects.filter(to_user=afuser, readed=False)
-
+    global_info=getStartPage_info(**kwargs_startpage)
     context =   { 'proyectos'                : col['proyectos'],
                   'afcloud_admin'            : col['afcloud_admin'],
-                  'globalconf_isdone'        : globalconf_isdone
+                  'globalconf_isdone'        : globalconf_isdone,
                   #'notificaciones_no_leidas' : notificaciones_no_leidas
+                  'global_info': global_info
                   }
 
     request.session['globalconf_isdone']= globalconf_isdone
@@ -103,9 +126,43 @@ def index(request, template_name='index.html', extra_context=None):
     #request.session['notificaciones_no_leidas'] = True if notificaciones_no_leidas.count() else False
     request.session['afcloud_admin'] = col['afcloud_admin']
 
+
+    
     return TemplateResponse(request, template_name, context)
 
 
+def getStartPage_info(**kwargs):
+    
+    afuser=kwargs.get('afuser')
+    proyectos=kwargs.get('proyectos')
+    proyectos_lst=[]
+    perfil_lst=[]
+    
+    env_lst=[]
+    for p in proyectos:
+        pro=AfProyecto.objects.get(id=p)
+        proyectos_lst.append({'id': pro.id, 'nombre': pro.pro_nombre})
+    
+    user_info= {'usuario': afuser.user.username,
+                 'nombre': afuser.user.first_name, 
+                 'apellidos': afuser.user.last_name, 
+                 'last_login': afuser.last_login,
+                 'mail': afuser.user.email ,
+                 'admin' : afuser.usu_administrador
+                 }
+    entornos= AfEntorno.objects.all()
+    
+    for e in entornos:
+        env_lst.append({'ent_nombre': e.ent_nombre, 'ip': e.cluster_ip})
+        
+    roles= AfPerfil.objects.filter(usu=afuser)
+    
+    for r in roles:
+        perfil_lst.append({'proyecto': r.pro.pro_nombre, 'perfil': r.tpe.tpe_nombre})
+        
+    info={'proyectos': proyectos_lst, 'entornos': env_lst, 'usuario_nfo': user_info, 'roles': roles}
+    
+    return info
 
 @login_required
 def seccionActivaRedirect(request,id):
@@ -237,7 +294,7 @@ def modificarPerfil(request, id, template_name='userEditProfile.html'):
                 return render(request, template_name, {'form': form})
         else:
             form =userEditProfileForm(request.POST or None, instance=afuser.user)
-            return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form})
+            return TemplateResponse(request, template_name, context={'usuarios': afuser,'form': form, 'visualized_card': True})
 
     except ObjectDoesNotExist as dne:
         request.session['proyecto_seleccionado']    = False

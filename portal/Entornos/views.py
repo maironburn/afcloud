@@ -58,7 +58,7 @@ def administrarEntornos(request, template_name='entornosIndex.html', extra_conte
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e, 'visualized_card': True}
     return TemplateResponse(request, template_name, context)
 
 
@@ -111,7 +111,7 @@ def administrarEntornosOrdered(request, orden, ascendente, template_name='entorn
         number = paginator.page(paginator.num_pages)
 
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e, 'visualized_card': True}
     return TemplateResponse(request, template_name, context)
 
 
