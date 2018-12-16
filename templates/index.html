@@ -236,23 +236,25 @@
         </div>
 
 
-        <div class="box" style="margin-right: 8em;">
+        <div class="box" style="margin-right: 10em;">
             <div class="container">
              	<div class="row">
 
         			    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
 
         					<div class="box-part text-center">
-                    <img src="{% static 'images/adm_proyectos.svg' %}" width="45px" height="45px">
+                    <img <img src="{% static 'images/cube.png' %}" width="45px" height="45px">
         						<div class="title">
-        							<h4>Proyectos</h4>
+        							<h4>Despliegues</h4>
+                      <p>Despliegues asociados a los proyectos.</p>
         						</div>
         						<div class="text">
-        							<span>Lorem ipsum dolor sit amet, id quo eruditi eloquentiam. Assum decore te sed. Elitr scripta ocurreret qui ad.</span>
+                      {%if global_info.entornos%}
+                        {%for p in global_info.proyectos %}
+                        <span><strong><a href="/despliegue/proyecto/{{p.id}}">{{p.nombre}}</a></strong></span>
+                        {%endfor%}
+                      {%endif%}
         						</div>
-
-        						<a href="#">Learn More</a>
-
         					 </div>
         				</div>
 
@@ -310,7 +312,7 @@
         						</div>
 
         						<div class="text">
-        							<span>Seleccione un proyecto y podŕa consultar distintos aspectos de rendimiento y disponibilidad.</span>
+        							<span>Seleccione un proyecto y consulte distintos aspectos de rendimiento y disponibilidad.</span>
         						</div>
 
         						<a href="#">Learn More</a>
@@ -329,10 +331,14 @@
         						</div>
 
         						<div class="text">
-        							<span>Lorem ipsum dolor sit amet, id quo eruditi eloquentiam. Assum decore te sed. Elitr scripta ocurreret qui ad.</span>
+                      {%if global_info.notificaciones_pendientes%}
+        							<span>Tiene notificaciones pendientes.</span>
+                      {%else%}
+                      <span>No tiene notificaciones pendientes.</span>
+                      {%endif%}
         						</div>
 
-        						<a href="#">Learn More</a>
+        						<a href="/consultarNotificaciones" >Acceder</a>
 
         					 </div>
         				</div>

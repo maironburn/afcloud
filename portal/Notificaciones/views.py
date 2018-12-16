@@ -99,7 +99,7 @@ def notificacionesIndex(request, template_name='notificacionesIndex.html', extra
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e,  'visualized_card': True}
 
  
     return TemplateResponse(request, template_name, context)

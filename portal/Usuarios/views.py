@@ -112,7 +112,8 @@ def index(request, template_name='index.html', extra_context=None):
                   'afcloud_admin'            : col['afcloud_admin'],
                   'globalconf_isdone'        : globalconf_isdone,
                   #'notificaciones_no_leidas' : notificaciones_no_leidas
-                  'global_info': global_info
+                  'global_info': global_info,
+                  'notificaciones_pendientes' : notificaciones_pendientes
                   }
 
     request.session['globalconf_isdone']= globalconf_isdone
@@ -143,7 +144,7 @@ def getStartPage_info(**kwargs):
         pro=AfProyecto.objects.get(id=p)
         proyectos_lst.append({'id': pro.id, 'nombre': pro.pro_nombre})
     
-    user_info= {'usuario': afuser.user.username,
+    user_info= { 'usuario': afuser.user.username,
                  'nombre': afuser.user.first_name, 
                  'apellidos': afuser.user.last_name, 
                  'last_login': afuser.last_login,

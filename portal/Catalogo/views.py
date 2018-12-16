@@ -60,6 +60,7 @@ def index(request, template_name='CatalogoIndex.html', extra_context=None):
         if id_proyecto_seleccionado:
             return catalogosIndex(request,id_proyecto_seleccionado,extra_context= context)
 
+    context.update({ 'visualized_card': True})
     return TemplateResponse(request, template_name, context)
 
 @login_required
@@ -103,7 +104,7 @@ def  catalogosIndex(request, id_proyecto, template_name='CatalogoIndex.html', ex
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e, 'servicios': dict_servicios, 'catalog': catalog}
+    context = {'p': c, 'e': e, 'servicios': dict_servicios, 'catalog': catalog, 'visualized_card': True}
 
     if extra_context:
         context.update(extra_context)
@@ -146,7 +147,8 @@ def nuevoCatalogo(request,id_proyecto, template_name='newCatalogo.html'):
             dict_svc.update({s.id : s.ser_tarifa})
 
         form = CatalogRawForm(initial=data)
-        return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto, 'id': id_proyecto, 'dict_svc': dict_svc})
+        return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto, 
+                                               'id': id_proyecto, 'dict_svc': dict_svc, 'visualized_card': True})
 
 
 @login_required
@@ -174,7 +176,7 @@ def editarCatalogo(request,id_proyecto, id_servicio,template_name='editarCatalog
     for s in svc:
         dict_svc.update({s.id : s.ser_tarifa})
 
-    return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id,'dict_svc': dict_svc})
+    return render(request, template_name, {'form': form, 'value': value,'id': proyecto.id,'dict_svc': dict_svc, 'visualized_card': True})
 
 @login_required
 @group_required('Gestor',)

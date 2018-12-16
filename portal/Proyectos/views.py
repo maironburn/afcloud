@@ -50,7 +50,7 @@ def administrarProyectos(request, template_name='proyectosIndex.html', extra_con
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e, 'visualized_card': True}
     return TemplateResponse(request, template_name, context)
 
 
@@ -168,7 +168,7 @@ def administrarProyectosOrdered(request, orden, ascendente, template_name='proye
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e, 'visualized_card': True}
     return TemplateResponse(request, template_name, context)
 
 
@@ -203,7 +203,7 @@ def nuevoProyecto(request,template_name='newProject.html'):
             if not len(form.get_entornos()):
                 messages.error(request, "No se puede crear un proyecto sin asociar a un entorno")
 
-            return render(request, template_name, {'form': form, 'value': value})#, 'entornos': entornos})
+            return render(request, template_name, {'form': form, 'value': value, 'visualized_card': True})#, 'entornos': entornos})
 
     else:
 
@@ -251,7 +251,9 @@ def editarProyecto(request, id,template_name='editarProyecto.html'):
 
         return render(request, template_name, {'form': form, 'value': value,'id': id,
                                                'nombre_proyecto': proyecto.pro_nombre,
-                                               'entornos_associated': entornos_associated})
+                                               'entornos_associated': entornos_associated,
+                                                'visualized_card': True
+                                               })
     except ObjectDoesNotExist as dne:
         request.session['proyecto_seleccionado']    = False
         request.session['id_proyecto_seleccionado'] = False

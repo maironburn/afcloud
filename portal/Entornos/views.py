@@ -164,10 +164,10 @@ def nuevoEntorno(request,template_name='newEntorno.html'):
             return HttpResponseRedirect('/administrar/entornos')
         else:
             messages.error(request,  'Fichero config k8s no válido', extra_tags='fichero_config')
-            return render(request, template_name, {'form': form, 'value': value})
+            return render(request, template_name, {'form': form, 'value': value, 'visualized_card': True})
     else:
         form = EntornoForm()
-        return render(request, template_name, {'form': form, 'value': value})
+        return render(request, template_name, {'form': form, 'value': value, 'visualized_card': True})
 
 
 
@@ -194,7 +194,7 @@ def editarEntorno(request, id,template_name='editarEntorno.html'):
             messages.success(request,  'Entorno editado con éxito', extra_tags='Edición de entornos')
             return HttpResponseRedirect('/administrar/entornos')
 
-    return render(request, template_name, {'form': form, 'value': value,'id': id})
+    return render(request, template_name, {'form': form, 'value': value,'id': id, 'visualized_card': True})
 
 @login_required
 @group_required('af_cloud_admin',)

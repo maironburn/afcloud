@@ -45,7 +45,7 @@ def administrarServicios(request, template_name='serviciosIndex.html', extra_con
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e,'visualized_card': True}
     return TemplateResponse(request, template_name, context)
 
 
@@ -80,7 +80,7 @@ def administrarServiciosOrdered(request, orden, ascendente, template_name='servi
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e}
+    context = {'p': c, 'e': e,'visualized_card': True}
     return TemplateResponse(request, template_name, context)
 
 
@@ -103,10 +103,10 @@ def nuevoServicio(request,template_name='newService.html'):
             return HttpResponseRedirect('/administrar/servicios')
         else:
             messages.success(request,  'El mínimo de replicas debe ser menor que el máximo', extra_tags='Replicas Error')
-            return render(request, template_name, {'form': form, 'value': value})
+            return render(request, template_name, {'form': form, 'value': value, 'visualized_card': True})
     else:
         form = ServicioForm()
-        return render(request, template_name, {'form': form, 'value': value})
+        return render(request, template_name, {'form': form, 'value': value, 'visualized_card': True})
 
 
 @login_required
@@ -130,7 +130,7 @@ def editarServicio(request, id,template_name='editarServicio.html'):
             messages.success(request,  'Servicio editado con éxito', extra_tags='Edición de servicios')
             return HttpResponseRedirect('/administrar/servicios')
 
-    return render(request, template_name, {'form': form, 'value': value,'id': id, 'nombre_servicio': servicio.ser_nombre})
+    return render(request, template_name, {'form': form, 'value': value,'id': id, 'nombre_servicio': servicio.ser_nombre, 'visualized_card': True})
 
 @login_required
 @group_required('af_cloud_admin',)

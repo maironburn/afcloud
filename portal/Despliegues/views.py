@@ -126,7 +126,7 @@ def  desplieguesIndex(request, id_proyecto, template_name='DesplieguesIndex.html
     except EmptyPage:
         number = paginator.page(paginator.num_pages)
     c = paginator.page(number)
-    context = {'p': c, 'e': e, 'despliegues': lst_despliegues, 'instancias': instancias}
+    context = {'p': c, 'e': e, 'despliegues': lst_despliegues, 'instancias': instancias,  'visualized_card': True}
     if extra_context:
         context.update(extra_context)
 
@@ -217,7 +217,7 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
                     messages.success(request,  'Despliegue creado con éxito', extra_tags='Creación de despligues')
                     return HttpResponseRedirect('/despliegue/proyecto/%s' % (id_proyecto))
             
-            return render(request, template_name, {'form': form, 'value': value})
+            return render(request, template_name, {'form': form, 'value': value, 'visualized_card': Trues})
         
         else:
             data= {}
@@ -246,7 +246,8 @@ def nuevoDespliegue(request, id_proyecto, template_name='newDespliegue.html'):
         messages.error(request, "Ocurrió un error durante el despliegue")
         return TemplateResponse(request, template_name, None)   
      
-    return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,'dict_serv_extra': dict_serv_extra})
+    return render(request, template_name, {'form': form, 'value': value, 'nombre_proyecto': nombre_proyecto,
+                                           'dict_serv_extra': dict_serv_extra,  'visualized_card': True})
 
 
 @login_required

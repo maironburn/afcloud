@@ -62,7 +62,7 @@ def  monitoringIndex(request,  template_name='monitoring_Index.html', extra_cont
     except Exception as e:
         pass
 
-    context = {'p': data_dict, 'form': form}
+    context = {'p': data_dict, 'form': form, 'visualized_card': True}
 
     return render(request, template_name, {'form': form,
                                            'proyecto': request.session.get('proyecto_seleccionado'),
@@ -117,7 +117,7 @@ def adminMonitoring (request, template_name='admin_monitoring_Index.html', extra
     except Exception as e:
         pass
 
-    context = {'form': form, 'data' : lst_proj_env , 'rel_pro_ents': rel_pro_ents, 'ent_all': ent_all}
+    context = {'form': form, 'data' : lst_proj_env , 'rel_pro_ents': rel_pro_ents, 'ent_all': ent_all, 'visualized_card': True}
 
     return render(request, template_name, context)    
 
@@ -176,7 +176,10 @@ def  monitoringRequest (request, template_name='monitoring_Index.html', extra_co
             entornos_list.append(pe.ent.ent_nombre)
             entornos_id_list.append(str(pe.ent.id))
      
-        rel_pro_ents.append ({'proyecto':  pro.pro_nombre, 'entornos': ','.join(entornos_list), 'entornos_id' : ','.join(entornos_id_list)})
+        rel_pro_ents.append ({'proyecto':  pro.pro_nombre, 'entornos': ','.join(entornos_list), 
+                              'entornos_id' : ','.join(entornos_id_list)
+                             
+                              })
         entornos_list=[]
         entornos_id_list=[]
             
@@ -194,7 +197,7 @@ def  monitoringRequest (request, template_name='monitoring_Index.html', extra_co
     except Exception as e:
         pass
 
-    context = {'form': form, 'data' : lst_proj_env , 'rel_pro_ents': rel_pro_ents, 'ent_all': ent_all }
+    context = {'form': form, 'data' : lst_proj_env , 'rel_pro_ents': rel_pro_ents, 'ent_all': ent_all,  'visualized_card': True }
 
     return render(request, template_name, context)    
 
